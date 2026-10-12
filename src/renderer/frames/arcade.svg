@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
+<defs><linearGradient id="cab" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b1340"/><stop offset="1" stop-color="#2f2170"/></linearGradient><linearGradient id="marq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd54a"/><stop offset="1" stop-color="#ff6a00"/></linearGradient><linearGradient id="pan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2d80"/><stop offset="1" stop-color="#22194f"/></linearGradient><radialGradient id="ball" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ff8a80"/><stop offset="1" stop-color="#b71c1c"/></radialGradient></defs>
+<path fill-rule="evenodd" fill="url(#cab)" d="M90,20H710L730,160V470L770,630V980H30V630L70,470V160ZM160,200H640A10,10 0 0 1 650,210V565A10,10 0 0 1 640,575H160A10,10 0 0 1 150,565V210A10,10 0 0 1 160,200Z"/>
+<path d="M90,20H710L730,160V470L770,630V980H30V630L70,470V160Z" fill="none" stroke="#ff2bd6" stroke-opacity=".85" stroke-width="6" stroke-linejoin="round"/>
+<path fill="url(#marq)" d="M124,40H676A14,14 0 0 1 690,54V136A14,14 0 0 1 676,150H124A14,14 0 0 1 110,136V54A14,14 0 0 1 124,40Z"/>
+<path d="M140,70H660M140,95H660M140,120H660" stroke="#fff" stroke-opacity=".25" stroke-width="6" stroke-linecap="round"/>
+<path fill-rule="evenodd" fill="#07070c" d="M138,170H662A18,18 0 0 1 680,188V587A18,18 0 0 1 662,605H138A18,18 0 0 1 120,587V188A18,18 0 0 1 138,170ZM160,200H640A10,10 0 0 1 650,210V565A10,10 0 0 1 640,575H160A10,10 0 0 1 150,565V210A10,10 0 0 1 160,200Z"/>
+<path d="M160,197H640A13,13 0 0 1 653,210V565A13,13 0 0 1 640,578H160A13,13 0 0 1 147,565V210A13,13 0 0 1 160,197Z" fill="none" stroke="#33334a" stroke-width="6"/>
+<path fill="url(#pan)" d="M50,640H750L780,760H20Z"/><rect x="20" y="760" width="760" height="24" fill="#120c2c"/>
+<ellipse cx="200" cy="706" rx="34" ry="12" fill="#111"/><path d="M200,704V662" stroke="#222" stroke-width="10" stroke-linecap="round"/><circle cx="200" cy="655" r="22" fill="url(#ball)"/>
+<ellipse cx="420" cy="700" rx="18" ry="13" fill="#29b6f6" stroke="#000" stroke-opacity=".45" stroke-width="3"/><ellipse cx="480" cy="690" rx="18" ry="13" fill="#66bb6a" stroke="#000" stroke-opacity=".45" stroke-width="3"/><ellipse cx="540" cy="700" rx="18" ry="13" fill="#ffee58" stroke="#000" stroke-opacity=".45" stroke-width="3"/><ellipse cx="600" cy="690" rx="18" ry="13" fill="#ef5350" stroke="#000" stroke-opacity=".45" stroke-width="3"/>
+<path fill="#2a2a2e" stroke="#555" stroke-width="3" d="M338,830H462A8,8 0 0 1 470,838V932A8,8 0 0 1 462,940H338A8,8 0 0 1 330,932V838A8,8 0 0 1 338,830Z"/>
+<rect x="365" y="860" width="12" height="36" rx="3" fill="#ff3b30"/><rect x="423" y="860" width="12" height="36" rx="3" fill="#ff3b30"/>
+<rect x="30" y="950" width="740" height="30" fill="#0e0a22"/>
+</svg>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file:; img-src 'self' file: data: blob:; media-src 'self' file: data: blob: mediastream:; connect-src 'self' file: data: blob:; font-src 'self' file: data:; object-src 'none'; base-uri 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RateofReality</title>
+<link rel="stylesheet" href="styles.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<main id="stage">
+  <div id="bg"></div>
+  <div id="screens"></div>
+  <div id="cursor" hidden><svg width="22" height="22" viewBox="0 0 22 22"><path d="M2 1V18L6.5 13.8 9.6 20.5 12.4 19.2 9.4 12.6H15.5Z" fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+</main>
+
+<aside id="ui">
+  <header><b>RateofReality</b><button id="hideUi" title="Hide panel (H / Ctrl+Alt+H)">⟩</button></header>
+  <div class="scroll">
+    <details open><summary>Sources</summary>
+      <div class="row"><button id="srcRefresh">Refresh</button><button id="srcSteam">Auto: latest Steam game</button></div>
+      <div id="sources" class="grid"></div>
+      <p class="hint">Click: show on selected screen · Shift+click: new screen</p>
+    </details>
+    <details open><summary>Screens</summary>
+      <div class="row"><button id="scrAdd">Add</button><button id="scrRemove" data-needs-sel>Remove</button><button id="scrClear" data-needs-sel>Clear source</button></div>
+      <ul id="screenList" class="list"></ul>
+    </details>
+    <details open><summary>Aspect &amp; fit</summary>
+      <div id="aspects" class="chips"></div>
+      <div class="row"><input id="aspectCustom" placeholder="Custom W:H, e.g. 5:4"><button id="aspectApply" data-needs-sel>Set</button></div>
+      <label class="row">Fit <select id="fit" data-needs-sel><option>contain</option><option>cover</option><option>stretch</option></select></label>
+      <p class="hint">Drag to move, handles to resize (Shift = free) · arrows nudge · +/- scale · [ ] order · Del remove · double-click fit</p>
+    </details>
+    <details open><summary>Frame</summary>
+      <div id="frames" class="grid"></div>
+      <div class="row"><button id="frameCustom" data-needs-sel>Custom frame…</button></div>
+    </details>
+    <details open><summary>Background</summary>
+      <div class="row"><select id="bgType"><option value="color">Color</option><option value="image">Image / GIF</option><option value="video">Video</option></select><input type="color" id="bgColor"></div>
+      <div class="row"><button id="bgImage">Image / GIF…</button><button id="bgVideo">Video…</button></div>
+      <label class="row">Fit <select id="bgFit"><option>cover</option><option>contain</option><option>stretch</option><option>tile</option></select></label>
+    </details>
+    <details><summary>Displays</summary>
+      <select id="displays" size="3"></select>
+      <div class="row"><button id="dispRefresh">Refresh</button><button id="dispMove" data-needs-sel>Move game to display</button></div>
+      <p class="hint">Add a virtual monitor (IddCx virtual display driver), move the game there and capture it.</p>
+    </details>
+    <details><summary>Scenes</summary>
+      <div class="row"><input id="sceneName" placeholder="Scene name"><button id="sceneSave">Save</button></div>
+      <div class="row"><select id="scenes"></select><button id="sceneLoad">Load</button><button id="sceneDelete">Delete</button></div>
+    </details>
+  </div>
+  <footer>
+    <button id="play" class="primary">▶ Play</button>
+    <label><input type="checkbox" id="fullscreen"> Fullscreen</label>
+  </footer>
+</aside>
+<button id="showUi" title="Show panel (H)">☰</button>
+<div id="toast" role="status"></div>
+
+<dialog id="insets">
+  <form method="dialog">
+    <p>No transparent opening found. Enter the screen opening as % inset from each edge:</p>
+    <div class="row"><label>Left <input name="l" type="number" value="10" min="0" max="95"></label><label>Top <input name="t" type="number" value="10" min="0" max="95"></label></div>
+    <div class="row"><label>Right <input name="r" type="number" value="10" min="0" max="95"></label><label>Bottom <input name="b" type="number" value="10" min="0" max="95"></label></div>
+    <div class="row"><button value="ok" class="primary">OK</button><button value="cancel">Cancel</button></div>
+  </form>
+</dialog>
+</body>
+</html>

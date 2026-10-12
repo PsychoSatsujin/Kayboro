@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 720" width="600" height="720">
+<defs><radialGradient id="shell" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ffc1dc"/><stop offset="1" stop-color="#d9478f"/></radialGradient><linearGradient id="bez" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f2ea"/><stop offset="1" stop-color="#cbc3b4"/></linearGradient><radialGradient id="btn" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#fff6bf"/><stop offset="1" stop-color="#efa800"/></radialGradient></defs>
+<circle cx="300" cy="30" r="20" fill="none" stroke="#c4c4cc" stroke-width="8"/>
+<path fill-rule="evenodd" fill="url(#shell)" d="M300,40C468,40 578,260 578,450C578,610 455,705 300,705C145,705 22,610 22,450C22,260 132,40 300,40ZM186,200H414A6,6 0 0 1 420,206V434A6,6 0 0 1 414,440H186A6,6 0 0 1 180,434V206A6,6 0 0 1 186,200Z"/>
+<path d="M300,40C468,40 578,260 578,450C578,610 455,705 300,705C145,705 22,610 22,450C22,260 132,40 300,40Z" fill="none" stroke="#9c2463" stroke-opacity=".5" stroke-width="5"/>
+<circle cx="130" cy="330" r="14" fill="#fff" fill-opacity=".28"/><circle cx="470" cy="300" r="10" fill="#fff" fill-opacity=".28"/><circle cx="110" cy="520" r="9" fill="#fff" fill-opacity=".28"/><circle cx="490" cy="540" r="16" fill="#fff" fill-opacity=".28"/><circle cx="300" cy="120" r="12" fill="#fff" fill-opacity=".28"/><circle cx="220" cy="650" r="8" fill="#fff" fill-opacity=".28"/><circle cx="390" cy="655" r="11" fill="#fff" fill-opacity=".28"/><circle cx="520" cy="420" r="7" fill="#fff" fill-opacity=".28"/>
+<ellipse cx="170" cy="150" rx="60" ry="28" transform="rotate(-35 170 150)" fill="#fff" fill-opacity=".35"/>
+<path fill-rule="evenodd" fill="url(#bez)" d="M184,176H416A28,28 0 0 1 444,204V436A28,28 0 0 1 416,464H184A28,28 0 0 1 156,436V204A28,28 0 0 1 184,176ZM186,200H414A6,6 0 0 1 420,206V434A6,6 0 0 1 414,440H186A6,6 0 0 1 180,434V206A6,6 0 0 1 186,200Z"/>
+<path d="M186,197H414A9,9 0 0 1 423,206V434A9,9 0 0 1 414,443H186A9,9 0 0 1 177,434V206A9,9 0 0 1 186,197Z" fill="none" stroke="#6b6355" stroke-width="6"/>
+<circle cx="210" cy="560" r="28" fill="url(#btn)" stroke="#a87400" stroke-width="3"/><circle cx="300" cy="592" r="28" fill="url(#btn)" stroke="#a87400" stroke-width="3"/><circle cx="390" cy="560" r="28" fill="url(#btn)" stroke="#a87400" stroke-width="3"/>
+</svg>
