@@ -46,18 +46,16 @@ test('colorways: catalogue items all render, translucency agrees', () => {
 });
 
 test('applyColorway sets filter + opacity and restores the previous look', () => {
-  const classes = new Set();
-  const img = { style: { filter: '', opacity: '' }, classList: { toggle: (c, on) => (on ? classes.add(c) : classes.delete(c)), remove: c => classes.delete(c) } };
+  const img = { style: { filter: '', opacity: '' } };
   const undoGold = C.applyColorway(img, 'gold');
   assert.equal(img.style.filter, C.COLORWAYS.gold.filter);
   assert.equal(img.style.opacity, '');
   const undoClear = C.applyColorway(img, 'clear'); // replaces gold
   assert.equal(img.style.opacity, '0.55');
-  assert.ok(classes.has('fx-clear'));
   undoGold(); // stale disposer: no effect
   assert.equal(img.style.opacity, '0.55');
   undoClear();
-  assert.deepEqual([img.style.filter, img.style.opacity, classes.size], ['', '', 0]);
+  assert.deepEqual([img.style.filter, img.style.opacity], ['', '']);
 });
 
 test('finishes: every contract id has a recipe whose layers are styled in fx.css', () => {

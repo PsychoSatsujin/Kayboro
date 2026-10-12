@@ -8,7 +8,7 @@ import { onFrame, reducedMotion, onReducedMotionChange } from './ticker.js';
 import { colorwayOf } from './colorways.js';
 
 export const FINISH_IDS = ['none', 'matte', 'gloss', 'holo', 'pearl', 'glitter'];
-// Layer recipes (classes styled in fx.css). motion: pointer tilt + time drift via --fx-x/--fx-y/--fx-t.
+// Layer recipes (classes styled in fx.css). motion: pointer tilt + time drift via --fx-x/--fx-y.
 export const FINISHES = {
   none: { layers: [] },
   matte: { layers: ['matte-desat', 'matte-flat', 'matte-grain', 'matte-light'] },
@@ -37,10 +37,11 @@ const el = (tag, cls) => { const e = document.createElement(tag); if (cls) e.cla
 const cssUrl = u => `url(${JSON.stringify(new URL(u, document.baseURI).href)})`;
 const noop = () => {};
 
-// Finds the frame image and the element the layers live in. viewEl may be the stage's .screen
-// (layers follow its img.frame), any wrapper of an <img>, the <img> itself, or a bare box.
+// Finds the frame image and the element the layers live in. viewEl may be the box holding the frame
+// <img> (the stage's .shell-front), any ancestor of an img.frame, the <img> itself, or a bare box
+// sized like the frame (the stage's .shell-back), which the layers then simply fill.
 function host(viewEl) {
-  const img = viewEl.tagName === 'IMG' ? viewEl : viewEl.querySelector(':scope > img.frame') || viewEl.querySelector(':scope > img');
+  const img = viewEl.tagName === 'IMG' ? viewEl : viewEl.querySelector(':scope > img.frame, :scope > img') || viewEl.querySelector('img.frame');
   return { img, box: img ? img.parentElement : viewEl };
 }
 
@@ -83,7 +84,7 @@ function carve(img) {
 
 // Masks `wrap` with the frame: its own alpha right away, the carved silhouette once that is ready.
 function maskWith(wrap, url) {
-  if (wrap.fxSrc === url) return;
+  if (!url || wrap.fxSrc === url) return;
   wrap.fxSrc = url;
   wrap.style.setProperty('--fx-mask', cssUrl(url));
   wrap.classList.remove('fx-shaped');
@@ -96,11 +97,12 @@ function maskWith(wrap, url) {
 }
 
 // Keeps `layer` on top of the frame image's box (stage.place() rewrites its inline px box on every
-// drag), hidden whenever the frame is, and masked by frameUrl (or by the img's current src).
+// drag), hidden whenever the frame is, and masked by frameUrl, then by whatever src the img switches to.
 function follow({ img, box }, layer, frameUrl, onSize) {
   let restorePos = null;
   if (getComputedStyle(box).position === 'static') { restorePos = box.style.position; box.style.position = 'relative'; }
-  let w = 0, h = 0;
+  let w = 0, h = 0, src = img?.src;
+  maskWith(layer, frameUrl || src);
   const sync = () => {
     let x = 0, y = 0, nw = box.clientWidth, nh = box.clientHeight;
     if (img) {
@@ -108,12 +110,11 @@ function follow({ img, box }, layer, frameUrl, onSize) {
       if (s.left && s.top && s.width && s.height) [x, y, nw, nh] = [s.left, s.top, s.width, s.height].map(parseFloat);
       else [x, y, nw, nh] = [img.offsetLeft, img.offsetTop, img.offsetWidth, img.offsetHeight];
       layer.hidden = img.hidden;
-      if (!frameUrl && img.src) maskWith(layer, img.src);
+      if (img.src && img.src !== src) maskWith(layer, (src = img.src));
     }
     Object.assign(layer.style, { left: `${x}px`, top: `${y}px`, width: `${nw}px`, height: `${nh}px` });
     if (nw !== w || nh !== h) { w = nw; h = nh; onSize?.(w, h); }
   };
-  if (frameUrl) maskWith(layer, frameUrl);
   const mo = img && new MutationObserver(sync);
   mo?.observe(img, { attributes: true, attributeFilter: ['style', 'hidden', 'src'] });
   const ro = new ResizeObserver(sync);
@@ -135,6 +136,7 @@ function usePointer() {
   return () => { if (!--pointerUsers) { removeEventListener('pointermove', onMove); document.removeEventListener('pointerout', onOut); } };
 }
 
+const abs = Math.abs, clamp1 = v => Math.max(-1, Math.min(1, v));
 // Eased tilt in [-1, 1]: slow Lissajous drift, pulled toward the pointer while it is over the shell.
 // Calls gone() once the layers have been removed from the document without being disposed.
 function tilt(wrap, gone) {
@@ -155,16 +157,14 @@ function tilt(wrap, gone) {
       pull += ((over ? 1 : 0) - pull) * (1 - Math.exp(-dt / 400));
       const dx = 0.7 * Math.sin(s * 0.27) + 0.2 * Math.sin(s * 0.71), dy = 0.55 * Math.sin(s * 0.19 + 1.2) + 0.15 * Math.sin(s * 0.53);
       x += (dx + (clamp1(tx) - dx) * pull - x) * e; y += (dy + (clamp1(ty) - dy) * pull - y) * e;
-      const v = `${x.toFixed(3)} ${y.toFixed(3)} ${((s / 9) % 1).toFixed(3)}`;
-      if (v === last) return;
-      last = v;
-      wrap.style.setProperty('--fx-x', x.toFixed(3));
-      wrap.style.setProperty('--fx-y', y.toFixed(3));
-      wrap.style.setProperty('--fx-t', ((s / 9) % 1).toFixed(3));
+      const vx = x.toFixed(3), vy = y.toFixed(3);
+      if (vx + vy === last) return;
+      last = vx + vy;
+      wrap.style.setProperty('--fx-x', vx);
+      wrap.style.setProperty('--fx-y', vy);
     },
   };
 }
-const abs = Math.abs, clamp1 = v => Math.max(-1, Math.min(1, v));
 
 // applyFinish(viewEl, frameUrl, finishId, { intensity = 1 }) -> dispose(). Re-applying replaces.
 const finishes = new WeakMap(), fills = new WeakMap();
@@ -172,8 +172,10 @@ export function applyFinish(viewEl, frameUrl, finishId, { intensity = 1 } = {}) 
   finishes.get(viewEl)?.();
   const recipe = FINISHES[finishId];
   if (!recipe || !recipe.layers.length) return noop;
+  const h = host(viewEl);
+  if (!frameUrl && !h.img?.src) return noop;
   ensureFxStyles();
-  const h = host(viewEl), wrap = el('div', `fx-finish fx-${finishId}`);
+  const wrap = el('div', `fx-finish fx-${finishId}`);
   wrap.style.setProperty('--fx-i', String(Math.max(0, Math.min(1.5, +intensity || 0))));
   for (const name of recipe.layers) {
     const l = el('div', `fx-l ${name.split(' ').map(n => (n.length > 1 ? `fx-${n}` : `fx-v-${n}`)).join(' ')}`);
@@ -216,8 +218,10 @@ export function applyShellFill(viewEl, frameUrl, fill, { fps, pixelRatio } = {})
   fills.get(viewEl)?.();
   const type = fill?.type;
   if (!type || type === 'none' || !(type === 'screensaver' ? fill.id : fill.url) || !FILL_TYPES.includes(type)) return noop;
+  const h = host(viewEl);
+  if (!frameUrl && !h.img?.src) return noop;
   ensureFxStyles();
-  const h = host(viewEl), wrap = el('div', `fx-fill fx-fill-${type}`), layer = el('div', 'fx-l fx-fill-l');
+  const wrap = el('div', `fx-fill fx-fill-${type}`), layer = el('div', 'fx-l fx-fill-l');
   wrap.append(layer);
   let saver = null, media = null;
   if (type === 'screensaver') {

@@ -54,10 +54,18 @@ const ramp = (stops, cyclic = false) => {
   return out;
 };
 
+// Particles survive resizes (a screen being dragged bigger): positions scale, the count follows the area.
+const keep = (list, n, make, sx, sy) => {
+  for (const p of list) { p.x *= sx; p.y *= sy; }
+  list.length = min(list.length, n);
+  while (list.length < n) list.push(make());
+  return list;
+};
+
 // ---- Scenes: ({ pal, rand }) -> { resize(w, h, k), draw(ctx, t, dt, w, h) } in CSS px ----------
 
 function starfield({ pal: [bg, star, acc, acc2], rand }) {
-  let stars = [], back = null, shoot = null, nextShoot = 4;
+  let stars = [], back = null, shoot = null, nextShoot = 4, ow = 0, oh = 0;
   const glow = glowSprite(star), glowAcc = glowSprite(acc);
   const flare = (() => {
     const c = surface(64, 64), g = c.getContext('2d');
@@ -71,23 +79,24 @@ function starfield({ pal: [bg, star, acc, acc2], rand }) {
   return {
     resize(w, h, k) {
       back = surface(w * k, h * k);
-      const g = back.getContext('2d');
+      const g = back.getContext('2d'), r2 = rng(5); // fixed seed: the backdrop stays put across resizes
       g.scale(k, k);
       g.fillStyle = vgrad(g, h, [[0, rgba(mix(bg, BLACK, 0.4))], [0.55, rgba(bg)], [1, rgba(mix(bg, acc, 0.12))]]);
       g.fillRect(0, 0, w, h);
       g.globalCompositeOperation = 'lighter';
       for (let i = 0; i < 4; i++) { // nebulae: wide soft clouds of the two accents
-        const x = w * (0.15 + rand() * 0.7), y = h * (0.15 + rand() * 0.7), r = max(w, h) * (0.25 + rand() * 0.3);
+        const x = w * (0.15 + r2() * 0.7), y = h * (0.15 + r2() * 0.7), r = max(w, h) * (0.25 + r2() * 0.3);
         const rg = g.createRadialGradient(x, y, 0, x, y, r), c = i % 2 ? acc : acc2;
         rg.addColorStop(0, rgba(mix(c, bg, 0.3), 0.2)); rg.addColorStop(0.5, rgba(mix(c, bg, 0.55), 0.07)); rg.addColorStop(1, rgba(c, 0));
         g.fillStyle = rg; g.fillRect(0, 0, w, h);
       }
       g.fillStyle = rgba(star, 0.35);
-      for (let i = 0, n = (w * h) / 500; i < n; i++) g.fillRect(rand() * w, rand() * h, 0.6, 0.6); // static dust
-      stars = Array.from({ length: clamp(round((w * h) / 1500), 60, 600) }, () => {
+      for (let i = 0, n = (w * h) / 500; i < n; i++) g.fillRect(r2() * w, r2() * h, 0.6, 0.6); // static dust
+      stars = keep(stars, clamp(round((w * h) / 1500), 60, 600), () => {
         const z = rand() ** 2;
         return { x: rand() * w, y: rand() * h, z, r: 0.45 + z * 1.4, f: 0.6 + rand() * 2.2, p: rand() * TAU, acc: rand() < 0.16 };
-      });
+      }, ow ? w / ow : 1, oh ? h / oh : 1);
+      ow = w; oh = h;
     },
     draw(c, t, dt, w, h) {
       c.drawImage(back, 0, 0, w, h);
@@ -124,7 +133,7 @@ function starfield({ pal: [bg, star, acc, acc2], rand }) {
 }
 
 function bubbles({ pal: [bg, acc, hi], rand }) {
-  let list = [], motes = [], back = null, k = 1;
+  let list = [], motes = [], back = null, k = 1, ow = 0, oh = 0;
   const shaft = surface(64, 256), sg = shaft.getContext('2d'); // soft-edged light shaft, fading downward
   const hg = sg.createLinearGradient(0, 0, 64, 0);
   hg.addColorStop(0, rgba(WHITE, 0)); hg.addColorStop(0.5, rgba(WHITE, 1)); hg.addColorStop(1, rgba(WHITE, 0));
@@ -155,8 +164,10 @@ function bubbles({ pal: [bg, acc, hi], rand }) {
       b.scale(k, k);
       b.fillStyle = vgrad(b, h, [[0, rgba(mix(bg, acc, 0.3))], [0.45, rgba(bg)], [1, rgba(mix(bg, BLACK, 0.5))]]);
       b.fillRect(0, 0, w, h);
-      list = Array.from({ length: clamp(round((w * h) / 6500), 16, 150) }, () => spawn(w, h, rand() * h));
-      motes = Array.from({ length: clamp(round((w * h) / 9000), 10, 90) }, () => ({ x: rand() * w, y: rand() * h, s: 0.5 + rand(), v: 3 + rand() * 6 }));
+      const sx = ow ? w / ow : 1, sy = oh ? h / oh : 1;
+      list = keep(list, clamp(round((w * h) / 6500), 16, 150), () => spawn(w, h, rand() * h), sx, sy);
+      motes = keep(motes, clamp(round((w * h) / 9000), 10, 90), () => ({ x: rand() * w, y: rand() * h, s: 0.5 + rand(), v: 3 + rand() * 6 }), sx, sy);
+      ow = w; oh = h;
     },
     draw(c, t, dt, w, h) {
       c.drawImage(back, 0, 0, w, h);
@@ -188,12 +199,15 @@ function bubbles({ pal: [bg, acc, hi], rand }) {
   };
 }
 
+const SIN = Float32Array.from({ length: 4096 }, (_, i) => sin((i / 4096) * TAU));
+const fsin = x => SIN[((x * 651.8986) | 0) & 4095]; // table sine: the plasma evaluates ~7 per pixel
+
 function plasma({ pal: [a, b, c3] }) {
   const dark = mix(c3, BLACK, 0.82), lut = ramp([dark, c3, a, mix(a, WHITE, 0.55), b, mix(b, c3, 0.5)], true);
   let buf, img, words, bw, bh, unit, vig;
   return {
     resize(w, h, k) {
-      bw = clamp(round(w / 5), 24, 260); bh = max(2, round((bw * h) / w)); unit = 8.5 / max(bw, bh);
+      bw = clamp(round(min(w / 5, sqrt((36000 * w) / h))), 24, 260); bh = max(2, round((bw * h) / w)); unit = 8.5 / max(bw, bh);
       buf = surface(bw, bh); img = buf.getContext('2d').createImageData(bw, bh); words = new Uint32Array(img.data.buffer);
       vig = surface(w * k, h * k);
       const g = vig.getContext('2d'), rg = g.createRadialGradient(w * k / 2, h * k / 2, 0, w * k / 2, h * k / 2, max(w, h) * k * 0.75);
@@ -206,9 +220,9 @@ function plasma({ pal: [a, b, c3] }) {
         const py = y * unit;
         for (let x = 0; x < bw; x++, i++) {
           const px = x * unit;
-          const wx = px + 0.55 * sin(py * 1.7 + t * 0.31), wy = py + 0.55 * cos(px * 1.3 - t * 0.27); // domain warp
+          const wx = px + 0.55 * fsin(py * 1.7 + t * 0.31), wy = py + 0.55 * fsin(px * 1.3 - t * 0.27 + 1.5708); // domain warp
           const dx = wx - cx, dy = wy - cy;
-          const v = sin(wx * 1.1 + t * 0.6) + sin(wy * 1.25 - t * 0.43) + sin((wx * 0.6 + wy * 0.8) + t * 0.37) + sin(sqrt(dx * dx + dy * dy) * 1.7 - t * 0.9);
+          const v = fsin(wx * 1.1 + t * 0.6) + fsin(wy * 1.25 - t * 0.43) + fsin(wx * 0.6 + wy * 0.8 + t * 0.37) + fsin(sqrt(dx * dx + dy * dy) * 1.7 - t * 0.9);
           words[i] = lut[((v + 4) * 40 + shift) & 255];
         }
       }
@@ -271,7 +285,7 @@ function pixelRain({ pal: [bg, ga, gb], rand }) {
 }
 
 function sakura({ pal: [bg, pink, pale], rand }) {
-  let petals = [], back = null, k = 1;
+  let petals = [], back = null, k = 1, ow = 0, oh = 0;
   const deep = mix(pink, [255, 80, 150], 0.45);
   const petal = (light, dark) => { // notched cherry petal, base at the bottom
     const c = surface(64, 64), g = c.getContext('2d');
@@ -323,7 +337,8 @@ function sakura({ pal: [bg, pink, pale], rand }) {
       };
       const L = min(w, h) * 0.32;
       branch(-L * 0.15, h * 0.05, 0.35, L, max(2, L * 0.07), 3);
-      petals = Array.from({ length: clamp(round((w * h) / 3800), 18, 160) }, () => spawn(w, h, rand() * h));
+      petals = keep(petals, clamp(round((w * h) / 3800), 18, 160), () => spawn(w, h, rand() * h), ow ? w / ow : 1, oh ? h / oh : 1);
+      ow = w; oh = h;
     },
     draw(c, t, dt, w, h) {
       c.drawImage(back, 0, 0, w, h);
@@ -343,14 +358,17 @@ function sakura({ pal: [bg, pink, pale], rand }) {
   };
 }
 
-function aurora({ pal: [bg, green, violet], rand }) {
-  let back = null, fg = null, sky, glow, stars = [], aw, ah;
+function aurora({ pal: [bg, green, violet] }) {
+  let back = null, fg = null, sky, img, light, glow, stars = [], aw, ah;
+  // Ray colour by height (0 = the bright lower hem, 127 = the violet top), premultiplied, for additive light.
   const rays = [green, mix(green, violet, 0.35), mix(green, [120, 240, 255], 0.5)].map(col => {
     const c = surface(1, 128), g = c.getContext('2d'), lg = g.createLinearGradient(0, 128, 0, 0);
     lg.addColorStop(0, rgba(col, 0)); lg.addColorStop(0.04, rgba(mix(col, WHITE, 0.45), 1)); lg.addColorStop(0.16, rgba(col, 0.85));
     lg.addColorStop(0.55, rgba(mix(col, violet, 0.75), 0.35)); lg.addColorStop(1, rgba(violet, 0));
     g.fillStyle = lg; g.fillRect(0, 0, 1, 128);
-    return c;
+    const d = g.getImageData(0, 0, 1, 128).data, lut = new Float32Array(128 * 3);
+    for (let i = 0; i < 128; i++) for (let ch = 0; ch < 3; ch++) lut[i * 3 + ch] = (d[(127 - i) * 4 + ch] * d[(127 - i) * 4 + 3]) / 255;
+    return lut;
   });
   const ridge = (g, w, h, base, amp, col, seed) => {
     const r = rng(seed), pts = [], n = 48;
@@ -364,15 +382,16 @@ function aurora({ pal: [bg, green, violet], rand }) {
   return {
     resize(w, h, k) {
       back = surface(w * k, h * k);
-      const g = back.getContext('2d');
+      const g = back.getContext('2d'), r2 = rng(3);
       g.scale(k, k);
       g.fillStyle = vgrad(g, h, [[0, rgba(mix(bg, BLACK, 0.5))], [0.62, rgba(bg)], [0.85, rgba(mix(bg, green, 0.14))], [1, rgba(bg)]]);
       g.fillRect(0, 0, w, h);
       g.fillStyle = rgba(WHITE, 0.55);
-      for (let i = 0, n = (w * h) / 900; i < n; i++) { const s = rand() < 0.1 ? 1.2 : 0.6; g.fillRect(rand() * w, rand() * h * 0.8, s, s); }
-      stars = Array.from({ length: 18 }, () => ({ x: rand() * w, y: rand() * h * 0.6, p: rand() * TAU, f: 1 + rand() * 2 }));
-      aw = clamp(round(w / 2.5), 40, 260); ah = max(2, round((aw * h) / w));
-      sky = surface(aw, ah); glow = surface(max(2, aw / 6), max(2, ah / 6));
+      for (let i = 0, n = (w * h) / 900; i < n; i++) { const s = r2() < 0.1 ? 1.2 : 0.6; g.fillRect(r2() * w, r2() * h * 0.8, s, s); }
+      stars = Array.from({ length: 18 }, () => ({ x: r2() * w, y: r2() * h * 0.6, p: r2() * TAU, f: 1 + r2() * 2 }));
+      aw = clamp(round(w / 2.5), 40, 240); ah = max(2, round((aw * h) / w));
+      sky = surface(aw, ah); img = sky.getContext('2d').createImageData(aw, ah); light = new Float32Array(aw * ah * 3);
+      glow = surface(max(2, aw / 6), max(2, ah / 6));
       fg = surface(w * k, h * k); // mountains drawn over the aurora
       const f = fg.getContext('2d');
       f.scale(k, k);
@@ -380,25 +399,29 @@ function aurora({ pal: [bg, green, violet], rand }) {
       const near = ridge(f, w, h, h * 0.95, h * 0.06, rgba(mix(bg, BLACK, 0.7)), 8);
       f.fillStyle = rgba(mix(bg, BLACK, 0.72));
       for (let i = 0; i < w / 14; i++) { // pines along the near ridge
-        const x = rand() * w, y = near[round((x / w) * (near.length - 1))] + 2, th = h * (0.025 + rand() * 0.035);
+        const x = r2() * w, y = near[round((x / w) * (near.length - 1))] + 2, th = h * (0.025 + r2() * 0.035);
         f.beginPath(); f.moveTo(x, y - th); f.lineTo(x + th * 0.32, y); f.lineTo(x - th * 0.32, y); f.fill();
       }
     },
     draw(c, t, dt, w, h) {
-      const s = sky.getContext('2d');
-      s.clearRect(0, 0, aw, ah); s.globalCompositeOperation = 'lighter';
-      for (let n = 0; n < 3; n++) {
+      light.fill(0);
+      for (let n = 0; n < 3; n++) { // three curtains: folded vertical rays hanging from a wavy hem
+        const lut = rays[n];
         for (let x = 0; x < aw; x++) {
           const u = x / aw;
           const base = ah * (0.4 + 0.07 * n) + ah * 0.09 * sin(u * 3.1 + t * 0.11 + n * 1.7) + ah * 0.035 * sin(u * 7.3 - t * 0.23 + n);
           const fold = (0.5 + 0.5 * sin(u * 26 + t * 0.8 + n * 2 + 2.2 * sin(u * 5 - t * 0.3))) ** 4;
           const env = 0.25 + 0.75 * (0.5 + 0.5 * sin(u * 2.4 + t * 0.07 + n * 2.1)) ** 2;
-          const ht = ah * (0.2 + 0.2 * (0.5 + 0.5 * sin(u * 4.2 + t * 0.17 + n)));
-          s.globalAlpha = min(1, (0.1 + 0.75 * fold) * env * 0.95);
-          s.drawImage(rays[n], 0, 0, 1, 128, x, base - ht, 1.25, ht * 1.08);
+          const ht = ah * (0.2 + 0.2 * (0.5 + 0.5 * sin(u * 4.2 + t * 0.17 + n))) * 1.08, a = min(1, (0.1 + 0.75 * fold) * env * 0.95);
+          for (let y = max(0, ceil(base - ht)), y1 = min(ah - 1, floor(base)); y <= y1; y++) {
+            const li = min(127, ((base - y) / ht) * 128) | 0, o = (y * aw + x) * 3;
+            light[o] += lut[li * 3] * a; light[o + 1] += lut[li * 3 + 1] * a; light[o + 2] += lut[li * 3 + 2] * a;
+          }
         }
       }
-      s.globalCompositeOperation = 'source-over'; s.globalAlpha = 1;
+      const px = img.data;
+      for (let i = 0, j = 0; i < px.length; i += 4, j += 3) { px[i] = light[j]; px[i + 1] = light[j + 1]; px[i + 2] = light[j + 2]; px[i + 3] = 255; }
+      sky.getContext('2d').putImageData(img, 0, 0); // opaque black + light: drawn with 'lighter' it only adds
       const gg = glow.getContext('2d');
       gg.clearRect(0, 0, glow.width, glow.height); gg.drawImage(sky, 0, 0, glow.width, glow.height);
       c.drawImage(back, 0, 0, w, h);

@@ -22,12 +22,10 @@ export function applyColorway(imgEl, id) {
   const { filter, shellOpacity } = colorwayOf(id), s = imgEl.style, prev = [s.filter, s.opacity];
   s.filter = filter === 'none' ? '' : filter;
   s.opacity = shellOpacity < 1 ? String(shellOpacity) : '';
-  imgEl.classList.toggle('fx-clear', shellOpacity < 1);
   const undo = () => {
     if (applied.get(imgEl) !== undo) return;
     applied.delete(imgEl);
     [s.filter, s.opacity] = prev;
-    imgEl.classList.remove('fx-clear');
   };
   applied.set(imgEl, undo);
   return undo;

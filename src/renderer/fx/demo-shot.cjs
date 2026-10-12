@@ -1,12 +1,14 @@
 'use strict';
-// Screenshots of demo.html: xvfb-run -a -s '-screen 0 1600x900x24' npx electron --no-sandbox src/renderer/fx/demo-shot.cjs [outDir] [view...]
-// Writes <outDir>/<view>[-tN].png. Pass FX_REDUCED=1 to emulate prefers-reduced-motion.
+// Screenshots of demo.html, two per view 1.4 s apart (to see motion):
+//   xvfb-run -a -s '-screen 0 1600x900x24' npx electron --no-sandbox src/renderer/fx/demo-shot.cjs [outDir] [view[?query]...]
+// e.g. 'finishes?frame=px-crt&h=250'. FX_REDUCED=1 forces prefers-reduced-motion; FX_MOUSE=x,y hovers.
 const { app, BrowserWindow } = require('electron');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const args = process.argv.slice(process.argv.findIndex(a => path.resolve(a) === __filename) + 1);
-const outDir = path.resolve(args[0] || path.join(__dirname, 'shots'));
+const outDir = path.resolve(args[0] || path.join(os.tmpdir(), 'shellcade-fx-shots'));
 const views = args.length > 1 ? args.slice(1) : ['finishes', 'colorways', 'fills', 'savers', 'combos'];
 app.disableHardwareAcceleration();
 if (process.env.FX_REDUCED) app.commandLine.appendSwitch('force-prefers-reduced-motion');

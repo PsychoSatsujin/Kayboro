@@ -1,14 +1,13 @@
-/* Shell finishes + fills (finishes.js). Every .fx-l is masked by the frame image (--fx-mask), so
-   nothing here can paint over the screen hole. Layers blend straight onto the frame: .fx-finish is
-   deliberately not a stacking context. --fx-x/--fx-y (-1..1) = tilt, --fx-i = intensity. */
-.fx-finish, .fx-fill { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+/* Shell finishes + fills (finishes.js). Every .fx-l is masked by the frame (--fx-mask; unset, it paints
+   nothing), so nothing here can cover the screen hole. Layers blend straight onto the frame image, so
+   .fx-finish must never become a stacking context. --fx-x/--fx-y (-1..1) = tilt, --fx-i = intensity. */
+.fx-finish, .fx-fill { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; --fx-mask: linear-gradient(transparent, transparent); }
 .fx-l {
   position: absolute; inset: 0; overflow: hidden; pointer-events: none;
   mask-image: var(--fx-mask); mask-size: 100% 100%; mask-repeat: no-repeat; mask-position: 0 0;
 }
 .fx-finish > .fx-l { z-index: 1; opacity: calc(var(--fx-i, 1) * var(--o, 1)); }
 .fx-l > i { position: absolute; inset: 0; }
-.fx-l > i, .fx-l > b { pointer-events: none; }
 
 /* Edge lights: the mask minus itself shifted by --fx-rim leaves only up-facing (or down-facing) edges. */
 .fx-rim, .fx-rim-soft, .fx-rim-low, .fx-rim-side, .fx-rim-pearl {

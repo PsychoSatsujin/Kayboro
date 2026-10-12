@@ -1,5 +1,6 @@
-// FX demo: every finish / colorway / fill on real frames, laid out like the stage (.view = screen
-// rect, img.frame = frame box from frameOuterRect). Used by demo-shot.cjs for screenshots.
+// FX demo: every finish / colorway / fill on real frames, built like the stage's screens:
+// .screen (hole rect) > .shell-back (fill) + .media (the "game") + .shell-front > img.frame (+ finish).
+// Open in Electron, or screenshot with demo-shot.cjs.
 import { FRAMES } from '../frames/frames.js';
 import { frameOuterRect } from '../layout.js';
 import { applyFinish, applyShellFill, FINISH_IDS, ensureFxStyles } from './finishes.js';
@@ -19,7 +20,7 @@ async function loadCatalog() {
       const url = new URL(`../../catalog/${f}.json`, import.meta.url).href;
       const j = (await import(url, { with: { type: 'json' } })).default;
       for (const fr of j.frames) catalog[fr.id] = { ...fr, url: new URL(`../${fr.file}`, import.meta.url).href };
-    } catch { /* catalog not readable via fetch: built-in frames only */ }
+    } catch { /* catalogue not importable: built-in frames only */ }
   }
 }
 
@@ -36,18 +37,20 @@ function cell(parent, label, frameId, height, { finish = 'none', colorway = 'def
   const f = frameOf(frameId);
   if (!f) return;
   const fw = height * (f.size.w / f.size.h), sw = fw * f.hole.w, sh = height * f.hole.h;
-  const c = make('div', 'cell'), box = make('div', 'stagebox'), v = make('div', 'view'), cv = make('canvas', 'game'), img = make('img', 'frame');
+  const c = make('div', 'cell'), box = make('div', 'stagebox'), scr = make('div', 'screen'), media = make('div', 'media');
+  const back = make('div', 'shell-back'), front = make('div', 'shell-front'), cv = make('canvas'), img = make('img', 'frame');
   Object.assign(box.style, { width: `${fw}px`, height: `${height}px` });
-  const r = frameOuterRect({ x: 0, y: 0, w: sw, h: sh }, f.hole);
-  Object.assign(v.style, { left: `${-r.x}px`, top: `${-r.y}px`, width: `${sw}px`, height: `${sh}px` });
-  Object.assign(img.style, { left: `${r.x}px`, top: `${r.y}px`, width: `${r.w}px`, height: `${r.h}px` });
-  img.src = f.url; img.alt = ''; img.draggable = false;
+  const r = frameOuterRect({ x: 0, y: 0, w: sw, h: sh }, f.hole), outer = { left: `${r.x}px`, top: `${r.y}px`, width: `${r.w}px`, height: `${r.h}px` };
+  Object.assign(scr.style, { left: `${-r.x}px`, top: `${-r.y}px`, width: `${sw}px`, height: `${sh}px` });
+  Object.assign(back.style, outer); Object.assign(front.style, outer);
+  Object.assign(img, { src: f.url, alt: '', draggable: false });
   game(cv, (label.length * 47) % 360);
-  v.append(cv, img); box.append(v); c.append(box, make('span', 'lbl', label)); parent.append(c);
+  media.append(cv); front.append(img); scr.append(back, media, front); box.append(scr);
+  c.append(box, make('span', 'lbl', label)); parent.append(c);
   applyColorway(img, colorway);
-  if (fill) applyShellFill(v, f.url, fill);
+  if (fill) applyShellFill(back, f.url, fill);
   if (q.has('ghost')) img.style.opacity = q.get('ghost'); // debug: see the fill behind the frame
-  applyFinish(v, f.url, finish);
+  applyFinish(front, f.url, finish);
 }
 
 function section(title, build) {
