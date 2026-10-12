@@ -8,6 +8,12 @@ const title = process.env.FAKE_GAME_TITLE || 'FakeGame';
 const COLOR = '#ff00ff';
 
 Menu.setApplicationMenu(null); // no menu bar: keeps the client area exactly 800x600 and Alt inert
+// CI runners have no GPU. Software compositing keeps the window's pixels readable by every Windows
+// capture backend (WGC and GDI), and the RateofReality window covers this one during the smoke test,
+// so don't let Chromium's occlusion tracking stop painting it.
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
 
 app.whenReady().then(() => {
   const win = new BrowserWindow({
@@ -18,7 +24,7 @@ app.whenReady().then(() => {
     frame: true,
     resizable: false,
     backgroundColor: COLOR,
-    webPreferences: { sandbox: true, contextIsolation: true },
+    webPreferences: { sandbox: true, contextIsolation: true, backgroundThrottling: false },
   });
   win.on('page-title-updated', (e) => e.preventDefault()); // keep our title, the smoke test looks it up
   const html = `<!doctype html><title>${title}</title><body style="margin:0;background:${COLOR};overflow:hidden"></body>`;

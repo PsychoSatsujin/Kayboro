@@ -55,7 +55,12 @@ const srcKey = (id) => String(id).split(':').slice(0, 2).join(':');
 
 async function listSources() {
   const own = new Set(BrowserWindow.getAllWindows().map((w) => srcKey(w.getMediaSourceId())));
-  const sources = await desktopCapturer.getSources({ types: ['window', 'screen'], thumbnailSize: { width: 320, height: 180 } });
+  // One getSources() call per type: asking for windows and screens together intermittently drops the
+  // screen on Linux/X11 ("Failed to initialize pixel buffer"); sequential single-type calls don't.
+  const sources = [];
+  for (const type of ['screen', 'window']) {
+    sources.push(...(await desktopCapturer.getSources({ types: [type], thumbnailSize: { width: 320, height: 180 } })));
+  }
   return sources.filter((s) => !own.has(srcKey(s.id))).map((s) => {
     const kind = s.id.startsWith('screen:') ? 'screen' : 'window';
     const m = kind === 'window' ? /^window:(-?\d+):/.exec(s.id) : null; // Windows: "window:<HWND>:0"

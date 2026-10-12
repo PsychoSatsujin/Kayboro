@@ -32,6 +32,12 @@ const T0 = Date.now();
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
+// Chromium rewrites userData while shutting down (after we could delete it), so each run sweeps
+// the leftovers of earlier runs instead.
+for (const d of fs.readdirSync(os.tmpdir())) {
+  const p = path.join(os.tmpdir(), d);
+  try { if (d.startsWith('ror-smoke-') && Date.now() - fs.statSync(p).mtimeMs > 15 * 60e3) fs.rmSync(p, { recursive: true, force: true }); } catch {}
+}
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'ror-smoke-'));
 const USER_DATA = path.join(TMP, 'userData');
 fs.mkdirSync(USER_DATA);
@@ -483,15 +489,19 @@ const CHECKS = [
         const l = await window.ror.listSources();
         const bad = l.filter((s) => !s.id || typeof s.name !== 'string' || !/^(screen|window)$/.test(s.kind) || !/^data:image\//.test(s.thumbnail || ''));
         const screens = l.filter((s) => s.kind === 'screen');
-        return { ok: screens.length > 0, n: l.length, screens: screens.map((s) => `${s.id} "${s.name}"`), windows: l.length - screens.length, bad: bad.map((s) => s.id) };
+        // The app must not offer its own window as a source (title "RateofReality").
+        const own = l.filter((s) => s.kind === 'window' && s.name === document.title).map((s) => s.id);
+        return { ok: screens.length > 0, n: l.length, screens: screens.map((s) => `${s.id} "${s.name}"`), windows: l.length - screens.length, bad: bad.map((s) => s.id), own };
       });
     }, 20000, 100);
     assert(r.bad.length === 0, `malformed sources: ${r.bad.join(', ')}`);
+    assert(r.own.length === 0, `the app's own window is listed as a source: ${r.own.join(', ')}`);
     ctx.sourceCallsNeeded = calls;
     return `${r.n} sources: ${r.screens.join(', ')} + ${r.windows} window(s)` + (calls > 1 ? `; NOTE first ${calls - 1} call(s) returned no screen` : '');
   } },
 
-  { name: 'list-sources-repeatable', timeout: 20000, async fn() {
+  // Each listSources() takes ~3 s under Xvfb (window enumeration), so 6 calls need more than 20 s.
+  { name: 'list-sources-repeatable', timeout: 35000, async fn() {
     const counts = [];
     for (let i = 0; i < 6; i++) counts.push(await R(async () => (await window.ror.listSources()).filter((s) => s.kind === 'screen').length));
     const missing = counts.filter((n) => !n).length;
@@ -901,7 +911,7 @@ const CHECKS = [
     const l = await waitFor('Load to restore the scene', () => R((t) => ({ n: __smoke.screens().length, r: __smoke.selRect(), bg: document.getElementById('bg').style.backgroundColor, loaded: __smoke.toastSince(t, '^Loaded') }), t2)
       .then((s) => ({ ok: s.n === before.n && sameRect(s.r, before.r, 0.01) && s.bg === before.bg && s.loaded, ...s })), 3000);
     await R(() => __smoke.click('#sceneDelete'));
-    await waitFor('Delete to remove the scene', () => R((n) => ({ ok: ![...document.querySelectorAll('#scenes option')].some((o) => o.value === n) })), 3000);
+    await waitFor('Delete to remove the scene', () => R((n) => ({ ok: ![...document.querySelectorAll('#scenes option')].some((o) => o.value === n) }), name), 3000);
     const disk = JSON.parse(fs.readFileSync(scenesFile, 'utf8'));
     assert(!(name in disk), 'scene still in scenes.json after Delete');
     const api = await R(async (n) => ({ load: await window.ror.loadScene(n), list: await window.ror.listScenes() }), name);
@@ -994,6 +1004,10 @@ const CHECKS = [
   { name: 'win-play-cursor', win: true, timeout: 10000, async fn() {
     if (!ctx.playing) return { skip: 'play mode not active' };
     const h = ctx.game.hwnd, w = win(), cr = w.clientRect(h);
+    // main only reports cursor changes, so first park it off-centre (also checks a second mapping).
+    assert(w.setCursor(cr.x + Math.floor(cr.w / 4), cr.y + Math.floor(cr.h / 4)), 'SetCursorPos failed');
+    await waitFor('onCursor near (0.25, 0.25) inside', () => R(() => __smoke.cursor.slice(-1)[0] || null)
+      .then((c) => ({ ok: !!c && Math.abs(c.u - 0.25) <= 0.02 && Math.abs(c.v - 0.25) <= 0.02 && c.inside === true, ...c })), 3000, 30);
     await R(() => { __smoke.cursor.length = 0; return true; });
     const cx = cr.x + Math.floor(cr.w / 2), cy = cr.y + Math.floor(cr.h / 2);
     assert(w.setCursor(cx, cy), 'SetCursorPos failed');

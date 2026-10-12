@@ -1,0 +1,115 @@
+name: smoke
+
+# End-to-end smoke test of the real Electron app (test/e2e/smoke.js).
+# Windows runs the Win32 paths for real (Steam detection, window moving, play mode, cursor clip,
+# global hotkey) against a fake "Steam game"; Linux runs everything else under Xvfb.
+
+# Manual only: the repo is private, so every run bills Actions minutes (Windows counts 2x).
+# Start it from the Actions tab -> smoke -> Run workflow, or run `npm run smoke` locally.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows (Win32 + fake Steam game)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      FAKE_GAME_TITLE: FakeGame
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Electron 44 has no postinstall: the binary is only fetched on first use. The next steps copy
+      # node_modules\electron\dist, so download it explicitly (and fail here, not later, if that breaks).
+      - name: Download Electron binary
+        run: node node_modules/electron/install.js
+
+      - run: npm test
+
+      - name: Launch fake Steam game
+        shell: pwsh
+        run: |
+          # A copy of electron.exe under ...\steamapps\common\ so its process path looks like a Steam game.
+          Add-Type -AssemblyName System.Windows.Forms
+          Write-Host "Primary screen: $([System.Windows.Forms.Screen]::PrimaryScreen.Bounds)"
+          $dir = Join-Path $env:RUNNER_TEMP 'fake\steamapps\common\FakeGame'
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Copy-Item -Path (Join-Path $env:GITHUB_WORKSPACE 'node_modules\electron\dist\*') -Destination $dir -Recurse -Force
+          $exe = Join-Path $dir 'electron.exe'
+          if (-not (Test-Path -LiteralPath $exe)) { throw "electron.exe was not copied to $dir" }
+          $app = Join-Path $env:GITHUB_WORKSPACE 'test\e2e\fake-game'
+          # Start-Process passes this step's environment (incl. the job-level FAKE_GAME_TITLE) to the game.
+          $p = Start-Process -FilePath $exe -ArgumentList "`"$app`"" -PassThru
+          "FAKE_GAME_PID=$($p.Id)" >> $env:GITHUB_ENV
+          Write-Host "Started $exe $app (pid $($p.Id))"
+          $deadline = (Get-Date).AddSeconds(90)
+          while ($true) {
+            $w = Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq $env:FAKE_GAME_TITLE } | Select-Object -First 1
+            if ($w) { Write-Host "Fake game window is up: pid $($w.Id), hwnd $($w.MainWindowHandle)"; break }
+            if ($p.HasExited) { throw "The fake game exited early with code $($p.ExitCode)" }
+            if ((Get-Date) -gt $deadline) { throw 'The fake game window did not appear within 90 s' }
+            Start-Sleep -Milliseconds 500
+          }
+
+      - name: Smoke test
+        run: npx electron test/e2e/smoke.js
+
+      - name: Stop fake game
+        if: always()
+        shell: pwsh
+        run: if ($env:FAKE_GAME_PID) { Stop-Process -Id $env:FAKE_GAME_PID -Force -ErrorAction SilentlyContinue }
+
+      - name: Upload smoke results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: smoke-windows
+          path: test/e2e/out
+          if-no-files-found: warn
+
+  linux:
+    name: Linux (Xvfb)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Download Electron binary
+        run: node node_modules/electron/install.js
+
+      - run: npm test
+
+      - name: Ensure Xvfb
+        run: command -v xvfb-run || (sudo apt-get update && sudo apt-get install -y xvfb)
+
+      - name: Smoke test (Xvfb)
+        run: xvfb-run -a -s "-screen 0 1600x900x24" npx electron --no-sandbox test/e2e/smoke.js
+
+      - name: Upload smoke results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: smoke-linux
+          path: test/e2e/out
+          if-no-files-found: warn
