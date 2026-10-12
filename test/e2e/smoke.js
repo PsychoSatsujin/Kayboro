@@ -1,12 +1,12 @@
 'use strict';
-// RateofReality end-to-end smoke test. Electron entry point:
+// Shellcade end-to-end smoke test. Electron entry point:
 //
 //   npx electron test/e2e/smoke.js                    (Windows / macOS)
 //   xvfb-run -a -s "-screen 0 1600x900x24" npx electron --no-sandbox test/e2e/smoke.js   (Linux)
 //
 // It boots the real app (src/main/main.js) with a fresh userData dir and a scripted file picker,
 // then drives it like a user: real mouse/keyboard input through webContents.sendInputEvent, sidebar
-// clicks in the page, and window.ror calls. Windows-only checks (Steam detection, window moving,
+// clicks in the page, and window.ror / window.shell calls. Windows-only checks (Steam detection, window moving,
 // play mode, global hotkey) need a running fake game: set FAKE_GAME_TITLE (see .github/workflows/smoke.yml).
 //
 // Output: a results table on stdout, test/e2e/out/results.json and one PNG per major step.
@@ -151,6 +151,8 @@ function R(fn, ...args) {
 let shotN = 0;
 async function shot(name) {
   try {
+    // Let the compositor present the latest DOM changes first (capturePage can return the previous frame).
+    await Promise.race([R(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(true))))), sleep(500)]);
     const img = await wc.capturePage();
     fs.writeFileSync(path.join(OUT, `${String(++shotN).padStart(2, '0')}-${name}.png`), img.toPNG());
   } catch (err) {
@@ -219,9 +221,8 @@ async function typeInto(selector, text) {
 function installHelpers() {
   if (window.__smoke) return true;
   const S = (window.__smoke = { toasts: [], cursor: [], hotkeys: [], playStates: [] });
-  const toast = document.getElementById('toast');
-  new MutationObserver(() => { if (toast.textContent) S.toasts.push({ at: Date.now(), text: toast.textContent }); })
-    .observe(toast, { childList: true, characterData: true, subtree: true });
+  // Every app.toast() announces its text (whatever the toaster renders it as).
+  document.addEventListener('shellcade:toast', (e) => S.toasts.push({ at: Date.now(), text: e.detail?.text || '' }));
   if (window.ror) {
     window.ror.onCursor((c) => S.cursor.push({ at: Date.now(), ...c }));
     window.ror.onHotkey((name) => S.hotkeys.push({ at: Date.now(), name }));
@@ -317,6 +318,15 @@ function installHelpers() {
     if (!d) throw new Error('no sidebar section ' + title);
     if (!d.open) d.querySelector('summary').click();
     return d.open;
+  };
+  // Segmented radio groups (fit, bgType, bgFit): the checked value, and picking one like a user click.
+  S.radio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value ?? null;
+  S.pick = (name, value) => {
+    const r = document.querySelector(`input[name="${name}"][value="${value}"]`);
+    if (!r) throw new Error(`no ${name} option ${value}`);
+    if (r.disabled) throw new Error(`${name} option ${value} is disabled`);
+    r.click();
+    return r.checked;
   };
   S.setValue = (sel, value, ev) => {
     const e = document.querySelector(sel);
@@ -441,23 +451,34 @@ const CHECKS = [
       ok: document.querySelectorAll('#frames .tile').length > 0 && document.querySelectorAll('#screens .screen').length > 0,
     })), 10000);
     await R(installHelpers);
-    ctx.frames = await R(async () => (await import('./frames/frames.js')).FRAMES.map((f) => ({ id: f.id, name: f.name, hole: f.hole, aspect: f.aspect })));
-    const st = await R(() => ({
+    // Starters are always owned, so the alignment checks below use them; FRAMES also holds the catalog frames.
+    ctx.frames = await R(async () => (await import('./frames/frames.js')).STARTERS.map((f) => ({ id: f.id, name: f.name, hole: f.hole, aspect: f.aspect })));
+    const st = await R(async () => ({
       api: ['listSources', 'detectSteamGame', 'getDisplays', 'moveWindowToDisplay', 'startPlay', 'stopPlay', 'onCursor', 'onPlayState',
         'onHotkey', 'pickFile', 'listScenes', 'loadScene', 'saveScene', 'deleteScene', 'setFullscreen'].filter((k) => typeof window.ror?.[k] !== 'function'),
+      shellApi: ['getState', 'listCatalog', 'listDevelopers', 'purchase', 'equip', 'setBackdropSlot', 'buyBackdropSlot', 'listLocalWallpapers',
+        'sessionStart', 'sessionStop', 'openLink', 'onState', 'onUnlock', 'onLevelUp', 'onGameLaunched'].filter((k) => typeof window.shell?.[k] !== 'function'),
       stub: !!window.ror?.stub,
       screens: document.querySelectorAll('#screens .screen').length,
       frameTiles: document.querySelectorAll('#frames .tile').length,
+      allFrames: (await import('./frames/frames.js')).FRAMES.length,
+      catalogFrames: (await window.shell?.listCatalog?.())?.frames?.length ?? null,
       chips: document.querySelectorAll('#aspects .chip').length,
+      tabs: [...document.querySelectorAll('#tabs [role=tab]')].map((t) => t.textContent.trim()),
+      title: document.title,
       size: [innerWidth, innerHeight],
     }));
     assert(st.api.length === 0, `window.ror is missing: ${st.api.join(', ')}`);
+    assert(st.shellApi.length === 0, `window.shell is missing: ${st.shellApi.join(', ')}`);
     assert(!st.stub, 'window.ror is the browser stub (preload did not run)');
+    assert(st.title === 'Shellcade', `document title "${st.title}"`);
     assert(st.screens === 1, `expected 1 screen on first run, got ${st.screens}`);
-    assert(st.frameTiles === ctx.frames.length + 1, `expected ${ctx.frames.length + 1} frame tiles, got ${st.frameTiles}`);
+    assert(st.catalogFrames === st.allFrames && st.allFrames > ctx.frames.length, `frame list has ${st.allFrames} frames, catalog ${st.catalogFrames}`);
+    assert(st.frameTiles === st.allFrames + 1, `expected ${st.allFrames + 1} frame tiles, got ${st.frameTiles}`);
     assert(st.chips === 8, `expected 8 aspect chips, got ${st.chips}`);
+    assert(st.tabs.join() === 'Stage,Shop,Profile,Devs', `tabs: ${st.tabs.join(', ')}`);
     assert(rendererErrors.length === 0, `renderer errors during load: ${brief(rendererErrors, 400)}`);
-    return `window ${st.size.join('x')}, ${st.frameTiles} frame tiles, ${st.chips} aspect chips, no renderer errors`;
+    return `window ${st.size.join('x')}, ${st.frameTiles} frame tiles (${st.allFrames} frames), ${st.chips} aspect chips, tabs ${st.tabs.join('/')}, no renderer errors`;
   } },
 
   { name: 'initial-rect-visible', timeout: 5000, async fn() {
@@ -481,6 +502,32 @@ const CHECKS = [
     return `first-run screen shows "${GAME_TITLE}" (${r.names.length} screen)`;
   } },
 
+  { name: 'tabs', timeout: 15000, async fn() {
+    const out = [];
+    for (const t of ['shop', 'profile', 'devs', 'stage']) {
+      const p = await R((t) => { const b = document.getElementById('tab-' + t).getBoundingClientRect(); return { x: Math.round(b.left + b.width / 2), y: Math.round(b.top + b.height / 2) }; }, t);
+      await click(p);
+      const g = await waitFor(`the ${t} tab`, () => R((t) => {
+        const tab = document.getElementById('tab-' + t), panel = document.getElementById('panel-' + t);
+        const others = [...document.querySelectorAll('[role=tabpanel]')].filter((x) => x !== panel && !x.hidden).map((x) => x.id);
+        return { ok: tab.getAttribute('aria-selected') === 'true' && tab.tabIndex === 0 && !panel.hidden && panel.getBoundingClientRect().height > 0 && !others.length && panel.childElementCount > 0,
+          kids: panel.childElementCount, others };
+      }, t), 3000);
+      out.push(`${t} (${g.kids})`);
+      await shot('tab-' + t);
+    }
+    // Keyboard: arrows move selection and focus along the tablist.
+    await R(() => { document.getElementById('tab-stage').focus(); return true; });
+    key('Right');
+    await waitFor('ArrowRight to select Shop', () => R(() => ({ ok: document.getElementById('tab-shop').getAttribute('aria-selected') === 'true' && document.activeElement?.id === 'tab-shop' })), 2000);
+    key('Left');
+    await waitFor('ArrowLeft to select Stage', () => R(() => ({ ok: document.getElementById('tab-stage').getAttribute('aria-selected') === 'true' && document.activeElement?.id === 'tab-stage' })), 2000);
+    await R(() => { document.activeElement?.blur(); return true; });
+    const hud = await R(() => { const e = document.getElementById('hud'); return { w: e.getBoundingClientRect().width, text: e.textContent.replace(/\s+/g, ' ').trim(), mounted: document.getElementById('hudMount').childElementCount }; });
+    assert(hud.w > 0 && /Shellcade/.test(hud.text) && hud.mounted > 0, `HUD not shown: ${brief(hud)}`);
+    return `${out.join(', ')} by mouse; arrows move selection + focus; HUD "${hud.text.slice(0, 60)}"`;
+  } },
+
   { name: 'list-sources', timeout: 25000, async fn() {
     let calls = 0;
     const r = await waitFor('listSources() to include a screen', async () => {
@@ -489,7 +536,7 @@ const CHECKS = [
         const l = await window.ror.listSources();
         const bad = l.filter((s) => !s.id || typeof s.name !== 'string' || !/^(screen|window)$/.test(s.kind) || !/^data:image\//.test(s.thumbnail || ''));
         const screens = l.filter((s) => s.kind === 'screen');
-        // The app must not offer its own window as a source (title "RateofReality").
+        // The app must not offer its own window as a source (title "Shellcade").
         const own = l.filter((s) => s.kind === 'window' && s.name === document.title).map((s) => s.id);
         return { ok: screens.length > 0, n: l.length, screens: screens.map((s) => `${s.id} "${s.name}"`), windows: l.length - screens.length, bad: bad.map((s) => s.id), own };
       });
@@ -514,7 +561,7 @@ const CHECKS = [
     while (!live && attempt < 3) {
       attempt++;
       // Like a user: if the Sources grid shows no screen, press Refresh and look again once it has finished.
-      const screenTiles = () => R(() => [...document.querySelectorAll('#sources .tile')].filter((t) => t.querySelector('span')?.textContent.startsWith('🖥')).length);
+      const screenTiles = () => R(() => document.querySelectorAll('#sources .tile[data-kind="screen"]').length);
       const deadline = Date.now() + 20000;
       while (!(await screenTiles())) {
         assert(Date.now() < deadline, `no screen tile in Sources after ${refreshes} Refresh click(s)`);
@@ -529,7 +576,7 @@ const CHECKS = [
       }
       const t = now();
       name = await R(() => {
-        const tile = [...document.querySelectorAll('#sources .tile')].find((x) => x.querySelector('span')?.textContent.startsWith('🖥'));
+        const tile = document.querySelector('#sources .tile[data-kind="screen"]');
         tile.click();
         return tile.title;
       });
@@ -582,11 +629,11 @@ const CHECKS = [
     for (const f of ctx.frames) {
       await R((id) => __smoke.click(`#frames .tile[data-id="${id}"]`), f.id);
       const g = await waitFor(`frame ${f.id} to load`, () => R((id) => {
-        const el = __smoke.sel(), img = el.querySelector('img.frame');
+        const el = __smoke.sel(), img = el.querySelector('img.frame'), box = el.querySelector('.shell-front'), tile = document.querySelector(`#frames .tile[data-id="${id}"]`);
         return { ok: !img.hidden && img.src.endsWith('/' + id + '.svg') && img.complete && img.naturalWidth > 0,
           src: img.src.split('/').pop(), hidden: img.hidden, nw: img.naturalWidth,
-          r: __smoke.rectOf(el), fs: __smoke.rectOf(img), sb: __smoke.bcr(el), fb: __smoke.bcr(img),
-          tileOn: document.querySelector(`#frames .tile[data-id="${id}"]`).classList.contains('on') };
+          r: __smoke.rectOf(el), fs: __smoke.rectOf(box), sb: __smoke.bcr(el), fb: __smoke.bcr(img),
+          tileOn: tile.classList.contains('on') && tile.getAttribute('aria-pressed') === 'true' };
       }, f.id), 5000);
       const { r, fs: fr } = g;
       const exp = { x: (-f.hole.x * r.w) / f.hole.w, y: (-f.hole.y * r.h) / f.hole.h, w: r.w / f.hole.w, h: r.h / f.hole.h };
@@ -601,6 +648,42 @@ const CHECKS = [
     await R(() => __smoke.click('#frames .tile[data-id=""]'));
     await waitFor('frame None to remove the frame', () => R(() => ({ ok: __smoke.sel().querySelector('img.frame').hidden })), 3000);
     return `all ${out.length} loaded and aligned within 1px: ${out.join(', ')}`;
+  } },
+
+  { name: 'frames-catalog', timeout: 15000, async fn() {
+    const imgs = await waitFor('every frame thumbnail to load', () => R(() => {
+      const l = [...document.querySelectorAll('#frames .tile img')];
+      const bad = l.filter((i) => !(i.complete && i.naturalWidth > 0)).map((i) => i.src.split('/').pop());
+      return { ok: l.length > 0 && !bad.length, n: l.length, bad };
+    }), 8000, 100);
+    const lk = await R(() => { const t = document.querySelector('#frames .tile.locked'); return t ? { id: t.dataset.id, badge: t.querySelector('.badge')?.textContent || '' } : null; });
+    if (!lk) return `${imgs.n} thumbnails loaded; no locked frames`;
+    const frameState = () => R(() => { const i = __smoke.sel().querySelector('img.frame'); return { src: i.src, hidden: i.hidden }; });
+    const before = await frameState(), t = await R(() => Date.now());
+    await R((id) => __smoke.click(`#frames .tile[data-id="${id}"]`), lk.id);
+    const g = await waitFor('the locked-frame toast', () => R((t) => ({ ok: __smoke.toastSince(t, 'unlocks at level|costs .* coins|paid shell'), toast: __smoke.lastToast() }), t), 2000);
+    const after = await frameState();
+    assert(after.src === before.src && after.hidden === before.hidden, `clicking locked ${lk.id} changed the screen's frame (${brief(before)} -> ${brief(after)})`);
+    return `${imgs.n} thumbnails loaded; locked ${lk.id} [${lk.badge}] not applied, toast "${g.toast}"`;
+  } },
+
+  { name: 'shell-looks', timeout: 10000, async fn() {
+    const rows = () => R(() => Object.fromEntries(['finishes', 'colorways', 'fills'].map((id) => [id,
+      [...document.querySelectorAll(`#${id} .swatch[data-v]`)].map((b) => (b.dataset.v || 'none') + (b.getAttribute('aria-pressed') === 'true' ? '*' : ''))])));
+    const r0 = await rows(), st0 = await R(() => window.shell.getState());
+    for (const [row, slot] of [['finishes', 'finish'], ['colorways', 'colorway'], ['fills', 'fill']]) {
+      assert(r0[row].includes(`${st0.equipped[slot] ?? 'none'}*`), `${row} ${brief(r0[row])} does not show equipped ${slot} ${st0.equipped[slot]} as pressed`);
+    }
+    // Toggle the shell fill off and back on: the economy remembers it as the default for new screens.
+    const orig = st0.equipped.fill, next = orig ? '' : (r0.fills.find((v) => v !== 'none' && v !== 'none*') || '').replace('*', '');
+    if (!orig && !next) return `looks shown (${brief(r0)}); no fill owned to toggle`;
+    for (const v of [next, orig ?? '']) {
+      await R((v) => __smoke.click(`#fills .swatch[data-v="${v}"]`), v);
+      await waitFor(`fill ${v || 'none'} to be equipped`, () => R(async (v) => ({ eq: (await window.shell.getState()).equipped.fill,
+        pressed: document.querySelector(`#fills .swatch[data-v="${v}"]`)?.getAttribute('aria-pressed') }), v)
+        .then((s) => ({ ok: (s.eq ?? '') === v && s.pressed === 'true', ...s })), 3000);
+    }
+    return `finish/colorway/fill rows show the equipped look (${['finishes', 'colorways', 'fills'].map((k) => r0[k].join(' ')).join(' | ')}); fill ${orig || 'none'} -> ${next || 'none'} -> back`;
   } },
 
   { name: 'drag-move', timeout: 10000, async fn() {
@@ -709,7 +792,7 @@ const CHECKS = [
 
   { name: 'fit-modes', timeout: 10000, async fn() {
     for (const [mode, css] of [['cover', 'cover'], ['stretch', 'fill'], ['contain', 'contain']]) {
-      await R((m) => __smoke.setValue('#fit', m, 'change'), mode);
+      await R((m) => __smoke.pick('fit', m), mode);
       await waitFor(`fit ${mode}`, () => R(() => {
         const el = __smoke.sel();
         return { v: el.querySelector('video').style.objectFit, c: el.querySelector('canvas').style.objectFit };
@@ -717,14 +800,14 @@ const CHECKS = [
     }
     const p = await R(() => __smoke.grabPoint(__smoke.sel()));
     await dblclick(p);
-    await waitFor('double-click to toggle fit to cover', () => R(() => ({ ok: document.getElementById('fit').value === 'cover' && __smoke.sel().querySelector('video').style.objectFit === 'cover', fit: document.getElementById('fit').value })), 2000);
+    await waitFor('double-click to toggle fit to cover', () => R(() => ({ ok: __smoke.radio('fit') === 'cover' && __smoke.sel().querySelector('video').style.objectFit === 'cover', fit: __smoke.radio('fit') })), 2000);
     await dblclick(p);
-    await waitFor('double-click to toggle fit back to contain', () => R(() => ({ ok: document.getElementById('fit').value === 'contain', fit: document.getElementById('fit').value })), 2000);
+    await waitFor('double-click to toggle fit back to contain', () => R(() => ({ ok: __smoke.radio('fit') === 'contain', fit: __smoke.radio('fit') })), 2000);
     return 'cover/stretch(fill)/contain applied to video+canvas; double-click toggled contain->cover->contain';
   } },
 
   { name: 'bg-color', timeout: 10000, shot: true, async fn() {
-    await R(() => __smoke.setValue('#bgType', 'color', 'change'));
+    await R(() => __smoke.pick('bgType', 'color'));
     await R((c) => __smoke.setValue('#bgColor', c, 'input'), hex(BG_COLOR));
     await waitFor('#bg background colour', () => R(() => ({ c: document.getElementById('bg').style.backgroundColor })).then((s) => ({ ok: s.c === 'rgb(18, 52, 86)', ...s })), 2000);
     const fp = await R(() => __smoke.freePoint());
@@ -739,7 +822,7 @@ const CHECKS = [
     pickQueue.push(file);
     await R(() => __smoke.click('#bgImage'));
     await waitFor('pickFile("image")', () => ({ ok: ipcSince(n, 'pickFile').some((e) => e.raw === url && e.args.includes('image')) }), 3000);
-    const st = await waitFor('the image background', () => R(() => ({ img: document.getElementById('bg').style.backgroundImage, type: document.getElementById('bgType').value }))
+    const st = await waitFor('the image background', () => R(() => ({ img: document.getElementById('bg').style.backgroundImage, type: __smoke.radio('bgType') }))
       .then((s) => ({ ok: s.img.includes('bg.png') && s.type === 'image', ...s })), 3000);
     const im = await R((u) => new Promise((res) => { const i = new Image(); i.onload = () => res({ w: i.naturalWidth, h: i.naturalHeight }); i.onerror = () => res({ error: true }); i.src = u; }), url);
     assert(im.w === 64 && im.h === 48, `fixture did not load in the page: ${brief(im)}`);
@@ -803,7 +886,7 @@ const CHECKS = [
       const v = document.querySelector('#bg video');
       if (__smoke.toastSince(t, 'Could not play background video')) return { ok: true, error: __smoke.lastToast() };
       return { ok: !!v && v.src.endsWith('bg.webm') && v.readyState >= 2 && v.videoWidth === 160 && !v.paused && v.currentTime > 0,
-        rs: v?.readyState, vw: v?.videoWidth, paused: v?.paused, t: v?.currentTime, err: v?.error?.message, type: document.getElementById('bgType').value };
+        rs: v?.readyState, vw: v?.videoWidth, paused: v?.paused, t: v?.currentTime, err: v?.error?.message, type: __smoke.radio('bgType') };
     }, t), 8000, 50);
     assert(!v1.error, v1.error);
     assert(v1.type === 'video', `bgType shows ${v1.type}`);
@@ -824,8 +907,25 @@ const CHECKS = [
     return `${rec.mimeType} ${rec.bytes} B, ${rec.frames} frames; playing (t ${v1.t.toFixed(2)}s -> ${v2.t.toFixed(2)}s, ` +
       `looped: ${wrapped ? 'yes' : 'not seen'}), rendered ${hex(px.c)} (want ~${hex(VIDEO_COLOR)})`;
   }, after: async () => { // stop the video, back to a plain colour for later steps
-    await R(() => __smoke.setValue('#bgType', 'color', 'change')).catch(() => {});
+    await R(() => __smoke.pick('bgType', 'color')).catch(() => {});
   } },
+
+  { name: 'bg-screensaver', timeout: 10000, shot: true, async fn() {
+    const n = await R(() => document.querySelectorAll('#bgSavers .swatch[data-v]').length);
+    if (!n) return { skip: 'no screensaver owned' };
+    await R(() => __smoke.pick('bgType', 'screensaver'));
+    const g = await waitFor('a screensaver canvas painting the background', () => R(() => {
+      const c = document.querySelector('#bg canvas');
+      if (!c || !c.width) return { ok: false, canvas: !!c };
+      const t = Object.assign(document.createElement('canvas'), { width: 64, height: 36 }), x = t.getContext('2d', { willReadFrequently: true });
+      x.drawImage(c, 0, 0, 64, 36);
+      const d = x.getImageData(0, 0, 64, 36).data, cols = new Set();
+      for (let i = 0; i < d.length; i += 4) cols.add(((d[i] >> 4) << 8) | ((d[i + 1] >> 4) << 4) | (d[i + 2] >> 4));
+      const on = document.querySelector('#bgSavers .swatch.on')?.dataset.v;
+      return { ok: cols.size >= 2 && !!on, colors: cols.size, w: c.width, h: c.height, on };
+    }), 5000, 100);
+    return `"${g.on}" on a ${g.w}x${g.h} canvas, ${g.colors} colours`;
+  }, after: async () => { await R(() => __smoke.pick('bgType', 'color')).catch(() => {}); } },
 
   { name: 'custom-frame-hole', timeout: 15000, shot: true, async fn() {
     const W = 200, H = 200, hx0 = 25, hy0 = 50, hx1 = 25 + 150, hy1 = 50 + 90;
@@ -849,7 +949,7 @@ const CHECKS = [
       const dlg = document.getElementById('insets');
       if (dlg.open) return { ok: true, fallback: true };
       const el = __smoke.sel(), img = el.querySelector('img.frame');
-      return { ok: !img.hidden && img.src === u && img.complete && img.naturalWidth === 200, src: img.src, r: __smoke.rectOf(el), f: __smoke.rectOf(img),
+      return { ok: !img.hidden && img.src === u && img.complete && img.naturalWidth === 200, src: img.src, r: __smoke.rectOf(el), f: __smoke.rectOf(el.querySelector('.shell-front')),
         anyTileOn: !!document.querySelector('#frames .tile.on') };
     }, url), 6000, 50);
     if (g.fallback) {
@@ -940,7 +1040,7 @@ const CHECKS = [
   { name: 'win-game-capture', win: true, timeout: 25000, shot: true, async fn() {
     if (!ctx.game) return { skip: 'no game detected' };
     // Start from a plain screen: no frame, aspect locked to the source.
-    await R(() => { __smoke.click('#frames .tile[data-id=""]'); __smoke.click('#aspects .chip[data-a="source"]'); __smoke.setValue('#fit', 'contain', 'change'); return true; });
+    await R(() => { __smoke.click('#frames .tile[data-id=""]'); __smoke.click('#aspects .chip[data-a="source"]'); __smoke.pick('fit', 'contain'); return true; });
     const t = await R(() => Date.now());
     await R(() => __smoke.click('#srcSteam'));
     await waitFor('the selected screen to show the game', () => R((title, t) => ({
@@ -1027,7 +1127,7 @@ const CHECKS = [
     if (!ctx.drawn || !ctx.gameBox) return { skip: 'needs win-play-cursor and win-game-capture' };
     // Where the game's client-area centre appears in the captured picture (the magenta box), mapped to the stage.
     const b = ctx.gameBox, { vw, vh } = ctx.gameVideo;
-    const fit = await R(() => document.getElementById('fit').value);
+    const fit = await R(() => __smoke.radio('fit'));
     const vr = fitRect(vw / vh, ctx.drawn.r, fit); // where the captured picture is drawn
     // The cursor sits at the client-area centre; in the picture that is the centre of the magenta box.
     const exp = { x: vr.x + (b.x + b.w / 2) * vr.w, y: vr.y + (b.y + b.h / 2) * vr.h };
@@ -1156,7 +1256,7 @@ async function runCheck(c) {
 }
 
 app.whenReady().then(async () => {
-  console.log(`[smoke] RateofReality smoke on ${process.platform}, Electron ${process.versions.electron}, userData ${USER_DATA}` +
+  console.log(`[smoke] Shellcade smoke on ${process.platform}, Electron ${process.versions.electron}, userData ${USER_DATA}` +
     (GAME_TITLE ? `, fake game "${GAME_TITLE}"` : ''));
   for (const c of CHECKS) {
     if (finished) return;

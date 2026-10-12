@@ -17,3 +17,5 @@ contextBridge.exposeInMainWorld('ror', {
   onPlayState: on('playState'),
   onHotkey: on('hotkey'),
 });
+
+contextBridge.exposeInMainWorld('shell', require('./main/economy/preload-api.js'));

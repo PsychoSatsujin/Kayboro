@@ -1,0 +1,142 @@
+/* Shell finishes + fills (finishes.js). Every .fx-l is masked by the frame image (--fx-mask), so
+   nothing here can paint over the screen hole. Layers blend straight onto the frame: .fx-finish is
+   deliberately not a stacking context. --fx-x/--fx-y (-1..1) = tilt, --fx-i = intensity. */
+.fx-finish, .fx-fill { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+.fx-l {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  mask-image: var(--fx-mask); mask-size: 100% 100%; mask-repeat: no-repeat; mask-position: 0 0;
+}
+.fx-finish > .fx-l { z-index: 1; opacity: calc(var(--fx-i, 1) * var(--o, 1)); }
+.fx-l > i { position: absolute; inset: 0; }
+.fx-l > i, .fx-l > b { pointer-events: none; }
+
+/* Edge lights: the mask minus itself shifted by --fx-rim leaves only up-facing (or down-facing) edges. */
+.fx-rim, .fx-rim-soft, .fx-rim-low, .fx-rim-side, .fx-rim-pearl {
+  mask-image: var(--fx-mask), var(--fx-mask); mask-size: 100% 100%, 100% 100%; mask-repeat: no-repeat;
+  mask-position: 0 0, 0 var(--fx-rim, 2px); mask-composite: subtract;
+}
+.fx-rim { --o: .9; background: linear-gradient(90deg, rgba(255,255,255,.35), #fff 25%, #fff 75%, rgba(255,255,255,.5)); mix-blend-mode: screen; }
+.fx-rim-soft { --o: .3; mask-position: 0 0, 0 calc(var(--fx-rim, 2px) * 4); background: #fff; mix-blend-mode: soft-light; }
+.fx-rim-side { --o: .5; mask-position: 0 0, var(--fx-rim, 2px) 0; background: #fff; mix-blend-mode: screen; }
+.fx-rim-low { --o: .4; mask-position: 0 0, 0 calc(var(--fx-rim, 2px) * -1.6); background: #3a3448; mix-blend-mode: multiply; }
+
+/* ---- Matte: soft-touch plastic. Desaturate a touch, flatten glare, fine grain. ---- */
+.fx-matte-desat { --o: .3; background: #8c8898; mix-blend-mode: saturation; }
+.fx-matte-flat { --o: .1; background: #8f8a9c; }
+.fx-matte-grain {
+  --o: .45; mix-blend-mode: soft-light; background-size: 96px 96px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.25' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.6' intercept='-.3'/%3E%3CfeFuncG type='linear' slope='1.6' intercept='-.3'/%3E%3CfeFuncB type='linear' slope='1.6' intercept='-.3'/%3E%3CfeFuncA type='linear' slope='0' intercept='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='96' height='96' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.fx-matte-light { --o: .45; mix-blend-mode: soft-light; background: linear-gradient(165deg, rgba(255,255,255,.3), rgba(255,255,255,0) 45%, rgba(0,0,0,.28)); }
+
+/* ---- Gloss: candy-shell clear coat. Deeper base, crisp softbox reflections, a sweeping highlight, lit edges. ---- */
+.fx-gloss-coat { --o: 1; mix-blend-mode: multiply; background: linear-gradient(180deg, #fff 0%, #fff 40%, #e2e0e6 72%, #c6c3cc 100%); }
+.fx-gloss-pop { --o: .55; mix-blend-mode: soft-light; background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,0) 35%, rgba(0,0,0,0) 60%, rgba(0,0,0,.5)); }
+.fx-gloss-spec { --o: .9; }
+.fx-gloss-sweep { --o: .8; }
+.fx-gloss-spec > i {
+  inset: -20%; will-change: transform;
+  transform: translate(calc(var(--fx-x, .35) * 5%), calc(var(--fx-y, -.25) * 4%));
+  background:
+    radial-gradient(ellipse 8% 2.6% at 29% 23%, rgba(255,255,255,.95), rgba(255,255,255,0)),
+    radial-gradient(circle at 118% 125%, rgba(255,255,255,0) 70%, rgba(255,255,255,.5) 70.5%, rgba(255,255,255,.14) 76%, rgba(255,255,255,0) 76.5%),
+    linear-gradient(180deg, rgba(255,255,255,0) 17%, rgba(255,255,255,.32) 19%, rgba(255,255,255,.1) 30%, rgba(255,255,255,0) 38%);
+}
+.fx-gloss-sweep > i {
+  inset: 0 -60%; will-change: transform; animation: fx-sweep 7.5s cubic-bezier(.45,.05,.35,1) infinite;
+  background: linear-gradient(105deg, rgba(255,255,255,0) 43%, rgba(255,255,255,.45) 44.5%, rgba(255,255,255,.12) 47.5%, rgba(255,255,255,0) 49%);
+}
+@keyframes fx-sweep { 0% { transform: translateX(-62%); } 42%, 100% { transform: translateX(62%); } }
+
+/* ---- Holo: trading-card foil. A light band slides over the shell with the tilt; inside it the
+   rainbow runs the other way (color = pastel on light plastic, color-dodge = neon on dark). ---- */
+.fx-holo-tint { --o: .72; mix-blend-mode: color; }
+.fx-holo-foil { --o: .55; mix-blend-mode: color-dodge; }
+.fx-holo-tint > i, .fx-holo-foil > i, .fx-holo-spark > i {
+  inset: -50%; will-change: transform;
+  transform: translate(calc(var(--fx-x, .35) * 16%), calc(var(--fx-y, -.25) * 10%));
+  mask-image: linear-gradient(120deg, rgba(0,0,0,.14) 33%, #000 43%, #000 51%, rgba(0,0,0,.14) 61%);
+}
+.fx-holo-foil > i { mask-image: linear-gradient(120deg, rgba(0,0,0,0) 38%, #000 45.5%, #000 48.5%, rgba(0,0,0,0) 56%); }
+.fx-holo-spark > i { mask-image: linear-gradient(120deg, rgba(0,0,0,.12) 34%, #000 44%, #000 50%, rgba(0,0,0,.12) 60%); }
+.fx-holo-tint > i::before, .fx-holo-foil > i::before {
+  content: ''; position: absolute; inset: -30%; will-change: transform;
+  transform: translate(calc(var(--fx-x, .35) * -20%), calc(var(--fx-y, -.25) * -16%));
+  background: repeating-linear-gradient(30deg,
+    hsl(340 100% 76%) 0%, hsl(30 100% 72%) 1.6%, hsl(70 95% 70%) 3.2%, hsl(150 90% 70%) 4.8%,
+    hsl(195 100% 72%) 6.4%, hsl(240 100% 78%) 8%, hsl(290 100% 78%) 9.6%, hsl(340 100% 76%) 11.2%);
+}
+.fx-holo-foil > i::before {
+  background:
+    repeating-linear-gradient(-60deg, rgba(255,255,255,.18) 0 1px, rgba(255,255,255,0) 1px 4px),
+    repeating-linear-gradient(30deg,
+      hsl(340 100% 42%) 0%, hsl(30 100% 40%) 1.6%, hsl(70 95% 36%) 3.2%, hsl(150 90% 34%) 4.8%,
+      hsl(195 100% 40%) 6.4%, hsl(240 100% 48%) 8%, hsl(290 100% 46%) 9.6%, hsl(340 100% 42%) 11.2%);
+}
+.fx-holo-spark { --o: .9; mix-blend-mode: color-dodge; }
+.fx-holo-spark > i::before {
+  content: ''; position: absolute; inset: 0; background-size: 89px 89px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='89' height='89'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='turbulence' baseFrequency='.7' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .75 0 0 0 0 .9 0 0 0 0 1 12 0 0 0 -5.4'/%3E%3C/filter%3E%3Crect width='89' height='89' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+.fx-holo-bars { --o: .3; mix-blend-mode: overlay; }
+.fx-holo-bars > i {
+  inset: -50%; will-change: transform;
+  transform: translate(calc(var(--fx-x, .35) * 24%), calc(var(--fx-y, -.25) * 8%));
+  background: repeating-linear-gradient(-58deg, rgba(0,0,0,.4) 0%, rgba(255,255,255,0) 2.5%, #fff 3.6%, rgba(255,255,255,0) 4.7%, rgba(0,0,0,.4) 7.2%);
+}
+.fx-holo-glare { --o: .55; mix-blend-mode: overlay; }
+.fx-holo-glare > i {
+  inset: -60%; will-change: transform;
+  transform: translate(calc(var(--fx-x, .35) * 28%), calc(var(--fx-y, -.25) * 28%));
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.85) 0%, rgba(255,255,255,.3) 9%, rgba(128,128,128,0) 24%, rgba(0,0,0,.3) 48%);
+}
+
+/* ---- Pearl: milky nacre with a pink-blue flip as the shell tilts. ---- */
+.fx-pearl-milk { --o: .16; background: #fff7fd; }
+.fx-pearl-hue { --o: .3; mix-blend-mode: color; }
+.fx-pearl-nacre { --o: .7; mix-blend-mode: soft-light; }
+.fx-pearl-hue > i, .fx-pearl-nacre > i {
+  inset: -40%; will-change: transform;
+  transform: translate(calc(var(--fx-x, .35) * -12%), calc(var(--fx-y, -.25) * -10%));
+  background: linear-gradient(125deg, #ffb8e2 0%, #b9d2ff 18%, #c8ffe9 32%, #ffeec2 46%, #ffb8e2 60%, #b9d2ff 76%, #dfc6ff 100%);
+}
+.fx-pearl-sheen { --o: .55; mix-blend-mode: screen; }
+.fx-pearl-sheen > i {
+  inset: -40%; will-change: transform;
+  transform: translate(calc(var(--fx-x, .35) * 16%), calc(var(--fx-y, -.25) * 12%));
+  background: radial-gradient(ellipse 30% 22% at 42% 40%, rgba(255,240,250,.65), rgba(214,228,255,.22) 55%, rgba(255,255,255,0));
+}
+.fx-rim-pearl { --o: .9; mix-blend-mode: screen; background: linear-gradient(90deg, #ffd1ec, #d6e6ff 50%, #e9fff6); }
+
+/* ---- Glitter: specks suspended in the plastic, twinkling out of phase, plus a few star glints. ---- */
+.fx-glitter-flake { animation: fx-twinkle var(--tw, 2.6s) ease-in-out infinite alternate; }
+.fx-glitter-flake.fx-v-a { --tw: 2.3s; mix-blend-mode: screen; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='97' height='97'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='turbulence' baseFrequency='.55' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 14 0 0 0 -6.6'/%3E%3C/filter%3E%3Crect width='97' height='97' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / 97px 97px; }
+.fx-glitter-flake.fx-v-b { --tw: 3.1s; animation-delay: -1.2s; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='131' height='131'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='turbulence' baseFrequency='.5' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .78 0 0 0 0 .3 14 0 0 0 -6.9'/%3E%3C/filter%3E%3Crect width='131' height='131' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / 131px 131px; }
+.fx-glitter-flake.fx-v-c { --tw: 3.7s; animation-delay: -2.1s; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='113' height='113'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='turbulence' baseFrequency='.6' seed='17' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .42 0 0 0 0 .84 14 0 0 0 -7'/%3E%3C/filter%3E%3Crect width='113' height='113' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / 113px 113px; }
+.fx-glitter-flake.fx-v-d { --tw: 2.9s; animation-delay: -.7s; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='79' height='79'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='turbulence' baseFrequency='.65' seed='23' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .48 0 0 0 0 .94 0 0 0 0 1 14 0 0 0 -7'/%3E%3C/filter%3E%3Crect width='79' height='79' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / 79px 79px; }
+@keyframes fx-twinkle { 0% { opacity: calc(var(--fx-i, 1) * .3); } 100% { opacity: var(--fx-i, 1); } }
+.fx-glitter-stars { --o: 1; mix-blend-mode: screen; }
+.fx-glitter-stars > b {
+  position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; opacity: 0; transform: scale(0);
+  animation: fx-glint var(--d, 3s) ease-in-out var(--delay, 0s) infinite;
+  background:
+    radial-gradient(closest-side, #fff, rgba(255,255,255,0)) center / 100% 12% no-repeat,
+    radial-gradient(closest-side, #fff, rgba(255,255,255,0)) center / 12% 100% no-repeat,
+    radial-gradient(circle, #fff 0 6%, rgba(255,240,200,.55) 16%, rgba(255,255,255,0) 40%);
+}
+@keyframes fx-glint {
+  0%, 62%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  78% { opacity: 1; transform: scale(var(--s, 1)) rotate(30deg); }
+}
+
+/* ---- Shell fill: behind the frame, alpha boosted (3 stacked masks) so it reads through tinted plastic. ---- */
+.fx-fill-l { mask-image: var(--fx-mask), var(--fx-mask), var(--fx-mask); mask-size: 100% 100%; mask-repeat: no-repeat; mask-composite: add; }
+.fx-fill-l > canvas, .fx-fill-l > img, .fx-fill-l > video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+.fx-shaped > .fx-fill-l { mask-image: var(--fx-mask); }
+.fx-fill.fx-failed, .fx-pending { visibility: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-finish *, .fx-finish *::before, .fx-finish *::after { animation: none !important; transition: none !important; }
+  .fx-gloss-sweep > i { transform: translateX(-30%); }
+  .fx-glitter-stars > b:nth-child(3n + 2) { opacity: .8; transform: scale(var(--s, 1)) rotate(20deg); }
+}

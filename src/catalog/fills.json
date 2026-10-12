@@ -1,0 +1,16 @@
+{
+  "fills": [
+    { "id": "starfield", "name": "Starfield", "kind": "fill", "rarity": "common", "price": null, "unlockLevel": null, "author": "Shellcade",
+      "desc": "Slow drifting stars inside see-through shells.", "colors": ["#0b0a1a", "#ffffff", "#7af0ff"] },
+    { "id": "bubbles", "name": "Bubbles", "kind": "fill", "rarity": "common", "price": null, "unlockLevel": 8, "author": "Shellcade",
+      "desc": "Fizzy bubbles floating up.", "colors": ["#13324a", "#7af0ff", "#ffffff"] },
+    { "id": "plasma", "name": "Plasma", "kind": "fill", "rarity": "rare", "price": { "coins": 350 }, "unlockLevel": null, "author": "Shellcade",
+      "desc": "Classic demoscene plasma swirl.", "colors": ["#ff6ad5", "#7af0ff", "#6e3bff"] },
+    { "id": "pixel-rain", "name": "Pixel rain", "kind": "fill", "rarity": "rare", "price": null, "unlockLevel": 20, "author": "Shellcade",
+      "desc": "Chunky pixels raining down.", "colors": ["#0f0d16", "#6ee7a8", "#7af0ff"] },
+    { "id": "sakura-petals", "name": "Sakura petals", "kind": "fill", "rarity": "epic", "price": { "coins": 500 }, "unlockLevel": null, "author": "Shellcade",
+      "desc": "Cherry blossom petals tumbling in a breeze.", "colors": ["#2a1630", "#ffb7d5", "#ffe3ef"] },
+    { "id": "aurora", "name": "Aurora", "kind": "fill", "rarity": "epic", "price": null, "unlockLevel": 50, "author": "Shellcade",
+      "desc": "Northern lights rippling across the shell.", "colors": ["#071522", "#6ee7a8", "#c58cff"] }
+  ]
+}

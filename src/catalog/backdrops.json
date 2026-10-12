@@ -1,0 +1,7 @@
+{
+  "backdrops": [
+    { "id": "backdrop-slot", "name": "Backdrop slot", "kind": "backdrop-slot", "rarity": "common", "price": { "coins": 200 }, "unlockLevel": null,
+      "freeAtLevel": 5, "maxSlots": 12, "author": "Shellcade",
+      "desc": "Holds one video or image wallpaper from your own Wallpaper Engine library as a stage backdrop. Your first slot is free at level 5." }
+  ]
+}

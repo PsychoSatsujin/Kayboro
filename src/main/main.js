@@ -4,6 +4,7 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 const win32 = require('./win32');
 const store = require('./store');
+const { registerEconomyIpc } = require('./economy/ipc');
 
 const STEAM_RE = /\\steamapps\\common\\/i;
 const IMG = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
@@ -17,6 +18,7 @@ const FILTERS = {
 
 let win = null;
 let play = null; // { hwnd, timer, lastCursor, lastRect }
+let economy = null; // registerEconomyIpc() result: coins/XP, hosted-game session
 
 const send = (ch, data) => {
   if (win && !win.isDestroyed()) win.webContents.send('ror:' + ch, data);
@@ -28,7 +30,7 @@ function createWindow() {
     height: 800,
     minWidth: 480,
     minHeight: 320,
-    title: 'RateofReality',
+    title: 'Shellcade',
     backgroundColor: '#000000',
     autoHideMenuBar: true,
     webPreferences: {
@@ -152,6 +154,7 @@ function startPlay(hwnd) {
   play = { hwnd: String(hwnd), lastCursor: '', lastRect: r ? `${r.x},${r.y},${r.width},${r.height}` : '' };
   play.timer = setInterval(pollCursor, 8); // ~120 Hz
   send('playState', { playing: true, hwnd: play.hwnd });
+  economy?.onPlayState(true, play.hwnd);
   return true;
 }
 
@@ -166,6 +169,7 @@ function stopPlay() {
     win.setAlwaysOnTop(false);
   }
   send('playState', { playing: false, hwnd });
+  economy?.onPlayState(false, hwnd);
   return true;
 }
 
@@ -213,6 +217,7 @@ function registerIpc() {
 
 app.whenReady().then(() => {
   registerIpc();
+  economy = registerEconomyIpc({ ipcMain, getWindow: () => win, detectSteamGame, userDataDir: app.getPath('userData') });
   createWindow();
   // Global so they work while the game has focus; the renderer decides what to do.
   // Stopping is handled here so a hung/crashed renderer can't trap the user in the click-through overlay.

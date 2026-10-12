@@ -2,70 +2,241 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file:; img-src 'self' file: data: blob:; media-src 'self' file: data: blob: mediastream:; connect-src 'self' file: data: blob:; font-src 'self' file: data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob: https://cdn.cloudflare.steamstatic.com https://shared.cloudflare.steamstatic.com https://steamcdn-a.akamaihd.net; media-src 'self' file: data: blob: mediastream:; connect-src 'self' file: data: blob:; font-src 'self' file: data:; object-src 'none'; base-uri 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RateofReality</title>
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0f0d16">
+<title>Shellcade</title>
 <link rel="stylesheet" href="styles.css">
 <script type="module" src="app.js"></script>
 </head>
 <body>
-<main id="stage">
+<svg class="sprite" aria-hidden="true" focusable="false">
+<!-- Icons: Tabler Icons (MIT, assets/TABLER-ICONS-LICENSE.txt). Pixel coin + logo: Shellcade. -->
+<symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z" /></symbol>
+<symbol id="i-stop" viewBox="0 0 24 24" fill="currentColor"><path d="M17 4h-10a3 3 0 0 0 -3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3 -3v-10a3 3 0 0 0 -3 -3z" /></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" /><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" /></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14" /><path d="M5 12l14 0" /></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></symbol>
+<symbol id="i-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" /><path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" /><path d="M3 3l18 18" /></symbol>
+<symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" /><path d="M7 20h10" /><path d="M9 16v4" /><path d="M15 16v4" /></symbol>
+<symbol id="i-window" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M6 8h.01" /><path d="M9 8h.01" /></symbol>
+<symbol id="i-steam" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 5a4.5 4.5 0 1 1 -.653 8.953l-4.347 3.009l0 .038a3 3 0 0 1 -2.824 3l-.176 0a3 3 0 0 1 -2.94 -2.402l-2.56 -1.098v-3.5l3.51 1.755a2.989 2.989 0 0 1 2.834 -.635l2.727 -3.818a4.5 4.5 0 0 1 4.429 -5.302z" /><circle cx="16.5" cy="9.5" r="1" fill="currentColor" /></symbol>
+<symbol id="i-aspect" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M7 12v-3h3" /><path d="M17 12v3h-3" /></symbol>
+<symbol id="i-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 8h.01" /><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z" /><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5" /><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3" /></symbol>
+<symbol id="i-movie" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M8 4l0 16" /><path d="M16 4l0 16" /><path d="M4 8l4 0" /><path d="M4 16l4 0" /><path d="M4 12l16 0" /><path d="M16 8l4 0" /><path d="M16 16l4 0" /></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z" /></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" /><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" /><path d="M8 11v-4a4 4 0 1 1 8 0v4" /></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.331 8h11.339a2 2 0 0 1 1.977 2.304l-1.255 8.152a3 3 0 0 1 -2.966 2.544h-6.852a3 3 0 0 1 -2.965 -2.544l-1.255 -8.152a2 2 0 0 1 1.977 -2.304z" /><path d="M9 11v-5a3 3 0 0 1 6 0v5" /></symbol>
+<symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" /><path d="M12 6l-3.293 3.293a1 1 0 0 0 0 1.414l.543 .543c.69 .69 1.81 .69 2.5 0l1 -1a3.182 3.182 0 0 1 4.5 0l2.25 2.25" /><path d="M12.5 15.5l2 2" /><path d="M15 13l2 2" /></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l-8 4l8 4l8 -4l-8 -4" /><path d="M4 12l8 4l8 -4" /><path d="M4 16l8 4l8 -4" /></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6" /></symbol>
+<symbol id="i-maximize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4l4 0l0 4" /><path d="M14 10l6 -6" /><path d="M8 20l-4 0l0 -4" /><path d="M4 20l6 -6" /><path d="M16 20l4 0l0 -4" /><path d="M14 14l6 6" /><path d="M8 4l-4 0l0 4" /><path d="M4 4l6 6" /></symbol>
+<symbol id="i-minimize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l4 0l0 -4" /><path d="M3 3l6 6" /><path d="M5 15l4 0l0 4" /><path d="M3 21l6 -6" /><path d="M19 9l-4 0l0 -4" /><path d="M15 9l6 -6" /><path d="M19 15l-4 0l0 4" /><path d="M15 15l6 6" /></symbol>
+<symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l2.757 -7.351a1 1 0 0 1 .936 -.649h12.307a1 1 0 0 1 .986 1.164l-.996 5.211a2 2 0 0 1 -1.964 1.625h-14.026a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v2" /></symbol>
+<symbol id="i-panel-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M15 4v16" /><path d="M9 10l2 2l-2 2" /></symbol>
+<symbol id="i-panel-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M15 4v16" /><path d="M10 10l-2 2l2 2" /></symbol>
+<symbol id="i-wallpaper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-12" /><path d="M6 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M8 18v-12a2 2 0 1 0 -4 0v12" /></symbol>
+<symbol id="i-gamepad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5h3.5a5 5 0 0 1 0 10h-5.5l-4.015 4.227a2.3 2.3 0 0 1 -3.923 -2.035l1.634 -8.173a5 5 0 0 1 4.904 -4.019h3.4z" /><path d="M14 15l4.07 4.284a2.3 2.3 0 0 0 3.925 -2.023l-1.6 -8.232" /><path d="M8 9v2" /><path d="M7 10h2" /><path d="M14 10h2" /></symbol>
+<symbol id="i-handheld" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6m0 2a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2z" /><path d="M6 12h4m-2 -2v4" /><path d="M15 11l0 .01" /><path d="M18 13l0 .01" /></symbol>
+<symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12v3a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h9" /><path d="M7 20l10 0" /><path d="M9 16l0 4" /><path d="M15 16l0 4" /><path d="M17 4h4v4" /><path d="M16 9l5 -5" /></symbol>
+<symbol id="i-droplet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.502 19.423c2.602 2.105 6.395 2.105 8.996 0c2.602 -2.105 3.262 -5.708 1.566 -8.546l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546z" /></symbol>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10" /></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 9l5 -5l5 5" /><path d="M12 4l0 12" /></symbol>
+<symbol id="i-swatch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3h-4a2 2 0 0 0 -2 2v12a4 4 0 0 0 8 0v-12a2 2 0 0 0 -2 -2" /><path d="M13 7.35l-2 -2a2 2 0 0 0 -2.828 0l-2.828 2.828a2 2 0 0 0 0 2.828l9 9" /><path d="M7.3 13h-2.3a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h12" /><path d="M17 17l0 .01" /></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" /></symbol>
+<symbol id="i-coin-px" viewBox="0 0 9 9" shape-rendering="crispEdges"><path fill="#9a5b12" d="M2 0h5v1H2zM2 8h5v1H2zM0 2h1v5H0zM8 2h1v5H8zM1 1h1v1H1zM7 1h1v1H7zM1 7h1v1H1zM7 7h1v1H7z"/><path fill="#ffd166" d="M2 1h5v7H2zM1 2h7v5H1z"/><path fill="#e8a33a" d="M7 2h1v5H7zM2 7h5v1H2zM4 3h1v3H4z"/><path fill="#fff5cf" d="M2 2h1v3H2zM3 2h1v1H3z"/></symbol>
+<symbol id="i-logo" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#ff6ad5" d="M3 0h10v1H3zM2 1h12v13H2zM3 14h11v1H3zM3 15h9v1H3z"/><path fill="#c23f9f" d="M13 13h1v1h-1zM12 14h2v1h-2zM3 14h1v1H3z"/><path fill="#2a1630" d="M4 2h8v6H4zM4 10h3v1H4zM5 9h1v3H5z"/><path fill="#7af0ff" d="M5 3h6v4H5z"/><path fill="#eaffff" d="M5 3h2v1H5zM5 4h1v1H5z"/><path fill="#ffd166" d="M10 10h1v1h-1zM12 9h1v1h-1z"/></symbol>
+</svg>
+
+<main id="stage" aria-label="Stage">
   <div id="bg"></div>
   <div id="screens"></div>
+  <div id="stageEmpty" class="stage-empty" hidden>
+    <svg class="logo-lg" aria-hidden="true"><use href="#i-logo"/></svg>
+    <p>Your stage is empty.</p>
+    <button id="stageAdd" type="button" class="btn primary"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg>Add Screen</button>
+  </div>
   <div id="cursor" hidden><svg width="22" height="22" viewBox="0 0 22 22"><path d="M2 1V18L6.5 13.8 9.6 20.5 12.4 19.2 9.4 12.6H15.5Z" fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
 </main>
 
-<aside id="ui">
-  <header><b>RateofReality</b><button id="hideUi" title="Hide panel (H / Ctrl+Alt+H)">⟩</button></header>
-  <div class="scroll">
-    <details open><summary>Sources</summary>
-      <div class="row"><button id="srcRefresh">Refresh</button><button id="srcSteam">Auto: latest Steam game</button></div>
-      <div id="sources" class="grid"></div>
-      <p class="hint">Click: show on selected screen · Shift+click: new screen</p>
-    </details>
-    <details open><summary>Screens</summary>
-      <div class="row"><button id="scrAdd">Add</button><button id="scrRemove" data-needs-sel>Remove</button><button id="scrClear" data-needs-sel>Clear source</button></div>
-      <ul id="screenList" class="list"></ul>
-    </details>
-    <details open><summary>Aspect &amp; fit</summary>
-      <div id="aspects" class="chips"></div>
-      <div class="row"><input id="aspectCustom" placeholder="Custom W:H, e.g. 5:4"><button id="aspectApply" data-needs-sel>Set</button></div>
-      <label class="row">Fit <select id="fit" data-needs-sel><option>contain</option><option>cover</option><option>stretch</option></select></label>
-      <p class="hint">Drag to move, handles to resize (Shift = free) · arrows nudge · +/- scale · [ ] order · Del remove · double-click fit</p>
-    </details>
-    <details open><summary>Frame</summary>
-      <div id="frames" class="grid"></div>
-      <div class="row"><button id="frameCustom" data-needs-sel>Custom frame…</button></div>
-    </details>
-    <details open><summary>Background</summary>
-      <div class="row"><select id="bgType"><option value="color">Color</option><option value="image">Image / GIF</option><option value="video">Video</option></select><input type="color" id="bgColor"></div>
-      <div class="row"><button id="bgImage">Image / GIF…</button><button id="bgVideo">Video…</button></div>
-      <label class="row">Fit <select id="bgFit"><option>cover</option><option>contain</option><option>stretch</option><option>tile</option></select></label>
-    </details>
-    <details><summary>Displays</summary>
-      <select id="displays" size="3"></select>
-      <div class="row"><button id="dispRefresh">Refresh</button><button id="dispMove" data-needs-sel>Move game to display</button></div>
-      <p class="hint">Add a virtual monitor (IddCx virtual display driver), move the game there and capture it.</p>
-    </details>
-    <details><summary>Scenes</summary>
-      <div class="row"><input id="sceneName" placeholder="Scene name"><button id="sceneSave">Save</button></div>
-      <div class="row"><select id="scenes"></select><button id="sceneLoad">Load</button><button id="sceneDelete">Delete</button></div>
-    </details>
+<header id="hud" aria-label="Shellcade">
+  <div class="brand"><svg class="logo" aria-hidden="true"><use href="#i-logo"/></svg><h1 class="wordmark" translate="no">Shellcade</h1></div>
+  <div id="hudMount" class="hud-mount"></div>
+</header>
+
+<aside id="ui" aria-label="Controls">
+  <div class="ui-head">
+    <div id="tabs" class="tabs" role="tablist" aria-label="Panels">
+      <button type="button" role="tab" id="tab-stage" aria-controls="panel-stage" aria-selected="true"><svg class="i" aria-hidden="true"><use href="#i-gamepad"/></svg><span>Stage</span></button>
+      <button type="button" role="tab" id="tab-shop" aria-controls="panel-shop" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-bag"/></svg><span>Shop</span></button>
+      <button type="button" role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-user"/></svg><span>Profile</span></button>
+      <button type="button" role="tab" id="tab-devs" aria-controls="panel-devs" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><span>Devs</span></button>
+    </div>
+    <button id="hideUi" type="button" class="icon-btn" aria-label="Hide panel (H)" title="Hide panel (H)"><svg class="i" aria-hidden="true"><use href="#i-panel-close"/></svg></button>
   </div>
-  <footer>
-    <button id="play" class="primary">▶ Play</button>
-    <label><input type="checkbox" id="fullscreen"> Fullscreen</label>
+
+  <section id="panel-stage" class="panel" role="tabpanel" aria-labelledby="tab-stage" tabindex="-1">
+    <p class="sel-line"><span>Editing</span><b id="selName" translate="no"></b></p>
+
+    <details open>
+      <summary><svg class="i" aria-hidden="true"><use href="#i-share"/></svg>Sources<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+      <div class="sec">
+        <div class="row">
+          <button id="srcSteam" type="button" class="btn grow"><svg class="i" aria-hidden="true"><use href="#i-steam"/></svg>Latest Steam Game</button>
+          <button id="srcRefresh" type="button" class="icon-btn" aria-label="Refresh sources" title="Refresh sources"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+        </div>
+        <div id="sources" class="grid two" aria-label="Windows and monitors"></div>
+        <p class="hint">Click to show on the selected screen. Shift+click adds a new screen.</p>
+      </div>
+    </details>
+
+    <details open>
+      <summary><svg class="i" aria-hidden="true"><use href="#i-layers"/></svg>Screens<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+      <div class="sec">
+        <ul id="screenList" class="list" aria-label="Screens, top first"></ul>
+        <div class="row">
+          <button id="scrAdd" type="button" class="btn"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg>Add</button>
+          <button id="scrClear" type="button" class="btn" data-needs-sel><svg class="i" aria-hidden="true"><use href="#i-x"/></svg>Clear Source</button>
+          <button id="scrRemove" type="button" class="icon-btn danger" data-needs-sel aria-label="Remove screen" title="Remove screen (Del)"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
+        </div>
+      </div>
+    </details>
+
+    <details open>
+      <summary><svg class="i" aria-hidden="true"><use href="#i-aspect"/></svg>Aspect &amp; fit<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+      <div class="sec">
+        <div id="aspects" class="chips" aria-label="Aspect ratio"></div>
+        <div class="row">
+          <input id="aspectCustom" name="aspectCustom" aria-label="Custom aspect ratio" placeholder="Custom W:H, e.g. 5:4…" autocomplete="off" spellcheck="false">
+          <button id="aspectApply" type="button" class="btn" data-needs-sel>Set</button>
+        </div>
+        <div id="fit" class="seg" role="radiogroup" aria-label="Fit">
+          <label><input type="radio" name="fit" value="contain" data-needs-sel><span>Contain</span></label>
+          <label><input type="radio" name="fit" value="cover" data-needs-sel><span>Cover</span></label>
+          <label><input type="radio" name="fit" value="stretch" data-needs-sel><span>Stretch</span></label>
+        </div>
+        <p class="hint">Drag to move, handles to resize (Shift unlocks). Arrows nudge, +/- scale, [ ] reorder, double-click toggles fit.</p>
+      </div>
+    </details>
+
+    <details open>
+      <summary><svg class="i" aria-hidden="true"><use href="#i-handheld"/></svg>Shell<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+      <div class="sec">
+        <div class="label-row"><span class="label">Frame</span><span id="framesMeta" class="meta"></span></div>
+        <div id="frames" class="frames" aria-label="Frames"></div>
+        <button id="frameCustom" type="button" class="btn ghost wide" data-needs-sel><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg>Custom Frame…</button>
+        <div class="label-row"><span class="label">Finish</span></div>
+        <div id="finishes" class="swatches" aria-label="Finish"></div>
+        <div class="label-row"><span class="label">Colorway</span></div>
+        <div id="colorways" class="swatches" aria-label="Colorway"></div>
+        <div class="label-row"><span class="label">Shell fill</span><span class="meta">Shows through clear shells</span></div>
+        <div id="fills" class="swatches" aria-label="Shell fill"></div>
+      </div>
+    </details>
+
+    <details open>
+      <summary><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg>Background<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+      <div id="bgPanel" class="sec">
+        <div id="bgType" class="seg icons" role="radiogroup" aria-label="Background type">
+          <label title="Solid color"><input type="radio" name="bgType" value="color"><svg class="i" aria-hidden="true"><use href="#i-droplet"/></svg><span>Color</span></label>
+          <label title="Image or GIF"><input type="radio" name="bgType" value="image"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg><span>Image</span></label>
+          <label title="Video file"><input type="radio" name="bgType" value="video"><svg class="i" aria-hidden="true"><use href="#i-movie"/></svg><span>Video</span></label>
+          <label title="Animated screensaver"><input type="radio" name="bgType" value="screensaver"><svg class="i" aria-hidden="true"><use href="#i-sparkles"/></svg><span>Saver</span></label>
+          <label title="Wallpaper Engine backdrop slot"><input type="radio" name="bgType" value="wallpaper"><svg class="i" aria-hidden="true"><use href="#i-wallpaper"/></svg><span>Backdrop</span></label>
+        </div>
+        <div class="bg-pane" data-for="color">
+          <div class="row">
+            <label class="color-field"><input type="color" id="bgColor" aria-label="Background color"><span>Custom</span></label>
+            <div id="bgPresets" class="presets" aria-label="Color presets">
+              <button type="button" data-c="#0f0d16" aria-label="Night"></button>
+              <button type="button" data-c="#000000" aria-label="Black"></button>
+              <button type="button" data-c="#1b1033" aria-label="Grape"></button>
+              <button type="button" data-c="#0b2530" aria-label="Deep sea"></button>
+              <button type="button" data-c="#2b1426" aria-label="Berry"></button>
+              <button type="button" data-c="#00b140" aria-label="Green screen"></button>
+            </div>
+          </div>
+        </div>
+        <div class="bg-pane" data-for="image video">
+          <div class="row">
+            <button id="bgImage" type="button" class="btn grow" data-for="image"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg>Choose Image or GIF…</button>
+            <button id="bgVideo" type="button" class="btn grow" data-for="video"><svg class="i" aria-hidden="true"><use href="#i-movie"/></svg>Choose Video…</button>
+          </div>
+          <p id="bgFile" class="meta file"></p>
+        </div>
+        <div class="bg-pane" data-for="screensaver">
+          <div id="bgSavers" class="swatches" aria-label="Screensavers"></div>
+        </div>
+        <div class="bg-pane" data-for="wallpaper">
+          <div id="bgSlots" class="slots" aria-label="Backdrop slots"></div>
+          <div id="wpActions" class="row end"><button id="wpRefresh" type="button" class="btn sm ghost"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg>Rescan Wallpapers</button><button type="button" class="btn sm ghost" data-goto="shop"><svg class="i" aria-hidden="true"><use href="#i-bag"/></svg>Manage Slots</button></div>
+        </div>
+        <div class="bg-pane" data-for="image video wallpaper">
+          <div id="bgFit" class="seg" role="radiogroup" aria-label="Background fit">
+            <label><input type="radio" name="bgFit" value="cover"><span>Cover</span></label>
+            <label><input type="radio" name="bgFit" value="contain"><span>Contain</span></label>
+            <label><input type="radio" name="bgFit" value="stretch"><span>Stretch</span></label>
+            <label><input type="radio" name="bgFit" value="tile"><span>Tile</span></label>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><svg class="i" aria-hidden="true"><use href="#i-monitor"/></svg>Displays<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+      <div class="sec">
+        <select id="displays" size="3" aria-label="Displays"></select>
+        <div class="row">
+          <button id="dispRefresh" type="button" class="icon-btn" aria-label="Refresh displays" title="Refresh displays"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+          <button id="dispMove" type="button" class="btn grow" data-needs-sel>Move Game to Display</button>
+        </div>
+        <p class="hint">Add a virtual monitor (IddCx virtual display driver), move the game there and capture that monitor.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><svg class="i" aria-hidden="true"><use href="#i-save"/></svg>Scenes<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+      <div class="sec">
+        <div class="row">
+          <input id="sceneName" name="sceneName" aria-label="Scene name" placeholder="Scene name, e.g. Cozy CRT…" autocomplete="off" spellcheck="false">
+          <button id="sceneSave" type="button" class="btn"><svg class="i" aria-hidden="true"><use href="#i-save"/></svg>Save</button>
+        </div>
+        <div class="row">
+          <select id="scenes" aria-label="Saved scenes"></select>
+          <button id="sceneLoad" type="button" class="btn"><svg class="i" aria-hidden="true"><use href="#i-folder"/></svg>Load</button>
+          <button id="sceneDelete" type="button" class="icon-btn danger" aria-label="Delete scene" title="Delete scene"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
+        </div>
+      </div>
+    </details>
+  </section>
+  <section id="panel-shop" class="panel" role="tabpanel" aria-labelledby="tab-shop" tabindex="-1" hidden></section>
+  <section id="panel-profile" class="panel" role="tabpanel" aria-labelledby="tab-profile" tabindex="-1" hidden></section>
+  <section id="panel-devs" class="panel" role="tabpanel" aria-labelledby="tab-devs" tabindex="-1" hidden></section>
+
+  <footer class="ui-foot">
+    <label class="switch"><input type="checkbox" id="fullscreen" role="switch"><span class="track" aria-hidden="true"></span><span>Fullscreen</span></label>
+    <button id="play" type="button" class="play" aria-keyshortcuts="Control+Alt+P"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg><span>Play</span><kbd>Ctrl+Alt+P</kbd></button>
   </footer>
 </aside>
-<button id="showUi" title="Show panel (H)">☰</button>
-<div id="toast" role="status"></div>
+<button id="showUi" type="button" class="icon-btn floating" aria-label="Show panel (H)" title="Show panel (H)"><svg class="i" aria-hidden="true"><use href="#i-panel-open"/></svg></button>
+<div id="toasts" class="toasts"></div>
 
-<dialog id="insets">
+<dialog id="insets" aria-labelledby="insetsTitle">
   <form method="dialog">
-    <p>No transparent opening found. Enter the screen opening as % inset from each edge:</p>
-    <div class="row"><label>Left <input name="l" type="number" value="10" min="0" max="95"></label><label>Top <input name="t" type="number" value="10" min="0" max="95"></label></div>
-    <div class="row"><label>Right <input name="r" type="number" value="10" min="0" max="95"></label><label>Bottom <input name="b" type="number" value="10" min="0" max="95"></label></div>
-    <div class="row"><button value="ok" class="primary">OK</button><button value="cancel">Cancel</button></div>
+    <h2 id="insetsTitle">Mark the screen opening</h2>
+    <p>No transparent opening was found. Enter it as a percentage inset from each edge.</p>
+    <div class="grid two">
+      <label>Left <input name="l" type="number" inputmode="numeric" value="10" min="0" max="95"></label>
+      <label>Top <input name="t" type="number" inputmode="numeric" value="10" min="0" max="95"></label>
+      <label>Right <input name="r" type="number" inputmode="numeric" value="10" min="0" max="95"></label>
+      <label>Bottom <input name="b" type="number" inputmode="numeric" value="10" min="0" max="95"></label>
+    </div>
+    <div class="row actions"><button value="ok" class="btn primary">Use Opening</button><button value="cancel" class="btn ghost">Cancel</button></div>
   </form>
 </dialog>
 </body>
