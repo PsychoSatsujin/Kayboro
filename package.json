@@ -1,0 +1,17 @@
+{
+  "name": "rateofreality",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Resize, reshape and frame live captures of any app window or monitor on a virtual stage.",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "koffi": "^2.9.0"
+  },
+  "devDependencies": {
+    "electron": "^44.0.0"
+  }
+}
