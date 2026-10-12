@@ -6,7 +6,8 @@
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node --test"
+    "test": "node --test \"test/*.test.js\"",
+    "smoke": "electron test/e2e/smoke.js"
   },
   "dependencies": {
     "koffi": "^2.9.0"

@@ -39,6 +39,8 @@ function createWindow() {
     },
   });
   win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+  // A crashed renderer can no longer leave play mode: release the cursor and the overlay.
+  win.webContents.on('render-process-gone', () => stopPlay());
   win.on('closed', () => {
     stopPlay();
     win = null;
@@ -47,12 +49,16 @@ function createWindow() {
 
 // ---- Sources & displays -------------------------------------------------
 
+// "window:<HWND>" part of a media source id. getMediaSourceId() can carry an aura id in the 3rd field,
+// while desktopCapturer may report the same window with ":0", so compare without it.
+const srcKey = (id) => String(id).split(':').slice(0, 2).join(':');
+
 async function listSources() {
-  const own = new Set(BrowserWindow.getAllWindows().map((w) => w.getMediaSourceId()));
+  const own = new Set(BrowserWindow.getAllWindows().map((w) => srcKey(w.getMediaSourceId())));
   const sources = await desktopCapturer.getSources({ types: ['window', 'screen'], thumbnailSize: { width: 320, height: 180 } });
-  return sources.filter((s) => !own.has(s.id)).map((s) => {
+  return sources.filter((s) => !own.has(srcKey(s.id))).map((s) => {
     const kind = s.id.startsWith('screen:') ? 'screen' : 'window';
-    const m = kind === 'window' ? /^window:(\d+):/.exec(s.id) : null; // Windows: "window:<HWND>:0"
+    const m = kind === 'window' ? /^window:(-?\d+):/.exec(s.id) : null; // Windows: "window:<HWND>:0"
     const hwnd = m ? m[1] : null;
     const info = hwnd ? win32.getProcessInfo(hwnd) : null;
     const exePath = (info && info.exePath) || null;
@@ -110,11 +116,17 @@ function pollCursor() {
   const c = win32.getCursorPos();
   if (!r || !c || r.width <= 0 || r.height <= 0) return;
 
-  // Re-clip when the game window moved/resized (only while it has focus, so alt-tab isn't trapped).
+  // Re-clip while the game has focus (so alt-tab isn't trapped) when it moved/resized, or when the clip
+  // was dropped: Windows resets it on activation changes, and SetForegroundWindow activates asynchronously
+  // (after startPlay's first clip). A tighter clip the game set itself is left alone.
   const rk = `${r.x},${r.y},${r.width},${r.height}`;
-  if (rk !== play.lastRect && win32.isForeground(play.hwnd)) {
-    play.lastRect = rk;
-    win32.clipCursor(r);
+  if (win32.isForeground(play.hwnd)) {
+    const cc = win32.getClipCursor();
+    const held = cc && cc.x >= r.x && cc.y >= r.y && cc.x + cc.width <= r.x + r.width && cc.y + cc.height <= r.y + r.height;
+    if (rk !== play.lastRect || !held) {
+      play.lastRect = rk;
+      win32.clipCursor(r);
+    }
   }
 
   const ck = `${c.x},${c.y},${rk}`;
@@ -198,7 +210,8 @@ app.whenReady().then(() => {
   registerIpc();
   createWindow();
   // Global so they work while the game has focus; the renderer decides what to do.
-  globalShortcut.register('Control+Alt+P', () => send('hotkey', 'toggle-play'));
+  // Stopping is handled here so a hung/crashed renderer can't trap the user in the click-through overlay.
+  globalShortcut.register('Control+Alt+P', () => (play ? stopPlay() : send('hotkey', 'toggle-play')));
   globalShortcut.register('Control+Alt+H', () => send('hotkey', 'toggle-ui'));
   app.on('activate', () => {
     if (!BrowserWindow.getAllWindows().length) createWindow();

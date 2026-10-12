@@ -36,8 +36,8 @@ const app = {
   update(fn, id = this.scene.selectedId) { const s = this.get(id); if (s) { fn(s); this.changed(); } return s; },
 
   addScreen(fields = {}) {
-    const n = this.scene.screens.length, z = Math.max(0, ...this.scene.screens.map(s => s.z)) + 1;
-    const s = { ...blankScreen(), rect: { x: 80 + n * 30, y: 80 + n * 30, w: 480, h: 270 }, z, ...fields };
+    const z = Math.max(0, ...this.scene.screens.map(s => s.z)) + 1;
+    const s = { ...blankScreen(), rect: centredRect(480, 270), z, ...fields };
     this.scene.screens.push(s);
     this.scene.selectedId = s.id;
     this.applyAspect(s);
@@ -115,9 +115,22 @@ function blankScreen() {
     aspect: 'source', fit: 'contain', frame: null, customFrame: null, z: 1, visible: true };
 }
 
+// Visible stage: the window minus the sidebar (full width when the sidebar is hidden).
+function stageArea() {
+  const side = app.uiHidden ? 0 : document.getElementById('ui')?.offsetWidth || 0;
+  return { w: Math.max(innerWidth - side, 1), h: innerHeight };
+}
+
+// A w x h rect centred in the visible stage (shrunk to fit if the stage is smaller).
+function centredRect(w, h) {
+  const a = stageArea(), k = Math.min(1, a.w / w, a.h / h);
+  w = Math.round(w * k); h = Math.round(h * k);
+  return { x: Math.round((a.w - w) / 2), y: Math.round((a.h - h) / 2), w, h };
+}
+
 function defaultScene() {
-  const w = Math.round(Math.min(960, innerWidth * 0.6)), h = Math.round(w * 9 / 16);
-  const s = { ...blankScreen(), rect: { x: Math.round((innerWidth - w) / 2), y: Math.round((innerHeight - h) / 2), w, h } };
+  const w = Math.round(Math.min(960, stageArea().w * 0.6)), h = Math.round(w * 9 / 16);
+  const s = { ...blankScreen(), rect: centredRect(w, h) };
   return { version: 1, background: { type: 'color', color: '#000000', url: '', fit: 'cover' }, screens: [s], selectedId: s.id };
 }
 

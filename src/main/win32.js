@@ -12,12 +12,14 @@ const stub = {
   getWindowRect: () => null,
   getCursorPos: () => null,
   clipCursor: () => false, // rect {x,y,width,height} or null to release
+  getClipCursor: () => null, // current clip rect (the whole virtual screen when unclipped)
   moveWindow: () => false, // keep size, move top-left to (x, y)
 };
 
+// 64-bit HWNDs are sign-extended 32-bit values, so Chromium can print them as negative ids.
 const H = (h) => {
   const n = Number(h);
-  return Number.isSafeInteger(n) && n > 0 ? n : 0;
+  return Number.isSafeInteger(n) && n !== 0 ? n : 0;
 };
 
 function bind(koffi) {
@@ -38,6 +40,9 @@ function bind(koffi) {
   const ClientToScreen = f(u, 'int __stdcall ClientToScreen(intptr_t hWnd, _Inout_ POINT *p)');
   const GetCursorPos = f(u, 'int __stdcall GetCursorPos(_Out_ POINT *p)');
   const ClipCursor = f(u, 'int __stdcall ClipCursor(const RECT *r)');
+  const GetClipCursor = f(u, 'int __stdcall GetClipCursor(_Out_ RECT *r)');
+  const BringWindowToTop = f(u, 'int __stdcall BringWindowToTop(intptr_t hWnd)');
+  const AttachThreadInput = f(u, 'int __stdcall AttachThreadInput(uint32 idAttach, uint32 idAttachTo, int attach)');
   const SetWindowPos = f(u, 'int __stdcall SetWindowPos(intptr_t hWnd, intptr_t after, int x, int y, int cx, int cy, uint32 flags)');
   const GetWindowRect = f(u, 'int __stdcall GetWindowRect(intptr_t hWnd, _Out_ RECT *r)');
   const keybd_event = f(u, 'void __stdcall keybd_event(uint8 vk, uint8 scan, uint32 flags, uintptr_t extra)');
@@ -45,6 +50,7 @@ function bind(koffi) {
   const QueryFullProcessImageNameW = f(k, 'int __stdcall QueryFullProcessImageNameW(intptr_t h, uint32 flags, void *buf, _Inout_ uint32 *size)');
   const GetProcessTimes = f(k, 'int __stdcall GetProcessTimes(intptr_t h, _Out_ FILETIME *c, _Out_ FILETIME *e, _Out_ FILETIME *k, _Out_ FILETIME *u)');
   const CloseHandle = f(k, 'int __stdcall CloseHandle(intptr_t h)');
+  const GetCurrentThreadId = f(k, 'uint32 __stdcall GetCurrentThreadId()');
 
   const SW_RESTORE = 9, VK_MENU = 0x12, KEYEVENTF_KEYUP = 2;
   const SWP_NOSIZE = 0x1, SWP_NOZORDER = 0x4, SWP_NOACTIVATE = 0x10;
@@ -74,13 +80,28 @@ function bind(koffi) {
     },
 
     focusWindow(h) {
-      if (!H(h) || !IsWindow(H(h))) return false;
-      if (IsIconic(H(h))) ShowWindow(H(h), SW_RESTORE);
+      const w = H(h);
+      if (!w || !IsWindow(w)) return false;
+      if (IsIconic(w)) ShowWindow(w, SW_RESTORE);
+      const fg = () => Number(GetForegroundWindow()) === w;
+      // Already focused (e.g. Ctrl+Alt+P pressed in the game): don't inject Alt into it.
+      // Works directly when we are the foreground process (Play button clicked).
+      if (fg() || SetForegroundWindow(w) && fg()) return true;
       // Tapping Alt lets a background process take the foreground.
       keybd_event(VK_MENU, 0, 0, 0);
-      const ok = !!SetForegroundWindow(H(h));
+      SetForegroundWindow(w);
       keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);
-      return ok;
+      if (fg()) return true;
+      // Last resort: share input state with the foreground thread, which lifts the foreground lock.
+      const me = GetCurrentThreadId(), other = GetWindowThreadProcessId(GetForegroundWindow(), null);
+      const attached = !!other && other !== me && !!AttachThreadInput(me, other, 1);
+      try {
+        BringWindowToTop(w);
+        SetForegroundWindow(w);
+      } finally {
+        if (attached) AttachThreadInput(me, other, 0);
+      }
+      return fg();
     },
 
     getClientRect(h) {
@@ -102,6 +123,11 @@ function bind(koffi) {
     clipCursor(rect) {
       const r = rect ? { left: rect.x, top: rect.y, right: rect.x + rect.width, bottom: rect.y + rect.height } : null;
       return !!ClipCursor(r);
+    },
+
+    getClipCursor() {
+      const r = {};
+      return GetClipCursor(r) ? rectOut(r) : null;
     },
 
     moveWindow(h, x, y) {
