@@ -268,9 +268,9 @@ function installHelpers() {
     return null;
   };
   // Pixel statistics of a <video>'s current frame (canvas readback).
-  S.videoStats = (v, box) => {
+  S.videoStats = (v, box, W = 96) => {
     if (!v || !v.videoWidth) return null;
-    const W = 96, H = Math.max(1, Math.round((W * v.videoHeight) / v.videoWidth));
+    const H = Math.max(1, Math.round((W * v.videoHeight) / v.videoWidth));
     const c = document.createElement('canvas');
     c.width = W; c.height = H;
     const ctx = c.getContext('2d', { willReadFrequently: true });
@@ -410,6 +410,13 @@ function win() {
     },
   };
   return W32;
+}
+// Same contract as fitRect() in src/renderer/layout.js (where a picture of `aspect` lands inside `box`).
+function fitRect(aspect, box, mode = 'contain') {
+  if (mode === 'stretch' || !(aspect > 0)) return { ...box };
+  const wider = aspect > box.w / box.h, byWidth = mode === 'cover' ? !wider : wider;
+  const w = byWidth ? box.w : box.h * aspect, h = byWidth ? box.w / aspect : box.h;
+  return { x: box.x + (box.w - w) / 2, y: box.y + (box.h - h) / 2, w, h };
 }
 const sameRect = (a, b, tol = 0) => !!a && !!b && near(a.x, b.x, tol) && near(a.y, b.y, tol) && near(a.w, b.w, tol) && near(a.h, b.h, tol);
 
@@ -922,6 +929,8 @@ const CHECKS = [
 
   { name: 'win-game-capture', win: true, timeout: 25000, shot: true, async fn() {
     if (!ctx.game) return { skip: 'no game detected' };
+    // Start from a plain screen: no frame, aspect locked to the source.
+    await R(() => { __smoke.click('#frames .tile[data-id=""]'); __smoke.click('#aspects .chip[data-a="source"]'); __smoke.setValue('#fit', 'contain', 'change'); return true; });
     const t = await R(() => Date.now());
     await R(() => __smoke.click('#srcSteam'));
     await waitFor('the selected screen to show the game', () => R((title, t) => ({
@@ -930,11 +939,13 @@ const CHECKS = [
     }), GAME_TITLE, t), 5000);
     const st = await waitFor('the game colour #ff00ff in the capture', () => R((c) => {
       const el = __smoke.sel(), v = el.querySelector('video');
-      const s = el.classList.contains('live') ? __smoke.videoStats(v, c) : null;
+      const s = el.classList.contains('live') ? __smoke.videoStats(v, c, 320) : null;
       return { ok: !!s && s.centre.every((x, i) => Math.abs(x - c[i]) <= 30), live: el.classList.contains('live'), ...s };
     }, GAME_COLOR), 15000, 100);
+    const a = await waitFor('the screen to lock to the game window aspect', () => R(() => __smoke.selRect()).then((r) => ({ ok: Math.abs(r.w / r.h - st.vw / st.vh) / (st.vw / st.vh) < 0.01, r })), 3000);
     ctx.gameBox = st.box;
-    return `video ${st.vw}x${st.vh}, centre ${hex(st.centre)}, magenta area ${brief(st.box)}`;
+    ctx.gameVideo = { vw: st.vw, vh: st.vh };
+    return `video ${st.vw}x${st.vh}, centre ${hex(st.centre)}, magenta (client) area ${brief(st.box)} of the frame, screen ${fmtRect(a.r)}`;
   } },
 
   { name: 'win-move-window', win: true, timeout: 20000, async fn() {
@@ -1001,17 +1012,18 @@ const CHECKS = [
   { name: 'win-play-cursor-alignment', win: true, timeout: 5000, async fn() {
     if (!ctx.drawn || !ctx.gameBox) return { skip: 'needs win-play-cursor and win-game-capture' };
     // Where the game's client-area centre appears in the captured picture (the magenta box), mapped to the stage.
-    const { r } = ctx.drawn, b = ctx.gameBox;
+    const b = ctx.gameBox, { vw, vh } = ctx.gameVideo;
     const fit = await R(() => document.getElementById('fit').value);
-    assert(fit === 'contain', `expected fit contain, got ${fit}`);
-    const a = ctx.drawn.r.w / ctx.drawn.r.h; // rect is locked to the source aspect, so the video fills it
-    const exp = { x: r.x + (b.x + b.w / 2) * r.w, y: r.y + (b.y + b.h / 2) * r.h };
+    const vr = fitRect(vw / vh, ctx.drawn.r, fit); // where the captured picture is drawn
+    // The cursor sits at the client-area centre; in the picture that is the centre of the magenta box.
+    const exp = { x: vr.x + (b.x + b.w / 2) * vr.w, y: vr.y + (b.y + b.h / 2) * vr.h };
     const dx = ctx.drawn.x - exp.x, dy = ctx.drawn.y - exp.y;
-    const tol = { x: Math.max(3, r.w * 0.015), y: Math.max(3, r.h * 0.015) };
+    const tol = { x: Math.max(3, vr.w * 0.015), y: Math.max(3, vr.h * 0.015) };
     assert(Math.abs(dx) <= tol.x && Math.abs(dy) <= tol.y,
-      `drawn cursor is ${dx.toFixed(1)},${dy.toFixed(1)} px off the game's real cursor position ${exp.x.toFixed(1)},${exp.y.toFixed(1)} ` +
-      `(client area spans ${brief(b)} of the captured frame; aspect ${a.toFixed(3)})`);
-    return `drawn cursor within ${dx.toFixed(1)},${dy.toFixed(1)} px of the client centre in the capture`;
+      `drawn cursor ${ctx.drawn.x.toFixed(1)},${ctx.drawn.y.toFixed(1)} is ${dx.toFixed(1)},${dy.toFixed(1)} px off where the game's cursor appears ` +
+      `in the picture (${exp.x.toFixed(1)},${exp.y.toFixed(1)}); the client area is only ${brief(b)} of the captured ${vw}x${vh} frame ` +
+      `(title bar/borders), but (u,v) is mapped onto the whole frame`);
+    return `drawn cursor within ${dx.toFixed(1)},${dy.toFixed(1)} px of the client centre in the picture (fit ${fit})`;
   } },
 
   { name: 'win-hotkey-stop', win: true, timeout: 10000, async fn() {
