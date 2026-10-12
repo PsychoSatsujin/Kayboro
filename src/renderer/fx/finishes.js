@@ -1,6 +1,6 @@
 // Shell finishes and shell fills. Both are stacks of absolutely positioned layers that mirror the
-// frame <img>'s box and are masked by the frame's shape (mask-image: url(frame), then its carved
-// silhouette), so effects land on the shell only, never on the transparent screen hole.
+// frame <img>'s box and are masked by the frame itself (mask-image: url(frame), then masks carved
+// from it), so effects land on the shell only, never on the transparent screen hole.
 //   finish layers: siblings after the frame image (z-index 1), each with its own mix-blend-mode
 //   fill layer:    first child of the view, painted behind the capture and the frame
 import { createScreensaver } from './screensavers.js';
@@ -45,10 +45,14 @@ function host(viewEl) {
   return { img, box: img ? img.parentElement : viewEl };
 }
 
-// The shell's silhouette as a mask image: everything not reachable from the image border through
+// Masks carved from the frame, cached per URL: everything not reachable from the image border through
 // low-alpha pixels (< 0.4: soft drop shadows, glows), minus fully transparent pixels (the screen hole).
-// Translucent plastic counts at full strength, so fills show through it exactly as much as the art
-// lets them, and finishes coat it like a real surface. Cached per frame; null when pixels are unreadable.
+//   shape: that region at full strength. Fills show through translucent plastic exactly as much as
+//          the art lets them; edge lights trace real edges only.
+//   skin:  the frame's own alpha inside it. Finishes scale with the plastic's opacity, because the
+//          stage's .shell-front is an isolated group where a blend layer over see-through pixels would
+//          otherwise make the shell opaque.
+// Resolves to null when the pixels are unreadable; callers then keep the plain alpha mask.
 const shapes = new Map();
 export function shellShape(frameUrl) {
   if (!shapes.has(frameUrl)) shapes.set(frameUrl, new Promise((res, rej) => {
@@ -59,9 +63,9 @@ export function shellShape(frameUrl) {
   }).catch(() => null));
   return shapes.get(frameUrl);
 }
-function carve(img) {
+async function carve(img) {
   const nw = img.naturalWidth, nh = img.naturalHeight, k = Math.min(4, 1024 / Math.max(nw, nh));
-  if (!nw || !nh) return Promise.resolve(null); // no intrinsic size (bare SVG): keep the alpha mask
+  if (!nw || !nh) return null; // no intrinsic size (bare SVG): keep the alpha mask
   const W = Math.round(nw * k), H = Math.round(nh * k), c = el('canvas'), g = c.getContext('2d', { willReadFrequently: true });
   Object.assign(c, { width: W, height: H });
   g.drawImage(img, 0, 0, W, H);
@@ -77,21 +81,31 @@ function carve(img) {
     if (i >= W) push(i - W);
     if (i < W * (H - 1)) push(i + W);
   }
-  for (let i = 0; i < out.length; i++) px[i * 4 + 3] = !out[i] && px[i * 4 + 3] > 4 ? 255 : 0;
+  const blob = () => new Promise(res => c.toBlob(b => res(b && URL.createObjectURL(b)))); // snapshots the canvas now
+  for (let i = 0; i < out.length; i++) if (out[i]) px[i * 4 + 3] = 0;
   g.putImageData(id, 0, 0);
-  return new Promise(res => c.toBlob(b => res(b ? URL.createObjectURL(b) : null)));
+  const skin = blob();
+  for (let i = 3; i < px.length; i += 4) px[i] = px[i] > 4 ? 255 : 0;
+  g.putImageData(id, 0, 0);
+  const [s, sh] = await Promise.all([skin, blob()]);
+  return s && sh ? { skin: s, shape: sh } : null;
 }
 
-// Masks `wrap` with the frame: its own alpha right away, the carved silhouette once that is ready.
+// Masks `wrap` with the frame: its plain alpha right away, the carved masks once they are ready.
 function maskWith(wrap, url) {
   if (!url || wrap.fxSrc === url) return;
   wrap.fxSrc = url;
-  wrap.style.setProperty('--fx-mask', cssUrl(url));
+  wrap.style.setProperty('--fx-skin', cssUrl(url));
+  wrap.style.setProperty('--fx-shape', cssUrl(url));
   wrap.classList.remove('fx-shaped');
   wrap.classList.add('fx-pending');
-  shellShape(new URL(url, document.baseURI).href).then(shape => {
+  shellShape(new URL(url, document.baseURI).href).then(m => {
     if (wrap.fxSrc !== url) return;
-    if (shape) { wrap.style.setProperty('--fx-mask', cssUrl(shape)); wrap.classList.add('fx-shaped'); }
+    if (m) {
+      wrap.style.setProperty('--fx-skin', cssUrl(m.skin));
+      wrap.style.setProperty('--fx-shape', cssUrl(m.shape));
+      wrap.classList.add('fx-shaped');
+    }
     wrap.classList.remove('fx-pending');
   });
 }
@@ -110,6 +124,7 @@ function follow({ img, box }, layer, frameUrl, onSize) {
       if (s.left && s.top && s.width && s.height) [x, y, nw, nh] = [s.left, s.top, s.width, s.height].map(parseFloat);
       else [x, y, nw, nh] = [img.offsetLeft, img.offsetTop, img.offsetWidth, img.offsetHeight];
       layer.hidden = img.hidden;
+      layer.style.setProperty('--fx-shell', s.opacity || 1); // a 'clear' colorway thins the coating too
       if (img.src && img.src !== src) maskWith(layer, (src = img.src));
     }
     Object.assign(layer.style, { left: `${x}px`, top: `${y}px`, width: `${nw}px`, height: `${nh}px` });
