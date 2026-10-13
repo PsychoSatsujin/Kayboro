@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1100" width="1600" height="1100">
+<!-- Example Shell: a pastel console. The screen opening (160,110 1280x720, radius 25.6) is cut out with evenodd. -->
+<defs>
+  <linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc2e8"/><stop offset="1" stop-color="#c58cff"/></linearGradient>
+  <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <radialGradient id="btn" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff6fd"/><stop offset="1" stop-color="#ff6ad5"/></radialGradient>
+</defs>
+<path fill="url(#body)" fill-rule="evenodd" d="M130 30H1470A90 90 0 0 1 1560 120V980A90 90 0 0 1 1470 1070H130A90 90 0 0 1 40 980V120A90 90 0 0 1 130 30Z M185.6 110H1414.4A25.6 25.6 0 0 1 1440 135.6V804.4A25.6 25.6 0 0 1 1414.4 830H185.6A25.6 25.6 0 0 1 160 804.4V135.6A25.6 25.6 0 0 1 185.6 110Z"/>
+<rect x="100" y="44" width="1400" height="34" rx="17" fill="url(#shine)"/>
+<rect x="149" y="99" width="1302" height="742" rx="36" fill="none" stroke="#2c2740" stroke-width="18"/>
+<rect x="134" y="84" width="1332" height="772" rx="48" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="4"/>
+<g fill="#2c2740">
+  <rect x="200" y="920" width="150" height="50" rx="12"/>
+  <rect x="250" y="870" width="50" height="150" rx="12"/>
+</g>
+<circle cx="275" cy="945" r="14" fill="#3d3657"/>
+<circle cx="1300" cy="975" r="44" fill="url(#btn)" stroke="#2c2740" stroke-width="8"/>
+<circle cx="1410" cy="915" r="44" fill="url(#btn)" stroke="#2c2740" stroke-width="8"/>
+<g fill="#2c2740" opacity=".55">
+  <rect x="690" y="960" width="60" height="18" rx="9" transform="rotate(-20 720 969)"/>
+  <rect x="850" y="960" width="60" height="18" rx="9" transform="rotate(-20 880 969)"/>
+</g>
+<circle cx="800" cy="885" r="12" fill="#6ee7a8" stroke="#2c2740" stroke-width="5"/>
+<path d="M800 1010l9 19 21 3-15 15 4 21-19-10-19 10 4-21-15-15 21-3z" fill="#ffd166" stroke="#2c2740" stroke-width="5" stroke-linejoin="round"/>
+</svg>

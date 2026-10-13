@@ -54,15 +54,15 @@
 
 /* ---- Holo: trading-card foil. A light band slides over the shell with the tilt; inside it the
    rainbow runs the other way (color = pastel on light plastic, color-dodge = neon on dark). ---- */
-.fx-holo-tint { --o: .72; mix-blend-mode: color; }
-.fx-holo-foil { --o: .55; mix-blend-mode: color-dodge; }
+.fx-holo-tint { --o: .5; mix-blend-mode: color; }
+.fx-holo-foil { --o: .42; mix-blend-mode: color-dodge; }
 .fx-holo-tint > i, .fx-holo-foil > i, .fx-holo-spark > i {
   inset: -50%; will-change: transform;
   transform: translate(calc(var(--fx-x, .35) * 16%), calc(var(--fx-y, -.25) * 10%));
-  mask-image: linear-gradient(120deg, rgba(0,0,0,.14) 33%, #000 43%, #000 51%, rgba(0,0,0,.14) 61%);
+  mask-image: linear-gradient(120deg, rgba(0,0,0,.06) 33%, #000 43%, #000 51%, rgba(0,0,0,.06) 61%);
 }
 .fx-holo-foil > i { mask-image: linear-gradient(120deg, rgba(0,0,0,0) 38%, #000 45.5%, #000 48.5%, rgba(0,0,0,0) 56%); }
-.fx-holo-spark > i { mask-image: linear-gradient(120deg, rgba(0,0,0,.12) 34%, #000 44%, #000 50%, rgba(0,0,0,.12) 60%); }
+.fx-holo-spark > i { mask-image: linear-gradient(120deg, rgba(0,0,0,0) 36%, #000 44%, #000 50%, rgba(0,0,0,0) 58%); }
 .fx-holo-tint > i::before, .fx-holo-foil > i::before {
   content: ''; position: absolute; inset: -30%; will-change: transform;
   transform: translate(calc(var(--fx-x, .35) * -20%), calc(var(--fx-y, -.25) * -16%));
@@ -77,7 +77,7 @@
       hsl(340 100% 42%) 0%, hsl(30 100% 40%) 1.6%, hsl(70 95% 36%) 3.2%, hsl(150 90% 34%) 4.8%,
       hsl(195 100% 40%) 6.4%, hsl(240 100% 48%) 8%, hsl(290 100% 46%) 9.6%, hsl(340 100% 42%) 11.2%);
 }
-.fx-holo-spark { --o: .9; mix-blend-mode: color-dodge; }
+.fx-holo-spark { --o: .5; mix-blend-mode: color-dodge; }
 .fx-holo-spark > i::before {
   content: ''; position: absolute; inset: 0; background-size: 89px 89px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='89' height='89'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='turbulence' baseFrequency='.7' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .75 0 0 0 0 .9 0 0 0 0 1 12 0 0 0 -5.4'/%3E%3C/filter%3E%3Crect width='89' height='89' filter='url(%23f)'/%3E%3C/svg%3E");

@@ -1,6 +1,6 @@
 {
   "developers": [
-    { "devId": "sample-studio", "name": "Sample Studio (example listing)", "sample": true, "verified": false,
+    { "devId": "sample-studio", "name": "Sample Studio", "sample": true, "verified": false,
       "apps": [{ "appid": 480, "name": "Spacewar (Steam test app)" }],
       "links": { "patreon": null, "kofi": null, "itch": null, "website": "https://example.com/" },
       "blurb": "Placeholder showing how an indie developer listing looks. Not a real studio." }

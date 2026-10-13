@@ -18,7 +18,7 @@ const FILTERS = {
 
 let win = null;
 let play = null; // { hwnd, timer, lastCursor, lastRect }
-let economy = null; // registerEconomyIpc() result: coins/XP, hosted-game session
+let economy = null; // registerEconomyIpc() result: coins/XP for time spent, hosted-game session, mods
 
 const send = (ch, data) => {
   if (win && !win.isDestroyed()) win.webContents.send('ror:' + ch, data);
@@ -46,7 +46,10 @@ function createWindow() {
   win.on('closed', () => {
     stopPlay();
     win = null;
+    economy?.onWindowState();
   });
+  // Time spent counts while the window is visible and not minimized (or in play mode).
+  for (const ev of ['minimize', 'restore', 'show', 'hide']) win.on(ev, () => economy?.onWindowState());
 }
 
 // ---- Sources & displays -------------------------------------------------
@@ -217,7 +220,7 @@ function registerIpc() {
 
 app.whenReady().then(() => {
   registerIpc();
-  economy = registerEconomyIpc({ ipcMain, getWindow: () => win, detectSteamGame, userDataDir: app.getPath('userData') });
+  economy = registerEconomyIpc({ ipcMain, getWindow: () => win, detectSteamGame, isPlaying: () => !!play, userDataDir: app.getPath('userData') });
   createWindow();
   // Global so they work while the game has focus; the renderer decides what to do.
   // Stopping is handled here so a hung/crashed renderer can't trap the user in the click-through overlay.

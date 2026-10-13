@@ -1,6 +1,7 @@
 'use strict';
-// The hosted-game session: which game Shellcade is showing, its achievement watcher, play-time ticks
-// while play mode is on, and (Windows) detection of newly launched Steam games.
+// The hosted-game session: which game Shellcade is showing, its achievement watcher (only while
+// achievement rewards are on), and (Windows) detection of newly launched Steam games. Time spent is
+// counted by activity.js, which credits the hosted game's appid through app().
 const path = require('path');
 const { EventEmitter } = require('events');
 
@@ -33,9 +34,9 @@ const attempt = (fn, fallback = null) => {
 
 class SessionManager extends EventEmitter {
   constructor({ economy, steam = loadSteam(), detectSteamGame = async () => null, getProcessInfo = () => null,
-    platform = process.platform, now = Date.now, tickMs = 30e3, pollMs = 5e3 } = {}) {
+    platform = process.platform, now = Date.now, pollMs = 5e3, beforeChange = () => {} } = {}) {
     super();
-    Object.assign(this, { economy, steam, detectSteamGame, getProcessInfo, platform, now, tickMs, pollMs });
+    Object.assign(this, { economy, steam, detectSteamGame, getProcessInfo, platform, now, pollMs, beforeChange });
     this.cur = null; // { hwnd, exePath, appid, name, startedAt, watcher }
     this.playing = false;
   }
@@ -53,21 +54,21 @@ class SessionManager extends EventEmitter {
     const c = this.cur;
     if (c && (hwnd ? c.hwnd === hwnd : c.exePath === exe)) return { appid: c.appid, name: c.name };
     this.sessionStop();
+    attempt(() => this.beforeChange());
     const app = this._appForExe(exe);
     const s = (this.cur = {
       hwnd, exePath: exe, appid: app ? app.appid : null, startedAt: this.now(), watcher: null,
       name: (app && app.name) || String(sourceName || '').slice(0, 200) || (exe ? path.basename(exe).replace(/\.exe$/i, '') : 'Game'),
     });
-    if (s.appid != null) this._watch(s);
-    if (this.playing) this.lastTick = this.now();
     this.economy.setSession(s);
+    this.refreshWatcher();
     return { appid: s.appid, name: s.name };
   }
 
   sessionStop() {
     const s = this.cur;
     if (!s) return false;
-    this._tick();
+    attempt(() => this.beforeChange());
     // The watcher's final check can still report unlocks for this session, so stop it first.
     if (s.watcher) attempt(() => s.watcher.stop());
     this.cur = null;
@@ -75,13 +76,25 @@ class SessionManager extends EventEmitter {
     return true;
   }
 
-  _watch(s) {
+  // The hosted game, for crediting time: {appid, name} (appid null for non-Steam windows) or null.
+  app() {
+    return this.cur ? { appid: this.cur.appid, name: this.cur.name } : null;
+  }
+
+  // Runs the achievement watcher only while achievement rewards are on and a Steam game is hosted.
+  refreshWatcher() {
+    const s = this.cur;
+    const want = !!(s && s.appid != null && this.economy.getSettings().rewards.achievements);
+    if (s && !want && s.watcher) {
+      attempt(() => s.watcher.stop());
+      s.watcher = null;
+    }
+    if (!want || s.watcher) return;
     const W = this.steam.AchievementWatcher;
     if (typeof W !== 'function') return;
     try {
       const w = new W();
       w.on('unlock', (u) => this._award(s, u));
-      w.on('suspicious', (info) => this.economy.addFlag('suspicious-achievements', { appid: s.appid, count: info && info.count }));
       if (w.start({ appid: s.appid, name: s.name, sessionStart: s.startedAt })) s.watcher = w;
     } catch (err) {
       console.warn('[shell] achievement watcher failed:', err.message);
@@ -104,30 +117,10 @@ class SessionManager extends EventEmitter {
     return this._award({ appid, name: game }, { appid, game, apiName, name: a.name || apiName, desc: a.desc || '', iconUrl });
   }
 
-  // Play mode on/off for hwnd: earns play time for the hosted game while on.
+  // Play mode on/off for hwnd: playing a window hosts it (starts its session).
   setPlaying(playing, hwnd) {
-    if (playing) {
-      if (hwnd && (!this.cur || this.cur.hwnd !== String(hwnd))) this.sessionStart({ hwnd });
-      this.playing = true;
-      this.lastTick = this.now();
-      clearInterval(this.tickTimer);
-      this.tickTimer = setInterval(() => this._tick(), this.tickMs);
-      this.tickTimer.unref?.();
-    } else if (this.playing) {
-      this._tick();
-      this.playing = false;
-      clearInterval(this.tickTimer);
-      this.tickTimer = null;
-    }
-  }
-
-  _tick() {
-    if (!this.playing || !this.cur) return;
-    const t = this.now();
-    const sec = (t - this.lastTick) / 1000;
-    this.lastTick = t;
-    // A tick far later than scheduled (sleep, hang) only counts as one interval.
-    attempt(() => this.economy.addPlayTime(Math.min(sec, (this.tickMs / 1000) * 2), this.cur));
+    if (playing && hwnd && (!this.cur || this.cur.hwnd !== String(hwnd))) this.sessionStart({ hwnd });
+    this.playing = !!playing;
   }
 
   // Windows only: every pollMs, report a Steam game started after the last one seen ('gameLaunched').

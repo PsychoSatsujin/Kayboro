@@ -1,11 +1,7 @@
 'use strict';
-// Creator revenue split (pure). 70% of the net revenue from paid catalog sales goes to listed indie
-// developers, weighted by verified play of their games inside Shellcade.
-//
-// Only the arithmetic lives here. Real payouts need a backend that does not exist yet: it would collect
-// signed per-user play summaries (points() below) after the Steam release, aggregate them per developer
-// for a pay period, run computePayouts() on that period's net revenue and pay via the developer's
-// payout account. Nothing in the app sends play data anywhere today.
+// Creator revenue split (pure). 70% of Shellcade's net revenue goes to listed indie developers,
+// weighted by the play their games get inside Shellcade; 30% stays with Shellcade. payouts.js turns
+// it into the payout sheet (Devs tab > Export payout sheet, tools/payouts/merge-sheets.mjs).
 
 const BP = 10000n; // creatorShare is applied in basis points so the pool is exact integer math
 

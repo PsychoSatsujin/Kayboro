@@ -9,21 +9,29 @@
 // clicks in the page, and window.ror / window.shell calls. Windows-only checks (Steam detection, window moving,
 // play mode, global hotkey) need a running fake game: set FAKE_GAME_TITLE (see .github/workflows/smoke.yml).
 //
+// Shellcade checks use the test-only window.shell hooks (SHELLCADE_TEST=1, set below), a fake Steam
+// install (SHELLCADE_STEAM_ROOT: two games and two Wallpaper Engine wallpapers) and the example mod.
+// The takedown/integrity check briefly rewrites src/catalog/takedowns.json and src/integrity.json; both
+// are restored afterwards (and on the next run if this one was killed).
+//
 // Output: a results table on stdout, test/e2e/out/results.json and one PNG per major step.
-// Exit code 1 if any check FAILs. Hard limit: 150 s for the whole run.
+// Exit code 1 if any check FAILs. Hard limit: 240 s for the whole run.
 
 const { app, dialog, ipcMain, screen } = require('electron');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const zlib = require('zlib');
+const { execFileSync } = require('child_process');
 const { pathToFileURL } = require('url');
+
+process.env.SHELLCADE_TEST = '1'; // main and the preload read it: debugGrant, debugAdvanceTime, debugSimulateUnlock
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const OUT = path.join(__dirname, 'out');
 const IS_WIN = process.platform === 'win32';
 const GAME_TITLE = process.env.FAKE_GAME_TITLE || '';
-const HARD_TIMEOUT_MS = 150000;
+const HARD_TIMEOUT_MS = 240000;
 // Debugging aid: SMOKE_ONLY=app-load,bg-gif runs just those checks (the rest are reported as SKIP).
 const ONLY = (process.env.SMOKE_ONLY || '').split(',').map((s) => s.trim()).filter(Boolean);
 const T0 = Date.now();
@@ -43,17 +51,43 @@ const USER_DATA = path.join(TMP, 'userData');
 fs.mkdirSync(USER_DATA);
 app.setPath('userData', USER_DATA);
 
+// Shipped files the takedown/integrity check changes for a moment. A copy of the originals waits in
+// RESTORE until they are put back, so a killed run is repaired by the next one.
+const TAKEDOWNS = path.join(ROOT, 'src', 'catalog', 'takedowns.json');
+const MANIFEST = path.join(ROOT, 'src', 'integrity.json');
+const RESTORE = path.join(os.tmpdir(), 'shellcade-smoke-restore.json');
+function restoreShipped() {
+  let r;
+  try { r = JSON.parse(fs.readFileSync(RESTORE, 'utf8')); } catch { return false; }
+  fs.writeFileSync(TAKEDOWNS, r.takedowns);
+  if (r.manifest == null) fs.rmSync(MANIFEST, { force: true }); else fs.writeFileSync(MANIFEST, r.manifest);
+  fs.rmSync(RESTORE, { force: true });
+  return true;
+}
+function guardShipped() {
+  if (fs.existsSync(RESTORE)) return;
+  fs.writeFileSync(RESTORE, JSON.stringify({ takedowns: fs.readFileSync(TAKEDOWNS, 'utf8'), manifest: fs.existsSync(MANIFEST) ? fs.readFileSync(MANIFEST, 'utf8') : null }));
+}
+if (restoreShipped()) console.log('[smoke] restored src/catalog/takedowns.json and src/integrity.json left over by an interrupted run');
+
 const rendererErrors = []; // console errors, crashes, failed loads in the app window
 const mainErrors = []; // console.error in the main process ([ror] handler failures, [store] ...)
 const ipcLog = []; // every ror:* invoke: { ch, args, result, ms }
 const dialogLog = []; // every showOpenDialog call
 const pickQueue = []; // file paths the next showOpenDialog calls will "pick"
+const saveQueue = []; // file paths the next showSaveDialog calls will "save" to
 
 dialog.showOpenDialog = async (a, b) => {
   const opts = (b || a || {});
   const file = pickQueue.shift() || null;
   dialogLog.push({ at: Date.now() - T0, filters: opts.filters || null, file });
   return file ? { canceled: false, filePaths: [file] } : { canceled: true, filePaths: [] };
+};
+dialog.showSaveDialog = async (a, b) => {
+  const opts = (b || a || {});
+  const file = saveQueue.shift() || null;
+  dialogLog.push({ at: Date.now() - T0, save: true, filters: opts.filters || null, file });
+  return file ? { canceled: false, filePath: file } : { canceled: true, filePath: '' };
 };
 
 const origHandle = ipcMain.handle.bind(ipcMain);
@@ -228,6 +262,12 @@ function installHelpers() {
     window.ror.onHotkey((name) => S.hotkeys.push({ at: Date.now(), name }));
     window.ror.onPlayState((p) => S.playStates.push({ at: Date.now(), ...p }));
   }
+  // The HUD coin counter must never show a negative number while it animates.
+  S.hudNegative = [];
+  new MutationObserver(() => {
+    const t = document.querySelector('#hudMount .sc-hud-coins .sc-hud-num')?.textContent || '';
+    if (/^[-\u2212]/.test(t)) S.hudNegative.push(t);
+  }).observe(document.getElementById('hudMount'), { subtree: true, childList: true, characterData: true });
   const num = (v) => parseFloat(v);
   S.rectOf = (el) => ({ x: num(el.style.left), y: num(el.style.top), w: num(el.style.width), h: num(el.style.height) });
   S.bcr = (el) => { const b = el.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; };
@@ -381,6 +421,36 @@ function fixture(name, buf) {
   try { fs.copyFileSync(p, path.join(OUT, 'fixture-' + name)); } catch {}
   return p;
 }
+const solidPng = (w, h, rgb) => encodePng(w, h, () => [...rgb, 255]);
+
+// Fake Steam install: two installed games (their exes under steamapps/common) and two Wallpaper Engine
+// workshop items (a usable image and a scene that needs Wallpaper Engine). Read through SHELLCADE_STEAM_ROOT.
+const STEAM = path.join(TMP, 'steam');
+const GAMES = [{ appid: 4242001, name: 'Fake Quest', dir: 'FakeQuest', secs: 600 }, { appid: 4242002, name: 'Tiny Racer', dir: 'TinyRacer', secs: 300 }];
+const gameExe = (g) => path.join(STEAM, 'steamapps', 'common', g.dir, `${g.dir}.exe`);
+const WE_IMAGE = { id: '3100000001', title: 'Smoke Sunset' }, WE_SCENE = { id: '3100000002', title: 'Smoke Scene' };
+const WE_COLOR = [240, 120, 32];
+const FILE_WP_COLOR = [40, 96, 224];
+{
+  const apps = path.join(STEAM, 'steamapps');
+  for (const g of GAMES) {
+    fs.mkdirSync(path.dirname(gameExe(g)), { recursive: true });
+    fs.writeFileSync(gameExe(g), '');
+    fs.writeFileSync(path.join(apps, `appmanifest_${g.appid}.acf`), `"AppState"\n{\n\t"appid"\t\t"${g.appid}"\n\t"name"\t\t"${g.name}"\n\t"installdir"\t\t"${g.dir}"\n}\n`);
+  }
+  const we = path.join(apps, 'workshop', 'content', '431960');
+  const img = path.join(we, WE_IMAGE.id), scene = path.join(we, WE_SCENE.id);
+  fs.mkdirSync(img, { recursive: true });
+  fs.mkdirSync(scene, { recursive: true });
+  fs.writeFileSync(path.join(img, 'sunset.png'), solidPng(64, 36, WE_COLOR));
+  fs.writeFileSync(path.join(img, 'project.json'), JSON.stringify({ title: WE_IMAGE.title, type: 'image', file: 'sunset.png', preview: 'sunset.png' }));
+  fs.writeFileSync(path.join(scene, 'scene.pkg'), 'x');
+  fs.writeFileSync(path.join(scene, 'project.json'), JSON.stringify({ title: WE_SCENE.title, type: 'scene', file: 'scene.pkg' }));
+  process.env.SHELLCADE_STEAM_ROOT = STEAM;
+}
+// The example mod, installed in this run's userData before the app starts.
+const MOD_ID = 'example-shell';
+fs.cpSync(path.join(ROOT, 'examples', 'mods', MOD_ID), path.join(USER_DATA, 'shellcade', 'mods', MOD_ID), { recursive: true });
 
 // ---- Windows API for independent verification (own koffi bindings) ----------------------------
 
@@ -438,9 +508,33 @@ const sameRect = (a, b, tol = 0) => !!a && !!b && near(a.x, b.x, tol) && near(a.
 
 // ---- Checks ------------------------------------------------------------------------------------
 
-const ctx = {}; // shared between checks: frames, game, ...
+const ctx = {}; // shared between checks: frames, game, levels, ...
 const ipcSince = (n, ch) => ipcLog.slice(n).filter((e) => e.ch === 'ror:' + ch);
 const now = () => Date.now();
+
+// Shellcade helpers: tabs, the selected screen, frames, level rewards, the economy's history.jsonl.
+async function showTab(t) {
+  await R((t) => { document.getElementById('tab-' + t).click(); return true; }, t);
+  await waitFor(`the ${t} tab`, () => R((t) => { const p = document.getElementById('panel-' + t); return { ok: !p.hidden && p.childElementCount > 0 }; }, t), 3000);
+}
+async function ensureSel() {
+  if (await R(() => !!__smoke.sel())) return;
+  const p = await R(() => __smoke.grabPoint(__smoke.screens()[0]));
+  assert(p, 'no screen to select');
+  await click(p);
+  await waitFor('a selected screen', () => R(() => ({ ok: !!__smoke.sel() })), 3000);
+}
+async function useFrame(id) {
+  await R((id) => __smoke.click(`#frames .tile[data-id="${id}"]:not(.locked)`), id);
+  await waitFor(`frame ${id} on the selected screen`, () => R((id) => {
+    const i = __smoke.sel()?.querySelector('img.frame');
+    return { ok: !!i && !i.hidden && i.src.endsWith('/' + id + '.svg') && i.complete && i.naturalWidth > 0, src: i?.src };
+  }, id), 5000);
+}
+const levelCoins = (from, to) => (ctx.levels || []).filter((l) => l.level > from && l.level <= to).reduce((s, l) => s + l.rewards.coins, 0);
+const history = () => {
+  try { return fs.readFileSync(path.join(USER_DATA, 'shellcade', 'history.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l)); } catch { return []; }
+};
 
 const CHECKS = [
   { name: 'app-load', timeout: 25000, shot: true, async fn() {
@@ -456,8 +550,10 @@ const CHECKS = [
     const st = await R(async () => ({
       api: ['listSources', 'detectSteamGame', 'getDisplays', 'moveWindowToDisplay', 'startPlay', 'stopPlay', 'onCursor', 'onPlayState',
         'onHotkey', 'pickFile', 'listScenes', 'loadScene', 'saveScene', 'deleteScene', 'setFullscreen'].filter((k) => typeof window.ror?.[k] !== 'function'),
-      shellApi: ['getState', 'listCatalog', 'listDevelopers', 'purchase', 'equip', 'setBackdropSlot', 'buyBackdropSlot', 'listLocalWallpapers',
-        'sessionStart', 'sessionStop', 'openLink', 'onState', 'onUnlock', 'onLevelUp', 'onGameLaunched'].filter((k) => typeof window.shell?.[k] !== 'function'),
+      shellApi: ['getState', 'listCatalog', 'listDevelopers', 'purchase', 'equip', 'setActiveWallpaper', 'setWallpaperPreset', 'buyWallpaperPreset',
+        'listLocalWallpapers', 'sessionStart', 'sessionStop', 'openLink', 'getSettings', 'setSettings', 'getIntegrity', 'getMods', 'reloadMods',
+        'openModsFolder', 'submitDeveloper', 'listSubmissions', 'exportPayoutSheet', 'onState', 'onUnlock', 'onLevelUp', 'onGameLaunched', 'onCatalog']
+        .filter((k) => typeof window.shell?.[k] !== 'function'),
       stub: !!window.ror?.stub,
       screens: document.querySelectorAll('#screens .screen').length,
       frameTiles: document.querySelectorAll('#frames .tile').length,
@@ -1169,6 +1265,512 @@ const CHECKS = [
     return `clip ${fmtRect(s.clip)} == virtual screen, alwaysOnTop false${note}`;
   } },
 
+  // ---- Shellcade: catalog, rewards, shop, wallpapers, mods, takedowns, developers ----
+
+  { name: 'catalog-frames', timeout: 20000, async fn() {
+    const PIXEL = ['px-pocket', 'px-crt', 'px-pet-egg', 'px-arcade', 'px-dungeon', 'px-cloud-castle', 'px-cat-monitor', 'px-space-console'];
+    const VECTOR = ['vx-sakura-handheld', 'vx-magical-compact', 'vx-mecha-hud', 'vx-cozy-wood-tv', 'vx-neko-tv', 'vx-synthwave', 'vx-ufo-pet', 'vx-gallery'];
+    const c = await R(async () => {
+      const cat = await window.shell.listCatalog();
+      const { FRAMES } = await import('./frames/frames.js');
+      const loads = await Promise.all(FRAMES.map((f) => new Promise((res) => {
+        const i = new Image();
+        i.onload = () => res({ id: f.id, w: i.naturalWidth });
+        i.onerror = () => res({ id: f.id, error: true });
+        i.src = f.url;
+      })));
+      const shop = cat.frames.filter((f) => !f.mod);
+      return { ids: shop.map((f) => f.id), starters: shop.filter((f) => f.starter).map((f) => f.id), styles: Object.fromEntries(shop.map((f) => [f.id, f.style])),
+        bad: loads.filter((l) => l.error || !l.w).map((l) => l.id), n: loads.length, mods: cat.frames.filter((f) => f.mod).map((f) => f.id), levels: cat.levels,
+        debug: ['debugGrant', 'debugAdvanceTime', 'debugSimulateUnlock'].filter((k) => typeof window.shell[k] !== 'function') };
+    });
+    ctx.levels = c.levels;
+    assert(!c.debug.length, `window.shell test hooks missing (SHELLCADE_TEST): ${c.debug.join(', ')}`);
+    const missing = [...PIXEL, ...VECTOR].filter((id) => !c.ids.includes(id));
+    assert(c.ids.length === 21 && c.starters.length === 5 && !missing.length, `catalog has ${c.ids.length} frames (${c.starters.length} starters), missing: ${missing.join(', ')}`);
+    assert(PIXEL.every((id) => c.styles[id] === 'pixel') && VECTOR.every((id) => c.styles[id] === 'vector'), `frame styles ${brief(c.styles, 400)}`);
+    assert(!c.bad.length && c.n === 21 + c.mods.length, `frame images that failed to load: ${c.bad.join(', ')} (${c.n} frames)`);
+    assert(c.levels.length === 100, `levels.json has ${c.levels.length} levels`);
+    return `21 shop frames (5 starters + 8 pixel + 8 vector) + ${c.mods.length} mod frame; all ${c.n} images load; 100 levels`;
+  } },
+
+  { name: 'mod-frame', timeout: 15000, shot: true, async fn() {
+    const def = JSON.parse(fs.readFileSync(path.join(ROOT, 'examples', 'mods', MOD_ID, 'mod.json'), 'utf8')).frames[0];
+    const m = await R(async (id) => {
+      const sh = window.shell, mods = await sh.getMods(), cat = await sh.listCatalog(), st = await sh.getState();
+      const mine = mods.find((x) => x.id === id);
+      const items = ['frames', 'wallpapers', 'fills', 'colorways'].flatMap((k) => cat[k].filter((it) => it.mod?.id === id).map((it) => `${k}:${it.id}`));
+      const wp = cat.wallpapers.find((w) => w.mod?.id === id); // wallpapers are never locked: no ownership, no price
+      const tile = document.querySelector(`#frames .tile[data-id="${id}"]`);
+      return { mod: mine && { items: mine.items, errors: mine.errors, skipped: mine.skipped }, items, wpFree: !!wp && wp.price === null && /^file:\/\//.test(wp.media?.url || ''),
+        owned: items.filter((i) => !i.startsWith('wallpapers:') && st.inventory.includes(i.split(':')[1])),
+        url: cat.frames.find((f) => f.id === id)?.url || null, tile: !!tile, locked: !!tile?.classList.contains('locked') };
+    }, MOD_ID);
+    assert(m.mod && m.mod.items === 4 && !m.mod.errors.length && !m.mod.skipped, `getMods() for ${MOD_ID}: ${brief(m.mod)}`);
+    assert(m.items.length === 4 && m.owned.length === 3 && m.wpFree, `mod items ${brief(m.items)}, owned ${brief(m.owned)}, wallpaper free ${m.wpFree}`);
+    assert(/^file:\/\//.test(m.url || '') && m.tile && !m.locked, `mod frame url ${m.url}, tile ${m.tile}, locked ${m.locked}`);
+    await ensureSel();
+    await R((id) => __smoke.click(`#frames .tile[data-id="${id}"]`), MOD_ID);
+    const g = await waitFor('the mod frame on the selected screen', () => R((u) => {
+      const el = __smoke.sel(), img = el.querySelector('img.frame');
+      return { ok: !img.hidden && img.src === u && img.complete && img.naturalWidth > 0, src: img.src, nw: img.naturalWidth, r: __smoke.rectOf(el), f: __smoke.rectOf(el.querySelector('.shell-front')) };
+    }, m.url), 5000);
+    const hole = { x: -g.f.x / g.f.w, y: -g.f.y / g.f.h, w: g.r.w / g.f.w, h: g.r.h / g.f.h };
+    assert(['x', 'y', 'w', 'h'].every((k) => near(hole[k], def.hole[k], 0.005)), `mod frame laid out with hole ${brief(hole)}, mod.json says ${brief(def.hole)}`);
+    return `"${MOD_ID}": ${m.items.join(', ')} (owned, free; the wallpaper unlocked like every wallpaper); frame renders (${g.nw}px) with its hole ${['x', 'y', 'w', 'h'].map((k) => hole[k].toFixed(3)).join('/')}`;
+  } },
+
+  { name: 'time-accrual', timeout: 25000, async fn() {
+    const out = [];
+    for (const g of GAMES) {
+      const r = await R(async (exe, name, secs) => {
+        const sh = window.shell, s = await sh.sessionStart({ exePath: exe, sourceName: name });
+        const t = await sh.debugAdvanceTime(secs);
+        return { s, before: t.before, after: t.state };
+      }, gameExe(g), g.name, g.secs);
+      const min = g.secs / 60, d = (k) => r.after[k] - r.before[k], play = (st) => st.stats.perApp[g.appid]?.playSeconds || 0;
+      const lc = levelCoins(r.before.level, r.after.level);
+      assert(r.s && r.s.appid === g.appid && r.s.name === g.name, `sessionStart(${g.dir}.exe) -> ${brief(r.s)} (want appid ${g.appid})`);
+      assert(r.after.session?.appid === g.appid, `state.session ${brief(r.after.session)}`);
+      assert(d('xp') === min * 10, `${g.name}: +${d('xp')} XP for ${min} min (want ${min * 10})`);
+      assert(d('coins') === min + lc, `${g.name}: +${d('coins')} coins for ${min} min (want ${min} + ${lc} from level rewards)`);
+      assert(near(play(r.after) - play(r.before), g.secs, 0.01), `${g.name}: appid ${g.appid} got ${play(r.after) - play(r.before)} s of play (want ${g.secs})`);
+      assert(near(r.after.stats.totalPlaySeconds - r.before.stats.totalPlaySeconds, g.secs, 1), `totalPlaySeconds +${r.after.stats.totalPlaySeconds - r.before.stats.totalPlaySeconds}`);
+      out.push(`${g.name} (${g.appid}) ${min} min: +${d('coins')} coins, +${d('xp')} XP`);
+    }
+    await R(() => window.shell.sessionStop());
+    // Hidden (not visible) window: no time credited. Visible again: 1 coin + 10 XP a minute.
+    appWin.hide();
+    await waitFor('the window to hide', () => ({ ok: !appWin.isVisible() }), 3000);
+    const hid = await R(() => window.shell.debugAdvanceTime(180));
+    appWin.show();
+    await waitFor('the window to show again', () => ({ ok: appWin.isVisible() }), 3000);
+    const vis = await R(() => window.shell.debugAdvanceTime(60));
+    assert(hid.state.coins === hid.before.coins && hid.state.xp === hid.before.xp, `hidden window earned ${hid.state.coins - hid.before.coins} coins, ${hid.state.xp - hid.before.xp} XP`);
+    assert(vis.state.xp - vis.before.xp === 10 && vis.state.coins - vis.before.coins === 1 + levelCoins(vis.before.level, vis.state.level),
+      `visible minute: +${vis.state.coins - vis.before.coins} coins, +${vis.state.xp - vis.before.xp} XP`);
+    focusApp();
+    return `${out.join('; ')}; hidden 3 min: +0; visible 1 min: +1 coin +10 XP`;
+  } },
+
+  { name: 'achievement-rewards', timeout: 20000, shot: true, async fn() {
+    const [g] = GAMES;
+    // Off by default: an unlock in a hosted game pays nothing.
+    const off = await R(async (appid) => {
+      const sh = window.shell, s0 = await sh.getState(), r = await sh.debugSimulateUnlock(appid, 'ACH_WHILE_OFF'), s1 = await sh.getState();
+      return { on: s0.settings.rewards.achievements, r, d: [s1.coins - s0.coins, s1.xp - s0.xp, s1.stats.achievements - s0.stats.achievements] };
+    }, g.appid);
+    assert(off.on === false, 'achievement rewards are on by default');
+    assert(off.r === null && off.d.every((x) => x === 0), `unlock with rewards off: ${brief(off)}`);
+    // Profile > Settings > "Achievement rewards (beta)", like a user.
+    await showTab('profile');
+    const label = await waitFor('the achievement rewards switch', () => R(() => {
+      const i = document.querySelector('#panel-profile input[aria-label="Achievement rewards"]');
+      return i ? { label: i.closest('.sc-set')?.querySelector('b')?.textContent, checked: i.checked } : { ok: false };
+    }), 4000);
+    assert(label.label === 'Achievement rewards (beta)' && !label.checked, `switch ${brief(label)}`);
+    await R(() => __smoke.click('#panel-profile input[aria-label="Achievement rewards"]'));
+    await waitFor('the setting to turn on', () => R(async () => ({ ok: (await window.shell.getSettings()).rewards.achievements === true })), 3000);
+    const t = await R(() => { document.querySelectorAll('#toasts .sc-toast').forEach((x) => x.remove()); return Date.now(); });
+    const on = await R(async (exe, appid) => {
+      const sh = window.shell;
+      await sh.sessionStart({ exePath: exe });
+      const s0 = await sh.getState(), r = await sh.debugSimulateUnlock(appid, 'ACH_FIRST_WIN'), s1 = await sh.getState();
+      const again = await sh.debugSimulateUnlock(appid, 'ACH_FIRST_WIN'), s2 = await sh.getState();
+      await sh.sessionStop();
+      return { r, again, s0, s1, coinsAgain: s2.coins - s1.coins };
+    }, gameExe(g), g.appid);
+    const lc = levelCoins(on.s0.level, on.s1.level);
+    assert(on.r && on.r.coins === 50 && on.r.xp === 120 && on.r.appid === g.appid && on.r.game === g.name, `award ${brief(on.r)}`);
+    const ach = history().filter((e) => e.type === 'achievement');
+    assert(ach.length === 1 && ach[0].coins === 50 && ach[0].xp === 120 && ach[0].appid === g.appid, `history.jsonl achievements ${brief(ach)}`);
+    const dx = on.s1.xp - on.s0.xp; // a real-time minute may land between the reads (+10 XP, +1 coin)
+    assert((dx === 120 || dx === 130) && on.s1.coins - on.s0.coins === 50 + lc + (dx - 120) / 10, `unlock paid +${on.s1.coins - on.s0.coins} coins, +${dx} XP (want +${50 + lc}, +120)`);
+    assert(on.s1.stats.achievements === on.s0.stats.achievements + 1 && on.s1.stats.perApp[g.appid].achievements === 1, `achievement stats ${brief(on.s1.stats)}`);
+    assert(on.again === null && on.coinsAgain === 0, 'the same achievement paid twice');
+    const toast = await waitFor('the achievement toast', () => R((t) => {
+      const el = document.querySelector('#toasts .sc-toast.sc-ach');
+      return { ok: __smoke.toastSince(t, '^Achievement unlocked: ACH_FIRST_WIN \\+50 coins') && !!el, text: el?.textContent.replace(/\s+/g, ' ').trim() };
+    }, t), 3000);
+    await sleep(700); // entrance animation, for the screenshot
+    return `off by default (no pay); switched on in Profile > Settings; unlock -> +50 coins +120 XP once, toast "${toast.text.slice(0, 80)}"`;
+  } },
+
+  { name: 'level-up', timeout: 15000, shot: true, async fn() {
+    const target = 36; // past holo (25) and clear (35)
+    const s0 = await R(() => window.shell.getState());
+    const need = ctx.levels.find((l) => l.level === target).xpRequired - s0.xp;
+    assert(need > 0, `already at level ${s0.level}`);
+    const t = await R(() => { document.querySelectorAll('#toasts .sc-toast:not(.sc-ach)').forEach((x) => x.remove()); return Date.now(); });
+    const s1 = await R((xp) => window.shell.debugGrant({ xp }), need);
+    assert(s1.level === target, `granted ${need} XP: level ${s1.level} (want ${target})`);
+    const want = ctx.levels.filter((l) => l.level > s0.level && l.level <= target).flatMap((l) => l.rewards.items);
+    const lacking = want.filter((id) => !s1.inventory.includes(id));
+    assert(!lacking.length, `level rewards not in the inventory: ${lacking.join(', ')}`);
+    const extra = s1.coins - s0.coins - levelCoins(s0.level, target); // 1 when a real-time minute landed in between
+    assert(extra === 0 || extra === 1, `level rewards paid ${s1.coins - s0.coins} coins (want ${levelCoins(s0.level, target)})`);
+    const card = await waitFor('the level-up card', () => R((t, lv) => {
+      const el = document.querySelector('#toasts .sc-toast.sc-lvl');
+      const title = el?.querySelector('.sc-lvl-title')?.textContent;
+      return { ok: __smoke.toastSince(t, `^Level ${lv}!$`) && title === `Level ${lv}`, title, rewards: el?.querySelector('.sc-lvl-rewards')?.textContent };
+    }, t, target), 4000);
+    const hud = await R(() => document.querySelector('#hudMount .sc-hud-level b')?.textContent);
+    assert(hud === String(target), `HUD shows level ${hud}`);
+    const coinText = await waitFor('the HUD coins to settle', () => R(async () => {
+      const t = document.querySelector('#hudMount .sc-hud-coins .sc-hud-num').textContent, c = (await window.shell.getState()).coins;
+      return { ok: t === new Intl.NumberFormat('en-US').format(c), t, c, neg: __smoke.hudNegative };
+    }), 4000);
+    assert(!coinText.neg.length, `the HUD coin counter showed ${brief(coinText.neg)}`);
+    await sleep(1600); // let the confetti settle for the screenshot
+    return `+${need} XP: level ${s0.level} -> ${target}, ${want.length} reward items owned, card "${card.title}" (${(card.rewards || '').slice(0, 60)}), HUD Lv ${hud}`;
+  } },
+
+  { name: 'shop-buy-equip-finish', timeout: 20000, async fn() {
+    await ensureSel();
+    await useFrame('px-arcade');
+    await R(() => window.shell.debugGrant({ coins: 1000 }));
+    await showTab('shop');
+    await R(() => __smoke.click('#sc-shop-finishes'));
+    const c0 = await waitFor('the Pearl card with a price', () => R(async () => {
+      const c = document.querySelector('#panel-shop .sc-card[data-id="pearl"]');
+      return { ok: !!c?.querySelector('.sc-act.buy'), cls: c?.className, coins: (await window.shell.getState()).coins };
+    }), 4000);
+    await R(() => __smoke.click('#panel-shop .sc-card[data-id="pearl"] .sc-act.buy'));
+    await R(() => __smoke.click('#panel-shop .sc-card[data-id="pearl"] .sc-act.buy.is-confirm'));
+    const bought = await waitFor('Pearl to be owned', () => R(async () => {
+      const st = await window.shell.getState(), c = document.querySelector('#panel-shop .sc-card[data-id="pearl"]');
+      return { ok: st.inventory.includes('pearl') && !!c?.classList.contains('s-owned'), coins: st.coins, cls: c?.className };
+    }), 4000);
+    const buys = history().filter((e) => e.type === 'purchase');
+    assert(buys.length === 1 && buys[0].itemId === 'pearl' && buys[0].coins === -400 && c0.coins - bought.coins <= 400 && c0.coins - bought.coins >= 399, `Pearl purchase: ${brief(buys)}, coins ${c0.coins} -> ${bought.coins}`);
+    await R(() => __smoke.click('#panel-shop .sc-card[data-id="pearl"] .sc-act.use'));
+    const fx = await waitFor('the pearl finish on the selected screen', () => R(async () => {
+      const st = await window.shell.getState(), w = __smoke.sel()?.querySelector('.shell-front .fx-finish.fx-pearl');
+      const l = w?.querySelector('.fx-l'), img = __smoke.sel()?.querySelector('img.frame');
+      const mask = l ? getComputedStyle(l).maskImage || getComputedStyle(l).webkitMaskImage : '';
+      const a = w?.getBoundingClientRect(), b = img?.getBoundingClientRect();
+      const over = !!a && Math.abs(a.left - b.left) < 1 && Math.abs(a.top - b.top) < 1 && Math.abs(a.width - b.width) < 1 && Math.abs(a.height - b.height) < 1;
+      return { ok: st.equipped.finish === 'pearl' && !!w && !w.hidden && /url\(/.test(mask) && over, over,
+        eq: st.equipped.finish, layers: w?.querySelectorAll('.fx-l').length, mask: mask.slice(0, 60), shaped: w?.classList.contains('fx-shaped'), swatch: document.querySelector('#finishes .swatch[data-v="pearl"]')?.getAttribute('aria-pressed') };
+    }), 5000);
+    assert(fx.swatch === 'true', `Stage > Shell finish swatch for pearl pressed: ${fx.swatch}`);
+    return `bought Pearl for 400 coins (card owned), equipped: ${fx.layers} finish layers masked by the frame (${fx.shaped ? 'carved shape' : 'alpha'}: ${fx.mask}…)`;
+  } },
+
+  { name: 'shell-fill', timeout: 15000, shot: true, async fn() {
+    await showTab('stage');
+    await ensureSel();
+    await R(() => __smoke.click('#colorways .swatch[data-v="clear"]'));
+    await R(() => __smoke.click('#fills .swatch[data-v="starfield"]'));
+    const g = await waitFor('a starfield fill behind the clear shell', () => R(async () => {
+      const st = await window.shell.getState(), el = __smoke.sel(), c = el?.querySelector('.shell-back .fx-fill.fx-fill-screensaver canvas');
+      return { ok: st.equipped.colorway === 'clear' && st.equipped.fill === 'starfield' && !!c && c.width > 0 && el.querySelector('img.frame').style.opacity === '0.55',
+        eq: st.equipped, canvas: c ? `${c.width}x${c.height}` : null, opacity: el?.querySelector('img.frame').style.opacity };
+    }), 5000);
+    return `colorway clear (shell opacity ${g.opacity}) + fill starfield: fill canvas ${g.canvas} behind the shell`;
+  } },
+
+  { name: 'wallpapers', timeout: 30000, shot: true, async fn() {
+    const src = await R(async () => ({ cat: (await window.shell.listCatalog()).wallpapers.map((w) => ({ id: w.id, mod: w.mod?.id || null })),
+      we: (await window.shell.listLocalWallpapers()).map((w) => ({ id: w.id, title: w.title, usable: w.usable })) }));
+    assert(src.cat.filter((w) => !w.mod).length === 3 && src.cat.some((w) => w.mod === MOD_ID), `catalog wallpapers ${brief(src.cat)}`);
+    assert(src.we.length === 2 && src.we[0].id === WE_IMAGE.id && src.we[0].usable && !src.we[1].usable, `Wallpaper Engine list ${brief(src.we)}`);
+    const coins0 = (await R(() => window.shell.getState())).coins, spent0 = history().filter((e) => e.coins < 0).length;
+    await showTab('shop');
+    await R(() => __smoke.click('#sc-shop-wallpapers'));
+    await R(() => __smoke.pick('sc-wp-target', 'stage'));
+    await R(() => { const c = [...document.querySelectorAll('#panel-shop .sc-src .chip')].find((x) => /^All/.test(x.textContent)); c.click(); return true; });
+    const counts = await waitFor('the gallery with every source', () => R(() => {
+      const n = Object.fromEntries([...document.querySelectorAll('#panel-shop .sc-src .chip')].map((c) => [c.firstChild.textContent, Number(c.querySelector('.sc-n').textContent)]));
+      return { ok: n.Shellcade === 3 && n.Mods === 1 && n['Wallpaper Engine'] === 2 && document.querySelectorAll('#panel-shop .sc-wp:not(.is-add)').length === 6, n };
+    }), 6000);
+    const tileSel = (name) => `#panel-shop .sc-wp:not(.is-add)[title^="${name}"]`;
+    // Hovering a tile previews it on the stage; leaving restores.
+    const hp = await R((sel) => { const t = document.querySelector(sel); t.scrollIntoView({ block: 'center' }); const b = t.getBoundingClientRect(); return { x: Math.round(b.left + b.width / 2), y: Math.round(b.top + b.height / 2) }; }, tileSel(WE_IMAGE.title));
+    focusApp();
+    mouse('mouseMove', hp.x, hp.y);
+    await waitFor('the hover preview on the stage', () => R(() => ({ ok: /sunset\.png/.test(document.getElementById('bg').style.backgroundImage) })), 3000);
+    mouse('mouseMove', 20, 20);
+    await waitFor('the preview to end', () => R(() => ({ ok: !/sunset\.png/.test(document.getElementById('bg').style.backgroundImage) })), 3000);
+    const steps = [];
+    const apply = async (name, ref, check) => {
+      await R((sel) => __smoke.click(sel), tileSel(name));
+      const g = await waitFor(`${name} on the stage`, () => R(async (check) => {
+        const st = await window.shell.getState(), bg = document.getElementById('bg');
+        const shows = check.canvas ? !!bg.querySelector('canvas.saver') : bg.style.backgroundImage.includes(check.img);
+        return { ok: shows, active: st.activeWallpaper.stage, coins: st.coins, bg: bg.style.backgroundImage.slice(0, 80) };
+      }, check), 4000);
+      assert(JSON.stringify(g.active) === JSON.stringify(ref), `${name}: activeWallpaper.stage ${brief(g.active)} (want ${brief(ref)})`);
+      steps.push(name);
+      return g;
+    };
+    await apply('Nebula Drift', { source: 'shellcade', id: 'wp-nebula-drift' }, { canvas: true });
+    await apply(WE_IMAGE.title, { source: 'we', id: WE_IMAGE.id }, { img: 'sunset.png' });
+    const fp = await R(() => __smoke.freePoint());
+    const px = await waitFor('Wallpaper Engine pixels on the stage', async () => { const c = await pixelAt(fp.x, fp.y); return { ok: colorNear(c, WE_COLOR, 24), c }; }, 3000, 50);
+    await apply('Dusk Grid', { source: 'mod', id: 'example-dusk-grid' }, { img: 'dusk-grid.svg' });
+    // Any local file, through the "Add a file" tile.
+    const file = fixture('wallpaper.png', solidPng(64, 36, FILE_WP_COLOR));
+    const url = pathToFileURL(file).href;
+    pickQueue.push(file);
+    await R(() => __smoke.click('#panel-shop .sc-wp.is-add'));
+    const f = await waitFor('the picked file on the stage', () => R(async (u) => {
+      const st = await window.shell.getState();
+      return { ok: st.activeWallpaper.stage?.source === 'file' && st.activeWallpaper.stage.url === u && document.getElementById('bg').style.backgroundImage.includes('wallpaper.png'), active: st.activeWallpaper.stage, coins: st.coins };
+    }, url), 4000);
+    const fpx = await waitFor('file pixels on the stage', async () => { const c = await pixelAt(fp.x, fp.y); return { ok: colorNear(c, FILE_WP_COLOR, 24), c }; }, 3000, 50);
+    steps.push('file');
+    // A scene wallpaper needs Wallpaper Engine: a hint, nothing changes.
+    const t = await R(() => Date.now());
+    await R((sel) => __smoke.click(sel), tileSel(WE_SCENE.title));
+    await waitFor('the needs-Wallpaper-Engine toast', () => R((t) => ({ ok: __smoke.toastSince(t, 'needs Wallpaper Engine') }), t), 3000);
+    // The same gallery fills the shell (the clear shell from shell-fill shows it).
+    await R(() => __smoke.pick('sc-wp-target', 'fill'));
+    await R((sel) => __smoke.click(sel), tileSel(WE_IMAGE.title));
+    const fill = await waitFor('the wallpaper as the shell fill', () => R(async (id) => {
+      const st = await window.shell.getState(), img = __smoke.sel()?.querySelector('.shell-back .fx-fill-image img');
+      return { ok: st.activeWallpaper.fill?.id === id && !!img && /sunset\.png$/.test(img.src), fill: st.activeWallpaper.fill, img: img?.src.split('/').pop() };
+    }, WE_IMAGE.id), 4000);
+    await R(() => __smoke.pick('sc-wp-target', 'stage'));
+    assert(f.coins >= coins0 && history().filter((e) => e.coins < 0).length === spent0, `wallpapers cost coins: ${coins0} -> ${f.coins}`);
+    return `gallery ${brief(counts.n)}; hover preview + restore; free on the stage: ${steps.join(', ')} (rendered ${hex(px.c)}, ${hex(fpx.c)}); scene -> hint; shell fill ${fill.img}; no coins spent`;
+  } },
+
+  { name: 'wallpaper-presets', timeout: 20000, shot: true, async fn() {
+    const s0 = await R(() => window.shell.getState());
+    assert(s0.wallpaperPresets.length === 0 && s0.coins >= 200, `start: ${s0.wallpaperPresets.length} presets, ${s0.coins} coins`);
+    await R(() => __smoke.click('#panel-shop .sc-preset.is-buy'));
+    await R(() => __smoke.click('#panel-shop .sc-preset.is-buy.is-confirm'));
+    const s1 = await waitFor('a preset slot to be bought', () => R(async () => { const st = await window.shell.getState(); return { ok: st.wallpaperPresets.length === 1, st }; }), 3000).then((r) => r.st);
+    const pre = history().filter((e) => e.type === 'preset');
+    assert(pre.length === 1 && pre[0].coins === -200 && s0.coins - s1.coins >= 199 && s0.coins - s1.coins <= 200, `preset slot: ${brief(pre)}, coins ${s0.coins} -> ${s1.coins}`);
+    const cur = s1.activeWallpaper.stage;
+    await waitFor('the empty preset tile', () => R(() => ({ ok: !!document.querySelector('#panel-shop .sc-preset.is-empty') })), 3000);
+    await R(() => __smoke.click('#panel-shop .sc-preset.is-empty'));
+    const s2 = await waitFor('the preset to store the wallpaper', () => R(async () => { const st = await window.shell.getState(); return { ok: !!st.wallpaperPresets[0]?.wallpaper, st }; }), 3000).then((r) => r.st);
+    assert(JSON.stringify(s2.wallpaperPresets[0].wallpaper) === JSON.stringify(cur), `preset holds ${brief(s2.wallpaperPresets[0].wallpaper)}, stage shows ${brief(cur)}`);
+    // Switch away, then one click on the preset swaps back (free).
+    await R(() => __smoke.click('#panel-shop .sc-wp:not(.is-add)[title^="Nebula Drift"]'));
+    await waitFor('Nebula Drift on the stage', () => R(async () => ({ ok: (await window.shell.getState()).activeWallpaper.stage?.id === 'wp-nebula-drift' })), 3000);
+    await R(() => __smoke.click('#panel-shop .sc-preset.is-filled .sc-preset-pick'));
+    const s3 = await waitFor('the preset to swap the stage back', () => R(async (want) => {
+      const st = await window.shell.getState();
+      return { ok: JSON.stringify(st.activeWallpaper.stage) === want && document.getElementById('bg').style.backgroundImage.includes('wallpaper.png'), st };
+    }, JSON.stringify(cur)), 3000).then((r) => r.st);
+    assert(s3.coins >= s2.coins && history().filter((e) => e.type === 'preset').length === 1, `swapping presets cost ${s2.coins - s3.coins} coins`);
+    // Stage > Background lists it too.
+    await showTab('stage');
+    const pane = await R(() => ({ type: __smoke.radio('bgType'), slots: [...document.querySelectorAll('#bgSlots .slot .name')].map((n) => n.textContent) }));
+    assert(pane.type === 'wallpaper' && pane.slots.some((n) => /^1\. /.test(n)), `Stage > Background: ${brief(pane)}`);
+    await showTab('shop');
+    return `bought slot 1 for 200 coins, saved ${cur.source} wallpaper, swapped away and back for free; Stage > Background lists ${brief(pane.slots)}`;
+  } },
+
+  { name: 'takedowns-integrity', timeout: 40000, shot: true, async fn() {
+    guardShipped();
+    // npm run integrity
+    execFileSync(process.execPath, [path.join(ROOT, 'tools', 'integrity', 'build-manifest.mjs')], { cwd: ROOT, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, stdio: 'pipe' });
+    const i1 = await R(() => window.shell.getIntegrity({ refresh: true }));
+    assert(i1.ok && i1.checked > 50 && !i1.mismatched.length && !i1.missing.length, `after npm run integrity: ${brief(i1)}`);
+    await showTab('profile');
+    await R(() => __smoke.click('#panel-profile .sc-recheck'));
+    await waitFor('"App files: OK" in Profile > Settings', () => R(() => ({ ok: [...document.querySelectorAll('#panel-profile .sc-set b')].some((b) => b.textContent === 'App files: OK') })), 4000);
+    // Put Night Rain on the stage, then take it down with the equipped Pearl finish, the mod wallpaper and
+    // the Wallpaper Engine item in the shell fill.
+    await showTab('shop');
+    await R(() => __smoke.click('#panel-shop .sc-wp:not(.is-add)[title^="Night Rain"]'));
+    await waitFor('Night Rain on the stage', () => R(async () => ({ ok: (await window.shell.getState()).activeWallpaper.stage?.id === 'wp-night-rain' })), 3000);
+    const gone = ['wp-night-rain', 'pearl', 'example-dusk-grid', WE_IMAGE.id];
+    fs.writeFileSync(TAKEDOWNS, JSON.stringify({ removed: gone.map((id) => ({ id, date: '2026-10-13', reason: 'DMCA request (smoke test)' })) }, null, 2) + '\n');
+    await showTab('profile');
+    await R(() => __smoke.click('#panel-profile .sc-mods-acts button')); // Reload
+    const g = await waitFor('the taken-down items to disappear', () => R(async (gone) => {
+      const sh = window.shell, cat = await sh.listCatalog(), st = await sh.getState(), we = await sh.listLocalWallpapers();
+      const ids = ['frames', 'finishes', 'colorways', 'fills', 'wallpapers'].flatMap((k) => cat[k].map((it) => it.id)).concat(we.map((w) => w.id));
+      const dom = [...document.querySelectorAll('#panel-shop .sc-card, #panel-shop .sc-wp, #finishes .swatch')].map((e) => e.dataset.id || e.dataset.v || e.title);
+      const still = gone.filter((id) => ids.includes(id) || st.inventory.includes(id));
+      const onScreen = !!document.querySelector('#screens .fx-pearl, #screens .fx-fill-image') || !!document.querySelector('#finishes .swatch[data-v="pearl"]');
+      return { ok: !still.length && gone.every((id) => cat.takedowns.includes(id)) && st.equipped.finish === 'none' && !st.activeWallpaper.stage && !st.activeWallpaper.fill && !onScreen,
+        still, takedowns: cat.takedowns, eq: st.equipped, active: st.activeWallpaper, onScreen, dom: dom.length };
+    }, gone), 6000);
+    await showTab('shop');
+    await R(() => __smoke.click('#sc-shop-wallpapers'));
+    const shop = await waitFor('the shop without them', () => R(() => {
+      const names = [...document.querySelectorAll('#panel-shop .sc-wp-meta b')].map((b) => b.textContent);
+      return { ok: names.length > 0 && !names.some((n) => /Night Rain|Dusk Grid|Smoke Sunset/.test(n)), names };
+    }), 3000);
+    await R(() => __smoke.click('#sc-shop-finishes'));
+    await waitFor('no Pearl card', () => R(() => ({ ok: !!document.querySelector('#panel-shop .sc-card[data-id="matte"]') && !document.querySelector('#panel-shop .sc-card[data-id="pearl"]') })), 3000);
+    // A changed shipped file is reported, nothing is blocked.
+    const i2 = await R(() => window.shell.getIntegrity({ refresh: true }));
+    assert(!i2.ok && i2.mismatched.includes('catalog/takedowns.json') && i2.mismatched.length === 1, `after changing takedowns.json: ${brief(i2)}`);
+    await showTab('profile');
+    await R(() => __smoke.click('#panel-profile .sc-recheck'));
+    const warn = await waitFor('the files-differ note', () => R(() => {
+      const row = document.querySelector('#panel-profile .sc-set.is-warn');
+      return { ok: !!row && /1 file differs from the installed version/.test(row.textContent) && /Verify integrity/.test(row.textContent), text: row?.textContent.replace(/\s+/g, ' ').slice(0, 140) };
+    }), 4000);
+    const still = await R(async () => (await window.shell.purchase('mint')).ok);
+    assert(still, 'buying Mint failed while files differ (the check must not block anything)');
+    await R(() => { document.querySelectorAll('#toasts .sc-toast').forEach((x) => x.remove()); document.querySelector('#panel-profile .sc-set.is-warn').scrollIntoView({ block: 'center' }); return true; });
+    await shot('integrity-warning');
+    return `manifest ${i1.checked} files OK; takedown hid ${gone.join(', ')} (catalog, inventory, shop, gallery, stage; finish back to none, active wallpapers cleared; ${shop.names.length} gallery tiles left); ` +
+      `changed file -> ${brief(i2.mismatched)}, "${warn.text}", purchases still work`;
+  }, after: async () => {
+    restoreShipped();
+    await R(() => window.shell.reloadMods()).catch(() => {});
+    await waitFor('the catalog to come back', () => R(async () => ({ ok: (await window.shell.listCatalog()).finishes.some((f) => f.id === 'pearl') })), 3000).catch(() => {});
+  } },
+
+  { name: 'dev-form', timeout: 20000, async fn() {
+    await showTab('devs');
+    const sample = await waitFor('the sample listing marked Example', () => R(() => {
+      const d = document.querySelector('#panel-devs .sc-devlist .sc-dev.is-sample');
+      return { ok: !!d && d.querySelector('.sc-tag.ex')?.textContent === 'Example', name: d?.querySelector('.sc-dev-id b span')?.textContent };
+    }), 4000);
+    // Submitting an empty form shows field errors and saves nothing.
+    await R(() => { document.querySelector('#panel-devs form.sc-form').requestSubmit(); return true; });
+    const errs = await waitFor('field errors', () => R(() => {
+      const bad = [...document.querySelectorAll('#panel-devs form [aria-invalid="true"]')].map((e) => e.name || e.id);
+      return { ok: bad.length >= 3, bad };
+    }), 3000);
+    assert((await R(() => window.shell.listSubmissions())).length === 0, 'an invalid form was saved');
+    const [g] = GAMES;
+    const form = { name: 'Pixel Pals Studio', email: 'hello@pixelpals.example', kofi: 'https://ko-fi.com/pixelpals', paypal: 'pay@pixelpals.example', patreon: 'https://patreon.com/pixelpals', website: 'https://pixelpals.example' };
+    const t = await R(() => Date.now());
+    await R((form, g) => {
+      const set = (el, v) => { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); };
+      for (const [k, v] of Object.entries(form)) set(document.getElementById('sc-dev-' + k), v);
+      set(document.querySelector('#panel-devs [name=gameName]'), g.name);
+      set(document.querySelector('#panel-devs [name=appid]'), String(g.appid));
+      set(document.getElementById('sc-dev-notes'), 'Smoke test listing.');
+      document.getElementById('sc-dev-agree').click();
+      document.querySelector('#panel-devs form.sc-form').requestSubmit();
+      return true;
+    }, form, g);
+    const saved = await waitFor('the submission to be saved', () => R(async (t) => {
+      const l = await window.shell.listSubmissions();
+      return { ok: l.length === 1 && __smoke.toastSince(t, '^Listing saved'), l };
+    }, t), 4000).then((r) => r.l[0]);
+    assert(saved.name === form.name && saved.email === form.email && saved.agree === true && saved.games[0].appid === g.appid && saved.kofi && saved.paypal === form.paypal,
+      `saved submission ${brief(saved, 300)}`);
+    const tag = await waitFor('the hosted-play list to mark the game as submitted', () => R((name) => {
+      const li = [...document.querySelectorAll('#panel-devs .sc-support li')].find((x) => x.querySelector('b')?.textContent === name);
+      return { ok: li?.querySelector('.sc-tag')?.textContent === 'Submitted', tag: li?.querySelector('.sc-tag')?.textContent };
+    }, g.name), 3000);
+    const disk = JSON.parse(fs.readFileSync(path.join(USER_DATA, 'shellcade', 'dev-submissions.json'), 'utf8'));
+    assert(disk.submissions.length === 1 && disk.submissions[0].id === saved.id, 'dev-submissions.json does not hold the submission');
+    // A second studio for the other game (API), then both show in the Devs tab.
+    const r2 = await R((g) => window.shell.submitDeveloper({ name: 'Tiny Wheels', email: 'tw@tiny.example', games: [{ name: g.name, appid: g.appid }], paypal: 'https://paypal.me/tinywheels', agree: true }), GAMES[1]);
+    assert(r2.ok && r2.id, `submitDeveloper: ${brief(r2)}`);
+    return `"${sample.name}" marked Example; empty form -> errors on ${errs.bad.join(', ')}; saved "${saved.name}" (${saved.games.map((x) => `${x.name} ${x.appid}`).join(', ')}) + a second via API`;
+  } },
+
+  { name: 'payout-sheet', timeout: 20000, shot: true, async fn() {
+    const st = await R(() => window.shell.getState());
+    const pts = GAMES.map((g) => { const a = st.stats.perApp[g.appid] || {}; return Math.floor((a.playSeconds || 0) / 60) + 10 * (a.achievements || 0); });
+    const file = path.join(TMP, 'payouts.csv');
+    saveQueue.push(file);
+    // Devs tab: type the revenue, press Export (the save dialog is scripted).
+    const t = await R(() => Date.now());
+    await R(() => {
+      const i = document.getElementById('sc-rev');
+      i.value = '100.00';
+      i.dispatchEvent(new Event('input', { bubbles: true }));
+      [...document.querySelectorAll('#panel-devs .sc-payout button')].find((b) => /Export payout sheet/.test(b.textContent)).click();
+      return true;
+    });
+    await waitFor('the "Payout sheet saved" toast', () => R((t) => ({ ok: __smoke.toastSince(t, '^Payout sheet saved') }), t), 5000);
+    const raw = fs.readFileSync(file, 'utf8');
+    assert(raw.charCodeAt(0) === 0xfeff, 'CSV has no UTF-8 BOM');
+    const rows = raw.slice(1).trim().split(/\r\n/).map((l) => l.split(','));
+    const head = rows[0], col = (n) => head.indexOf(n);
+    assert(['Name', 'Email', 'Ko-fi', 'PayPal', 'Patreon', 'Steam appids', 'Play minutes', 'Points', 'Share %', 'Payout (USD)'].every((n) => col(n) >= 0), `CSV header ${head.join(',')}`);
+    const cents = (r) => Math.round(Number(r[col('Payout (USD)')]) * 100);
+    const devs = rows.slice(1).filter((r) => !r[0].startsWith('_')), sc = rows.find((r) => r[0] === '_shellcade'), total = rows.find((r) => r[0] === '_total');
+    assert(devs.length === 2 && sc && total && !rows.some((r) => r[0] === '_unallocated'), `CSV rows ${brief(rows.map((r) => r.slice(0, 2)))}`);
+    const devSum = devs.reduce((s, r) => s + cents(r), 0);
+    assert(devSum === 7000 && cents(sc) === 3000 && cents(total) === 10000, `dev payouts sum ${devSum} cents, Shellcade ${cents(sc)}, total ${cents(total)} (want 7000 / 3000 / 10000)`);
+    assert(sc[col('Name')] === 'Shellcade (30%)', `Shellcade row "${sc[col('Name')]}"`);
+    GAMES.forEach((g, i) => {
+      const r = devs.find((x) => x[col('Steam appids')] === String(g.appid));
+      assert(r, `no row for appid ${g.appid}`);
+      assert(Number(r[col('Points')]) === pts[i] && Math.abs(cents(r) - (7000 * pts[i]) / (pts[0] + pts[1])) < 1, `${g.name}: ${r.join(',')} (want ${pts[i]} points)`);
+    });
+    // Usage file for merging, then tools/payouts/merge-sheets.mjs over two installs' files.
+    const usage = path.join(TMP, 'usage.json');
+    assert(await R((f) => window.shell.exportPayoutSheet({ revenueCents: 0, filePath: f }), usage) === usage, 'usage JSON not saved');
+    const merged = path.join(TMP, 'merged.csv');
+    execFileSync(process.execPath, [path.join(ROOT, 'tools', 'payouts', 'merge-sheets.mjs'), '--revenue', '250.00', '--out', merged, file, usage],
+      { cwd: ROOT, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, stdio: 'pipe' });
+    const m = fs.readFileSync(merged, 'utf8').slice(1).trim().split(/\r\n/).map((l) => l.split(','));
+    const mDevs = m.slice(1).filter((r) => !r[0].startsWith('_')), mSum = mDevs.reduce((s, r) => s + cents(r), 0);
+    assert(mDevs.length === 2 && mSum === 17500 && cents(m.find((r) => r[0] === '_shellcade')) === 7500, `merged sheet ${brief(m)}`);
+    await R(() => document.querySelector('#panel-devs .sc-payout').scrollIntoView({ block: 'center' }));
+    return `CSV (BOM, ${devs.length} devs): ${devs.map((r) => `${r[col('Name')]} ${r[col('Points')]} pts $${r[col('Payout (USD)')]}`).join(', ')}, Shellcade (30%) $${sc[col('Payout (USD)')]}, total $${total[col('Payout (USD)')]}; merge-sheets over 2 files: devs $${(mSum / 100).toFixed(2)} of $250`;
+  } },
+
+  { name: 'profile-track', timeout: 10000, async fn() {
+    await showTab('profile');
+    const st = await R(() => window.shell.getState());
+    const p = await waitFor('the 100-level reward track', () => R(() => {
+      const n = [...document.querySelectorAll('#panel-profile .sc-track > li.sc-node')];
+      return { ok: n.length === 100, n: n.length, claimed: n.filter((x) => x.classList.contains('s-claimed')).length, next: document.querySelector('#panel-profile .sc-track [aria-current="step"] .sc-node-lv')?.textContent,
+        games: [...document.querySelectorAll('#panel-profile .sc-game b')].map((b) => b.textContent) };
+    }), 4000);
+    assert(p.claimed === st.level && p.next === String(st.level + 1), `track: ${p.claimed} claimed, next ${p.next} (level ${st.level})`);
+    assert(GAMES.every((g) => p.games.includes(g.name)), `played games ${brief(p.games)}`);
+    return `${p.n} levels, ${p.claimed} claimed, next ${p.next}; games ${p.games.join(', ')}`;
+  } },
+
+  { name: 'showcase', timeout: 30000, async fn() {
+    // The stage: a pixel shell with the holo finish, then each tab, for the screenshots.
+    await showTab('stage');
+    await ensureSel();
+    await useFrame('px-arcade');
+    await R(() => __smoke.click('#colorways .swatch[data-v="default"]'));
+    await R(() => __smoke.click('#finishes .swatch[data-v="holo"]'));
+    await R(() => __smoke.click('#fills .swatch[data-v=""]'));
+    await waitFor('the holo finish on the arcade shell', () => R(() => {
+      const w = __smoke.sel()?.querySelector('.shell-front .fx-finish.fx-holo');
+      return { ok: !!w && !w.classList.contains('fx-pending') };
+    }), 5000);
+    await R(() => { document.querySelectorAll('#toasts .sc-toast').forEach((t) => t.remove()); document.querySelector('#panel-stage details:nth-of-type(4)')?.scrollIntoView({ block: 'start' }); return true; });
+    await sleep(400);
+    await shot('stage-pixel-holo');
+    for (const [tab, sub] of [['shop', 'frames'], ['shop', 'wallpapers'], ['profile'], ['devs']]) {
+      await showTab(tab);
+      if (sub) await R((s) => __smoke.click('#sc-shop-' + s), sub);
+      await R((t) => { document.querySelectorAll('#toasts .sc-toast').forEach((x) => x.remove()); document.getElementById('panel-' + t).scrollTop = 0; return true; }, tab);
+      await sleep(500);
+      await shot(sub ? `${tab}-${sub}` : tab);
+    }
+    await showTab('stage');
+    return 'screenshots: stage-pixel-holo, shop-frames, shop-wallpapers, profile, devs';
+  } },
+
+  { name: 'window-resize', timeout: 10000, async fn() {
+    // Shrinking the window pulls every shell that now pokes out (under the sidebar) back onto the stage.
+    await showTab('stage');
+    const [w0, h0] = appWin.getContentSize();
+    appWin.setContentSize(1024, 768);
+    const inside = () => R(() => {
+      const vs = __smoke.visibleStage(), out = [];
+      for (const el of __smoke.screens()) {
+        const f = el.querySelector('.shell-front'), r = __smoke.bcr(f && !f.hidden ? f : el);
+        if (r.x < -1 || r.y < -1 || r.x + r.w > vs.w + 1 || r.y + r.h > vs.h + 1) out.push(r);
+      }
+      return { ok: innerWidth === 1024 && out.length === 0, size: [innerWidth, innerHeight], vs, out };
+    });
+    const g = await waitFor('every shell inside the 1024x768 stage', inside, 5000, 100);
+    ctx.restoreSize = [w0, h0];
+    return `1024x768: ${await R(() => __smoke.screens().length)} screen(s) inside the visible stage ${g.vs.w}x${g.vs.h}`;
+  }, after: async () => {
+    await shot('window-1024');
+    if (ctx.restoreSize) appWin.setContentSize(...ctx.restoreSize);
+    await sleep(400);
+  } },
+
   { name: 'no-renderer-errors', timeout: 5000, async fn() {
     const toasts = await R(() => __smoke.toasts.map((t) => t.text)).catch(() => []);
     ctx.toasts = toasts;
@@ -1210,6 +1812,7 @@ async function finish(reason) {
     checks: results, rendererErrors, mainErrors, toasts: ctx.toasts || null, dialogs: dialogLog,
     ipc: ipcLog.map(({ raw, ...e }) => e),
   };
+  try { restoreShipped(); } catch (err) { console.log('could not restore shipped files:', err.message); }
   try { fs.writeFileSync(path.join(OUT, 'results.json'), JSON.stringify(report, null, 2)); } catch (err) { console.log('could not write results.json:', err.message); }
   printTable();
   if (reason) console.log(`Aborted: ${reason}\n`);

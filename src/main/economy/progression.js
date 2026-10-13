@@ -1,9 +1,9 @@
 'use strict';
-// Level curve (pure). Level 1 starts at 0 XP; each step costs ~50 XP early and ~670 XP near the cap,
-// so level 100 (~30k XP) takes roughly 40 h of hosted play plus a typical run of achievements.
+// Level curve (pure). Level 1 starts at 0 XP; each step costs 60 XP early and ~810 XP near the cap,
+// so level 100 (~36k XP) takes roughly 60 h of use at 10 XP per minute.
 const MAX_LEVEL = 100;
 
-const stepCost = (l) => 5 * Math.round((50 + 0.65 * Math.pow(l - 1, 1.5)) / 5); // XP from level l to l+1
+const stepCost = (l) => 5 * Math.round((60 + 0.78 * Math.pow(l - 1, 1.5)) / 5); // XP from level l to l+1
 const TABLE = [0, 0]; // TABLE[l] = total XP needed to reach level l
 for (let l = 2; l <= MAX_LEVEL; l++) TABLE[l] = TABLE[l - 1] + stepCost(l - 1);
 

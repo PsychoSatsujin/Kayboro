@@ -5,6 +5,7 @@ import { Stage } from './stage.js';
 import { initUI } from './ui.js';
 import { parseAspect, scaleRect, frameOuterRect } from './layout.js';
 import { frameById, setCatalogFrames, STARTERS } from './frames/frames.js';
+import { buildGallery, resolveRef, normRef } from './panels/logic.js';
 
 const ror = window.ror || makeRorStub();
 const shell = window.shell || makeShellStub();
@@ -22,6 +23,7 @@ function addStylesheet(href) {
 const app = {
   ror, shell, scene: null, playing: false, playId: null, fullscreen: false, uiHidden: false,
   state: null, catalog: emptyCatalog(), wallpapers: [], fx: null, mods: {}, hosted: null, // hosted = { id, hwnd } of the session screen
+  preview: null, // { entry, target } while a gallery tile is hovered
 
   get(id) { return this.scene.screens.find(s => s.id === id) || null; },
   sel() { return this.get(this.scene.selectedId); },
@@ -113,32 +115,106 @@ const app = {
   setFit(fit) { this.update(s => { s.fit = fit; }); },
   toggleFit(id) { this.update(s => { s.fit = s.fit === 'contain' ? 'cover' : 'contain'; }, id); },
   // Picking a frame snaps the screen to the frame opening's native aspect and keeps the whole shell on the stage.
-  setFrame(frameId) { this.update(s => { Object.assign(s, { frame: frameId, customFrame: null, aspect: 'source' }); this.applyAspect(s); this.fitShell(s); }); },
+  setFrame(frameId) { this.update(s => { Object.assign(s, { frame: frameId, customFrame: null, aspect: 'source' }); this.applyAspect(s); if (this.frameOf(s)) this.fitShell(s); }); },
   setCustomFrame(cf) { this.update(s => { Object.assign(s, { frame: null, customFrame: cf, aspect: 'source' }); this.applyAspect(s); this.fitShell(s); }); },
+  // Scales a screen down and nudges it so its whole shell (or the bare screen) sits on the visible stage.
   fitShell(s, m = 16) {
-    const f = this.frameOf(s), a = stageArea();
-    if (!f) return;
+    const f = this.frameOf(s), a = stageArea(), hole = f?.hole || { x: 0, y: 0, w: 1, h: 1 };
     const top = this.uiHidden ? m : Math.max(m, (document.getElementById('hud')?.getBoundingClientRect().bottom || 0) + 12); // clear of the HUD
-    const o = frameOuterRect(s.rect, f.hole), k = Math.min(1, (a.w - 2 * m) / o.w, (a.h - top - m) / o.h);
+    const o = frameOuterRect(s.rect, hole), k = Math.min(1, (a.w - 2 * m) / o.w, (a.h - top - m) / o.h);
     if (k < 1) s.rect = scaleRect(s.rect, k);
-    const p = frameOuterRect(s.rect, f.hole);
+    const p = frameOuterRect(s.rect, hole);
     const d = (lo, len, min, max) => (lo < min ? min - lo : lo + len > max ? max - lo - len : 0);
     s.rect = { ...s.rect, x: s.rect.x + d(p.x, p.w, m, a.w - m), y: s.rect.y + d(p.y, p.h, top, a.h - m) };
   },
-  setBackground(patch) { Object.assign(this.scene.background, patch); this.changed(); },
-  // A wallpaper backdrop resolves to an image/video background (or the colour when its slot is empty).
+  // After the window shrinks: pull every shell that now pokes out of the visible stage back in.
+  keepOnStage() {
+    if (this.playing || !this.scene) return;
+    const a = stageArea();
+    let moved = false;
+    for (const s of this.scene.screens) {
+      const o = frameOuterRect(s.rect, this.frameOf(s)?.hole || { x: 0, y: 0, w: 1, h: 1 });
+      if (o.x >= -1 && o.y >= -1 && o.x + o.w <= a.w + 1 && o.y + o.h <= a.h + 1) continue;
+      const before = JSON.stringify(s.rect);
+      this.fitShell(s);
+      moved ||= JSON.stringify(s.rect) !== before;
+    }
+    if (moved) this.changed();
+  },
+  setBackground(patch) {
+    Object.assign(this.scene.background, patch);
+    this.changed();
+    // The stage now shows something other than a gallery wallpaper: the free active slot is cleared.
+    if (this.scene.background.type !== 'wallpaper' && this.state?.activeWallpaper?.stage) {
+      shell.setActiveWallpaper?.(null, 'stage').then(r => r?.state && this.setState(r.state)).catch(() => {});
+    }
+  },
+
+  // ---- Wallpapers: one gallery (catalog + mods, Wallpaper Engine, files), as the backdrop or a shell fill ----
+  wallpaperGallery() {
+    const gone = new Set(this.catalog.takedowns || []); // taken-down ids are hidden everywhere
+    return buildGallery({ catalog: this.catalog.wallpapers, we: this.wallpapers.filter(w => !gone.has(String(w.id))), resolve: f => new URL(`./${f}`, import.meta.url).href });
+  },
+  wallpaperEntry(ref) { return ref ? resolveRef(ref, this.wallpaperGallery()) : null; },
+  // Gallery entry -> what the stage draws: { type: 'screensaver', id, palette } | { type: 'image'|'video', url }.
+  wallpaperSpec(w) {
+    if (!w?.usable) return null;
+    if (w.type === 'screensaver') return { type: 'screensaver', id: w.fill, palette: w.palette || null };
+    return { type: w.type === 'video' ? 'video' : 'image', url: w.url };
+  },
+  // A screen's shell fill (a fill item id or a wallpaper reference) -> the spec, or null when it can't show.
+  fillSpec(fill) {
+    if (!fill) return null;
+    if (typeof fill === 'object') return this.wallpaperSpec(this.wallpaperEntry(fill));
+    const it = this.item('fills', fill);
+    if (!it || !this.owns(fill)) return null;
+    if (it.media?.url) return { type: it.media.type === 'video' ? 'video' : 'image', url: it.media.url };
+    return { type: 'screensaver', id: it.base || it.id, palette: it.base ? it.colors || null : null };
+  },
+  // Any wallpaper, any time, free: on the stage or in the selected screen's shell fill.
+  async setWallpaper(ref, target = 'stage') {
+    ref = normRef(ref);
+    this.preview = null;
+    if (target === 'fill') this.update(s => { s.fill = ref; });
+    else { this.scene.background = { ...this.scene.background, type: ref ? 'wallpaper' : 'color', ref }; this.changed(); }
+    const r = await shell.setActiveWallpaper(ref, target).catch(() => null);
+    if (r?.state) this.setState(r.state);
+    return r;
+  },
+  // Live preview while a gallery tile is hovered (null restores).
+  previewWallpaper(entry, target = 'stage') {
+    this.preview = entry?.usable ? { entry, target } : null;
+    stage.render();
+  },
+  // What the stage background draws: wallpapers and fill-based savers resolve to image/video/screensaver.
   bgSource() {
-    const b = this.scene.background;
-    if (b.type !== 'wallpaper') return b;
-    const id = this.state?.backdropSlots?.find(x => x.slot === b.slot)?.wallpaperId;
-    const w = id && this.wallpapers.find(x => x.id === id);
-    return w?.usable && w.fileUrl ? { ...b, type: w.type === 'video' ? 'video' : 'image', url: w.fileUrl } : { ...b, type: 'color' };
+    const b = this.scene.background, p = this.preview?.target === 'stage' ? this.preview.entry : null;
+    if (p || b.type === 'wallpaper') {
+      const spec = this.wallpaperSpec(p || this.wallpaperEntry(b.ref));
+      return spec ? { ...b, ...spec, palette: spec.palette || null } : { ...b, type: 'color' };
+    }
+    if (b.type === 'screensaver') {
+      const it = this.item('fills', b.id);
+      if (it?.media?.url) return { ...b, type: it.media.type === 'video' ? 'video' : 'image', url: it.media.url };
+      if (it?.base) return { ...b, id: it.base, palette: it.colors || null };
+    }
+    return b;
   },
   async refreshWallpapers() {
     const list = await shell.listLocalWallpapers().catch(() => []);
     this.wallpapers = Array.isArray(list) ? list : [];
-    stage.renderBg();
+    stage.render();
+    ui?.stateChanged();
     return this.wallpapers;
+  },
+  // Fresh catalog (mods reloaded, takedowns): frames, looks and wallpapers everywhere.
+  async refreshCatalog(cat = null) {
+    cat = cat || await shell.listCatalog().catch(() => null);
+    if (!cat || typeof cat !== 'object') return;
+    this.catalog = { ...emptyCatalog(), ...cat };
+    setCatalogFrames(this.catalog.frames);
+    ui?.catalogChanged();
+    stage?.render();
   },
   nudge(dx, dy) { this.update(s => { s.rect = { ...s.rect, x: s.rect.x + dx, y: s.rect.y + dy }; }); },
   scale(f) { this.update(s => { const r = scaleRect(s.rect, f); if (Math.min(r.w, r.h) >= 40) s.rect = r; }); },
@@ -160,7 +236,10 @@ const app = {
     this.hosted = { id: s.id, hwnd: s.hwnd };
     ui?.render();
     const r = await shell.sessionStart({ hwnd: s.hwnd, exePath: s.exePath || null, sourceName: s.sourceName || '' }).catch(() => null);
-    if (r?.appid != null && this.hosted?.hwnd === s.hwnd) this.toast({ title: `Hosting ${r.name}`, body: 'Achievements you unlock now earn coins.', kind: 'info' });
+    if (r?.appid != null && this.hosted?.hwnd === s.hwnd) {
+      this.toast({ title: `Hosting ${r.name}`, kind: 'info',
+        body: this.state?.settings?.rewards?.achievements ? 'Achievements you unlock now earn coins.' : 'Your play time here counts toward its developer.' });
+    }
   },
   syncSession() {
     const h = this.hosted;
@@ -207,7 +286,7 @@ function blankScreen() {
   const eq = app.equipped();
   return { id: uid(), sourceId: null, sourceName: '', hwnd: null, exePath: null, rect: { x: 80, y: 80, w: 480, h: 270 },
     aspect: 'source', fit: 'contain', frame: null, customFrame: null, z: 1, visible: true,
-    finish: eq.finish ?? 'none', colorway: eq.colorway ?? 'default', fill: eq.fill ?? null };
+    finish: eq.finish ?? 'none', colorway: eq.colorway ?? 'default', fill: app.state?.activeWallpaper?.fill || eq.fill || null };
 }
 
 // Visible stage: the window minus the sidebar (full width when the sidebar is hidden).
@@ -223,8 +302,8 @@ function centredRect(w, h) {
   return { x: Math.round((a.w - w) / 2), y: Math.round((a.h - h) / 2), w, h };
 }
 
-// Background types: color, image, video, screensaver (id = fill id), wallpaper (slot = backdrop slot).
-const defaultBackground = () => ({ type: 'color', color: '#0f0d16', url: '', fit: 'cover', id: null, slot: 0 });
+// Background types: color, image, video, screensaver (id = fill id), wallpaper (ref = gallery wallpaper reference).
+const defaultBackground = () => ({ type: 'color', color: '#0f0d16', url: '', fit: 'cover', id: null, ref: null });
 
 function defaultScene() {
   const w = Math.round(Math.min(960, stageArea().w * 0.6)), h = Math.round(w * 9 / 16);
@@ -235,14 +314,17 @@ function defaultScene() {
 function normalizeScene(sc) {
   if (!sc || typeof sc !== 'object' || !Array.isArray(sc.screens)) return null;
   const screens = sc.screens.filter(s => s && s.rect && [s.rect.x, s.rect.y, s.rect.w, s.rect.h].every(Number.isFinite))
-    .map((s, i) => ({ ...blankScreen(), ...s, id: String(s.id || uid()), z: Number.isFinite(s.z) ? s.z : i + 1 }));
+    .map((s, i) => ({ ...blankScreen(), ...s, id: String(s.id || uid()), z: Number.isFinite(s.z) ? s.z : i + 1 }))
+    .map(s => (s.fill && typeof s.fill === 'object' ? { ...s, fill: normRef(s.fill) } : s));
   const background = { ...defaultBackground(), ...sc.background };
+  background.ref = normRef(background.ref);
+  if (background.type === 'wallpaper' && !background.ref) background.type = 'color'; // old backdrop-slot scenes
   const selectedId = screens.some(s => s.id === sc.selectedId) ? sc.selectedId : screens[0]?.id ?? null;
   return { version: 1, background, screens, selectedId };
 }
 
 function emptyCatalog() {
-  return { frames: [], finishes: [], colorways: [], fills: [], backdrops: [], levels: [] };
+  return { frames: [], finishes: [], colorways: [], fills: [], wallpapers: [], levels: [], takedowns: [] };
 }
 
 // Plain-browser fallback so the UI still works without the Electron preload.
@@ -281,18 +363,19 @@ function makeShellStub() {
     levels: [{ level: 1, xpRequired: 0, rewards: { coins: 0, items: [] } }],
   };
   const state = {
-    coins: 0, xp: 0, level: 1, xpIntoLevel: 0, xpForNext: 50, inventory: [...STARTERS.map(f => f.id), 'none', 'default'],
-    equipped: { finish: 'none', colorway: 'default', fill: null }, backdropSlots: [],
-    stats: { totalPlaySeconds: 0, achievements: 0, perApp: {} }, session: null, flags: [],
+    coins: 0, xp: 0, level: 1, xpIntoLevel: 0, xpForNext: 60, inventory: [...STARTERS.map(f => f.id), 'none', 'default'],
+    equipped: { finish: 'none', colorway: 'default', fill: null }, wallpaperPresets: [], activeWallpaper: { stage: null, fill: null },
+    stats: { totalPlaySeconds: 0, achievements: 0, perApp: {} }, session: null, settings: { rewards: { achievements: false } },
   };
-  const get = async () => structuredClone(state), off = () => () => {};
+  const get = async () => structuredClone(state), off = () => () => {}, offline = async () => ({ ok: false, reason: 'offline', state: await get() });
   return {
     stub: true, getState: get, listCatalog: async () => structuredClone(catalog), listDevelopers: async () => [],
-    purchase: async () => ({ ok: false, reason: 'offline', state: await get() }),
+    purchase: offline, buyWallpaperPreset: offline, setWallpaperPreset: offline,
     equip: async (slot, id) => { if (slot in state.equipped && (id === null || state.inventory.includes(id))) state.equipped[slot] = id; return { ok: true, state: await get() }; },
-    setBackdropSlot: async () => ({ ok: false, reason: 'offline', state: await get() }), buyBackdropSlot: async () => ({ ok: false, reason: 'offline', state: await get() }),
+    setActiveWallpaper: async (ref, target = 'stage') => { if (target in state.activeWallpaper) state.activeWallpaper[target] = ref || null; return { ok: true, state: await get() }; },
     listLocalWallpapers: async () => [], sessionStart: async () => null, sessionStop: async () => false, openLink: async () => false,
-    onState: off, onUnlock: off, onLevelUp: off, onGameLaunched: off,
+    getSettings: async () => structuredClone(state.settings), setSettings: async () => structuredClone(state.settings),
+    onState: off, onUnlock: off, onLevelUp: off, onGameLaunched: off, onCatalog: off,
   };
 }
 
@@ -334,12 +417,15 @@ app.scene = restored || defaultScene();
 stage = new Stage(app, document.getElementById('stage'));
 ui = initUI(app);
 app.changed();
-if (app.scene.background.type === 'wallpaper') app.refreshWallpapers();
+app.refreshWallpapers(); // the user's own Wallpaper Engine folder, for the gallery and saved references
 addEventListener('keydown', onKey);
+let fitTimer = 0;
+addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => app.keepOnStage(), 150); });
 ror.onHotkey(name => { if (name === 'toggle-play') app.togglePlay(); else if (name === 'toggle-ui') app.toggleUI(); });
 ror.onPlayState(p => { if (p) app.setPlaying(p.playing); });
 ror.onCursor(c => { if (app.playing && c) stage.showCursor(app.get(app.playId), c.u, c.v, c.inside); });
 shell.onState(s => app.setState(s));
+shell.onCatalog?.(c => app.refreshCatalog(c));
 shell.onUnlock(e => app.toast(e, 'achievement'));
 shell.onLevelUp(e => app.toast(e, 'levelUp'));
 shell.onGameLaunched(ev => app.toast({

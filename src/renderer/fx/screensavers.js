@@ -235,15 +235,21 @@ function plasma({ pal: [a, b, c3] }) {
 }
 
 function pixelRain({ pal: [bg, ga, gb], rand }) {
-  const luts = [ga, gb].map(col => ramp([mix(bg, col, 0.04), mix(bg, col, 0.22), mix(bg, col, 0.6), col, mix(col, WHITE, 0.75)]));
-  let cell, gw, gh, heat, kind, drops, sparks, buf, img, words, grid;
+  // soft: dimmer heads (the colour itself, not white-hot) for big canvases such as a stage wallpaper.
+  const lut = soft => [ga, gb].map(col => ramp(soft ? [mix(bg, col, 0.03), mix(bg, col, 0.14), mix(bg, col, 0.38), mix(bg, col, 0.72), col]
+    : [mix(bg, col, 0.04), mix(bg, col, 0.22), mix(bg, col, 0.6), col, mix(col, WHITE, 0.75)]));
+  let luts, cell, gw, gh, heat, kind, drops, sparks, buf, img, words, grid, bloom = 0.45;
   const drop = y => ({ x: floor(rand() * gw), y: y ?? -rand() * gh * 0.6, v: 9 + rand() * 18 });
   return {
     warm: 45,
     resize(w, h, k) {
       cell = clamp(round(min(w, h) / 38), 5, 12); gw = ceil(w / cell); gh = ceil(h / cell);
       heat = new Float32Array(gw * gh); kind = Uint8Array.from({ length: gw }, () => (rand() < 0.3 ? 1 : 0));
-      drops = Array.from({ length: max(4, round(gw * 0.55)) }, () => drop(rand() * gh)); sparks = [];
+      // Big canvases (a stage wallpaper) get sparser, softer rain so the shell stays the brightest thing on screen.
+      const big = gw * gh > 4000;
+      bloom = big ? 0.25 : 0.45;
+      luts = lut(big);
+      drops = Array.from({ length: max(4, round(gw * (big ? 0.28 : 0.55))) }, () => drop(rand() * gh)); sparks = [];
       buf = surface(gw, gh); img = buf.getContext('2d').createImageData(gw, gh); words = new Uint32Array(img.data.buffer);
       grid = surface(w * k, h * k); // LED gaps between the chunky pixels
       const g = grid.getContext('2d'), s = cell * k, lw = max(1, round(k * cell * 0.14));
@@ -277,7 +283,7 @@ function pixelRain({ pal: [bg, ga, gb], rand }) {
       c.drawImage(buf, 0, 0, gw * cell, gh * cell);
       c.drawImage(grid, 0, 0, w, h);
       c.imageSmoothingEnabled = true; // bloom: the same pixels, blurred by bilinear upscaling
-      c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.45;
+      c.globalCompositeOperation = 'lighter'; c.globalAlpha = bloom;
       c.drawImage(buf, -cell / 2, -cell / 2, gw * cell + cell, gh * cell + cell);
       c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
     },

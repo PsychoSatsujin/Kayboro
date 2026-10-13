@@ -19,14 +19,19 @@ export const FRAMES = [...STARTERS];
 
 const num = (n, d = 0) => (Number.isFinite(n) ? n : d);
 const SAFE = /^frames\/(?:[\w-]+\/)*[\w-]+\.(?:svg|png|webp)$/;
+const MOD_URL = /^file:\/\/[^?#]+\.(?:svg|png|webp)$/i; // mod frames: absolute URL from main (mods.js)
 
-/** Catalog FrameItem (file relative to src/renderer/) -> frame entry, or null when unusable. */
+// Image URL of a catalog frame: `file` relative to src/renderer/, or a mod's own file:// `url`.
+const frameUrl = it => (it.mod ? (MOD_URL.test(String(it.url || '')) ? it.url : null)
+  : SAFE.test(String(it.file || '')) ? new URL(`../${it.file}`, import.meta.url).href : null);
+
+/** Catalog FrameItem -> frame entry, or null when unusable. */
 export function fromCatalog(it) {
-  const h = it?.hole;
-  if (!it || typeof it.id !== 'string' || !SAFE.test(String(it.file || '')) || !h || !(h.w > 0 && h.h > 0)) return null;
+  const h = it?.hole, url = it && frameUrl(it);
+  if (!it || typeof it.id !== 'string' || !url || !h || !(h.w > 0 && h.h > 0)) return null;
   const size = { w: num(it.size?.w, 1000), h: num(it.size?.h, 1000) };
   return {
-    id: it.id, name: String(it.name || it.id), url: new URL(`../${it.file}`, import.meta.url).href, starter: !!it.starter,
+    id: it.id, name: String(it.name || it.id), url, starter: !!it.starter, mod: it.mod || null, dlc: it.dlc || null,
     style: it.style || 'vector', theme: it.theme || '', rarity: it.rarity || 'common', price: it.price || null,
     unlockLevel: it.unlockLevel ?? null, size, hole: { x: num(h.x), y: num(h.y), w: h.w, h: h.h },
     aspect: num(it.aspect) > 0 ? it.aspect : (h.w * size.w) / (h.h * size.h), holeRadius: Math.max(0, num(it.holeRadius)),

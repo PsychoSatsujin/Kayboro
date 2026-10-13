@@ -1,13 +1,15 @@
 {
-  "name": "rateofreality",
-  "version": "0.1.0",
+  "name": "shellcade",
+  "productName": "Shellcade",
+  "version": "0.2.0",
   "private": true,
-  "description": "Resize, reshape and frame live captures of any app window or monitor on a virtual stage.",
+  "description": "Put your games in a shell: play inside decorative frames, earn coins for time spent, unlock cosmetic shells, finishes and wallpaper presets.",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
     "test": "node --test \"test/*.test.js\"",
-    "smoke": "electron test/e2e/smoke.js"
+    "smoke": "electron test/e2e/smoke.js",
+    "integrity": "node tools/integrity/build-manifest.mjs"
   },
   "dependencies": {
     "koffi": "^2.9.0"

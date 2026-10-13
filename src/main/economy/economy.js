@@ -1,269 +1,278 @@
 'use strict';
-// Coins, XP, levels and cosmetics. Every coin/XP change is a ledger entry; the state is a replay of the
-// ledger plus <dir>/state.json for the purely cosmetic choices (equipped items, backdrop wallpapers).
+// Coins, XP, levels, cosmetics, wallpapers and settings, saved as one plain <dir>/state.json.
+// Purchases, level-ups and achievements are also appended to <dir>/history.jsonl for reference.
 const fs = require('fs');
 const path = require('path');
 const { EventEmitter } = require('events');
-const { Ledger } = require('./ledger');
 const progression = require('./progression');
 const catalogLib = require('./catalog');
 
 const RULES = {
-  achievement: { coins: 50, xp: 120, firstOfDayBonus: 25 },
-  play: { xpPerMinute: 10, xpCapPerDay: 900, secondsPerCoin: 300, coinCapPerDay: 60, maxTickSeconds: 120 },
-  backdrop: { price: 200, freeAtLevel: 5, maxSlots: 12 },
+  time: { coinsPerMinute: 1, xpPerMinute: 10, maxTickSeconds: 3600 }, // while Shellcade is visible or in play mode
+  achievement: { coins: 50, xp: 120 }, // only with settings.rewards.achievements on
+  preset: { price: 200 }, // each extra wallpaper preset slot; no maximum
 };
 const SLOTS = { finish: 'finish', colorway: 'colorway', fill: 'fill' };
 const DEFAULT_EQUIPPED = { finish: 'none', colorway: 'default', fill: 'starfield' };
-const WALLPAPER_ID = /^[^\u0000-\u001f\u007f/\\]{1,200}$/; // a folder name (workshop id or own project)
+const DEFAULT_SETTINGS = { rewards: { achievements: false } };
+const TARGETS = ['stage', 'fill'];
+const SOURCES = ['shellcade', 'mod', 'we', 'file'];
+const REF_ID = /^[^\u0000-\u001f\u007f/\\]{1,200}$/; // catalog/mod item id or a Wallpaper Engine folder name
 
-const pad = (n) => String(n).padStart(2, '0');
-const dayKey = (t) => { const d = new Date(t); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const int = (n, min = 0) => Math.max(min, Math.floor(Number(n)) || 0);
+const r3 = (n) => Math.round(n * 1000) / 1000;
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+
+// A wallpaper reference: {source: 'shellcade'|'mod'|'we', id} or {source: 'file', url: 'file://...'}; null when malformed.
+function wallpaperRef(w) {
+  if (!w || typeof w !== 'object' || !SOURCES.includes(w.source)) return null;
+  if (w.source === 'file') {
+    return typeof w.url === 'string' && w.url.length <= 4096 && /^file:\/\//i.test(w.url) && !/[\u0000-\u001f]/.test(w.url) ? { source: 'file', url: w.url } : null;
+  }
+  return typeof w.id === 'string' && REF_ID.test(w.id) ? { source: w.source, id: w.id } : null;
+}
 
 class Economy extends EventEmitter {
   constructor({ dir, catalog = catalogLib.load, now = Date.now } = {}) {
     super();
     this.dir = dir;
+    this.file = path.join(dir, 'state.json');
     this.now = now;
     this.catalog = typeof catalog === 'function' ? catalog : () => catalog;
-    this.ledger = new Ledger(dir, { now });
     this.session = null; // { appid, name, startedAt } while a game is hosted
-    this.prefs = { equipped: { ...DEFAULT_EQUIPPED }, backdrops: {} };
     this.load();
   }
 
   load() {
-    this.r = { coins: 0, xp: 0, days: new Map(), achieved: new Set(), items: new Set(), levels: new Set(), slots: 0,
-      flags: new Set(), playSeconds: 0, achievements: 0, perApp: Object.create(null) };
-    for (const e of this.ledger.load()) this._apply(e);
+    let p = {};
     try {
-      const p = JSON.parse(fs.readFileSync(path.join(this.dir, 'state.json'), 'utf8'));
-      this.prefs = { equipped: { ...DEFAULT_EQUIPPED, ...p.equipped }, backdrops: { ...p.backdrops } };
-    } catch {}
-    if (this.ledger.tampered) this.addFlag('ledger-tampered');
+      p = JSON.parse(fs.readFileSync(this.file, 'utf8')) || {};
+    } catch (err) {
+      if (err.code !== 'ENOENT') console.error('[shell] state.json unreadable, starting fresh:', err.message);
+    }
+    const arr = (a) => (Array.isArray(a) ? a.filter((x) => typeof x === 'string') : []);
+    const perApp = Object.create(null);
+    for (const [id, a] of Object.entries(p.perApp || {})) {
+      if (Number.isSafeInteger(Number(id)) && a) perApp[id] = { name: String(a.name || ''), playSeconds: Math.max(0, Number(a.playSeconds) || 0), achievements: int(a.achievements) };
+    }
+    const presets = {};
+    for (const [k, w] of Object.entries(p.presets || {})) if (wallpaperRef(w)) presets[k] = wallpaperRef(w);
+    this.s = {
+      coins: int(p.coins), xp: int(p.xp), activeSeconds: Math.max(0, Number(p.activeSeconds) || 0), levelRewarded: int(p.levelRewarded, 1),
+      items: new Set(arr(p.items)), presetSlots: int(p.presetSlots), presets,
+      active: { stage: wallpaperRef(p.active?.stage), fill: wallpaperRef(p.active?.fill) },
+      equipped: { ...DEFAULT_EQUIPPED, ...(p.equipped && typeof p.equipped === 'object' ? p.equipped : {}) },
+      achieved: new Set(arr(p.achieved)), achievements: int(p.achievements), perApp,
+      settings: { rewards: { achievements: p.settings?.rewards?.achievements === true } },
+    };
     this._settleLevels(false);
     return this;
   }
 
-  // ---- Replay -------------------------------------------------------------
-
-  _day(day) {
-    if (!this.r.days.has(day)) this.r.days.set(day, { playSeconds: 0, playXp: 0, playCoins: 0, achievements: 0 });
-    return this.r.days.get(day);
-  }
-
-  _app(appid, name) {
-    if (appid == null || !Number.isSafeInteger(Number(appid))) return null;
-    const a = (this.r.perApp[appid] = this.r.perApp[appid] || { name: '', playSeconds: 0, achievements: 0 });
-    if (name) a.name = String(name);
-    return a;
-  }
-
-  _apply(e) {
-    const r = this.r, ref = e.ref || {};
-    r.coins += e.delta.coins;
-    r.xp += e.delta.xp;
-    if (e.type === 'play') {
-      const d = this._day(ref.day || dayKey(e.t));
-      const sec = Math.max(0, Math.floor(ref.seconds) || 0);
-      d.playSeconds += sec; d.playXp += e.delta.xp; d.playCoins += e.delta.coins;
-      r.playSeconds += sec;
-      const a = this._app(ref.appid, ref.name);
-      if (a) a.playSeconds += sec;
-    } else if (e.type === 'achievement') {
-      this._day(ref.day || dayKey(e.t)).achievements++;
-      r.achieved.add(`${ref.appid}:${ref.apiName}`);
-      r.achievements++;
-      const a = this._app(ref.appid, ref.game);
-      if (a) a.achievements++;
-    } else if (e.type === 'purchase') {
-      r.items.add(ref.itemId);
-    } else if (e.type === 'levelup') {
-      r.levels.add(ref.level);
-      for (const id of ref.items || []) r.items.add(id);
-    } else if (e.type === 'slot') {
-      r.slots++;
-    } else if (e.type === 'flag') {
-      r.flags.add(ref.flag);
+  _save() {
+    const s = this.s;
+    const data = { v: 2, ...s, items: [...s.items], achieved: [...s.achieved], perApp: { ...s.perApp } };
+    try {
+      fs.mkdirSync(this.dir, { recursive: true });
+      fs.writeFileSync(this.file + '.tmp', JSON.stringify(data, null, 1));
+      fs.renameSync(this.file + '.tmp', this.file);
+    } catch (err) {
+      console.error('[shell] state write failed:', err);
     }
   }
 
-  _append(type, delta, ref) {
-    const e = this.ledger.append(type, delta, ref);
-    this._apply(e);
-    return e;
+  _log(type, data) {
+    try {
+      fs.mkdirSync(this.dir, { recursive: true });
+      fs.appendFileSync(path.join(this.dir, 'history.jsonl'), JSON.stringify({ t: this.now(), type, ...data }) + '\n');
+    } catch {}
   }
 
   // Grants the levels.json rewards of every level reached but not yet rewarded.
   _settleLevels(notify = true) {
-    const level = progression.levelFromXp(this.r.xp);
+    const level = this.level;
     const table = this.catalog().levels;
-    for (let l = 2; l <= level; l++) {
-      if (this.r.levels.has(l)) continue;
+    for (let l = this.s.levelRewarded + 1; l <= level; l++) {
       const rewards = progression.rewardsFor(l, table);
-      this._append('levelup', { coins: rewards.coins, xp: 0 }, { level: l, items: rewards.items });
+      this.s.coins += rewards.coins;
+      for (const id of rewards.items) this.s.items.add(id);
+      this.s.levelRewarded = l;
+      this._log('levelup', { level: l, ...rewards });
       if (notify) this.emit('levelUp', { level: l, rewards });
     }
   }
 
   _changed() {
     this._settleLevels();
+    this._save();
     this.emit('state', this.getState());
   }
 
-  _savePrefs() {
-    try {
-      fs.mkdirSync(this.dir, { recursive: true });
-      const f = path.join(this.dir, 'state.json');
-      fs.writeFileSync(f + '.tmp', JSON.stringify({ v: 1, ...this.prefs }, null, 2));
-      fs.renameSync(f + '.tmp', f);
-    } catch (err) {
-      console.error('[shell] state write failed:', err);
-    }
+  _app(appid, name) {
+    if (appid == null || !Number.isSafeInteger(Number(appid)) || Number(appid) <= 0) return null;
+    const a = (this.s.perApp[appid] = this.s.perApp[appid] || { name: '', playSeconds: 0, achievements: 0 });
+    if (name) a.name = String(name).slice(0, 200);
+    return a;
   }
 
   // ---- Queries ------------------------------------------------------------
 
-  get level() { return progression.levelFromXp(this.r.xp); }
+  get level() { return progression.levelFromXp(this.s.xp); }
 
   owns(item) {
     if (!item) return false;
-    if (item.starter || this.r.items.has(item.id)) return true;
-    if (item.price && item.price.usd) return false;
+    if (item.starter || item.mod || this.s.items.has(item.id)) return true;
+    if (item.dlc || (item.price && item.price.usd)) return false;
     if (item.unlockLevel != null) return this.level >= item.unlockLevel;
     return !item.price || item.price.coins === 0;
   }
 
-  _slotInfo() {
-    const b = this.catalog().backdrops.find((x) => x.id === 'backdrop-slot') || {};
-    return {
-      price: (b.price && b.price.coins) || RULES.backdrop.price,
-      freeAtLevel: b.freeAtLevel || RULES.backdrop.freeAtLevel,
-      max: b.maxSlots || RULES.backdrop.maxSlots,
-    };
-  }
-
-  slotCount() {
-    const s = this._slotInfo();
-    return Math.min(s.max, (this.level >= s.freeAtLevel ? 1 : 0) + this.r.slots);
-  }
+  getSettings() { return clone(this.s.settings); }
 
   getState() {
     const cat = this.catalog();
     const idx = catalogLib.index(cat);
-    const inventory = new Set([...idx.values()].filter((it) => it.kind !== 'backdrop-slot' && this.owns(it)).map((it) => it.id));
-    for (const id of this.r.items) inventory.add(id); // keep items whose catalog file is missing right now
+    const gone = new Set(cat.takedowns || []);
+    const inventory = new Set([...idx.values()].filter((it) => this.owns(it)).map((it) => it.id));
+    for (const id of this.s.items) if (!gone.has(id)) inventory.add(id); // keeps items of a mod that is out right now
     const equipped = {};
     for (const [slot, kind] of Object.entries(SLOTS)) {
-      const id = this.prefs.equipped[slot];
+      const id = this.s.equipped[slot];
       const it = id == null ? null : idx.get(id);
-      equipped[slot] = id == null && slot === 'fill' ? null : it && it.kind === kind && inventory.has(id) ? id : DEFAULT_EQUIPPED[slot];
+      const fallback = slot === 'fill' && !idx.has(DEFAULT_EQUIPPED.fill) ? null : DEFAULT_EQUIPPED[slot];
+      equipped[slot] = id == null && slot === 'fill' ? null : it && it.kind === kind && inventory.has(id) ? id : fallback;
     }
-    const p = progression.progress(this.r.xp);
+    const live = (r) => (r && (r.source === 'file' || !gone.has(r.id)) ? { ...r } : null); // taken-down wallpapers drop out
+    const perApp = {};
+    for (const [id, a] of Object.entries(this.s.perApp)) perApp[id] = { name: a.name, playSeconds: Math.floor(a.playSeconds), achievements: a.achievements };
+    const p = progression.progress(this.s.xp);
     return {
-      coins: this.r.coins, xp: this.r.xp, level: p.level, xpIntoLevel: p.xpIntoLevel, xpForNext: p.xpForNext,
+      coins: this.s.coins, xp: this.s.xp, level: p.level, xpIntoLevel: p.xpIntoLevel, xpForNext: p.xpForNext,
       inventory: [...inventory], equipped,
-      backdropSlots: Array.from({ length: this.slotCount() }, (_, i) => ({ slot: i, wallpaperId: this.prefs.backdrops[i] || null })),
-      stats: { totalPlaySeconds: this.r.playSeconds, achievements: this.r.achievements, perApp: JSON.parse(JSON.stringify(this.r.perApp)) },
-      session: this.session ? { appid: this.session.appid, name: this.session.name, startedAt: this.session.startedAt } : null,
-      flags: [...this.r.flags],
+      wallpaperPresets: Array.from({ length: this.s.presetSlots }, (_, i) => ({ slot: i, wallpaper: live(this.s.presets[i]) })),
+      activeWallpaper: { stage: live(this.s.active.stage), fill: live(this.s.active.fill) },
+      stats: { totalPlaySeconds: Math.floor(this.s.activeSeconds), achievements: this.s.achievements, perApp },
+      session: this.session ? { ...this.session } : null,
+      settings: this.getSettings(),
     };
   }
 
   // ---- Earning ------------------------------------------------------------
 
-  // Hosted play time while play mode is on: 10 XP/min and 1 coin per 5 min, both capped per day.
-  addPlayTime(seconds, app = {}) {
-    const P = RULES.play;
-    seconds = Math.min(P.maxTickSeconds, Math.max(0, Math.round(Number(seconds) || 0)));
-    if (!seconds) return null;
-    const day = dayKey(this.now());
-    const d = this._day(day);
-    const total = d.playSeconds + seconds;
-    const xp = Math.min(P.xpCapPerDay, Math.floor((total * P.xpPerMinute) / 60)) - d.playXp;
-    const coins = Math.min(P.coinCapPerDay, Math.floor(total / P.secondsPerCoin)) - d.playCoins;
-    const e = this._append('play', { coins: Math.max(0, coins), xp: Math.max(0, xp) }, { appid: app.appid ?? null, name: app.name || null, seconds, day });
-    this._changed();
-    return e.delta;
+  // Time spent in Shellcade: 1 coin + 10 XP per whole minute (fractions carry over). `app` is the
+  // hosted game, whose Steam appid also collects the seconds for the developer split.
+  addTime(seconds, app = null) {
+    const sec = Math.min(RULES.time.maxTickSeconds, Number(seconds));
+    if (!(sec > 0)) return null;
+    const before = Math.floor(this.s.activeSeconds / 60);
+    this.s.activeSeconds = r3(this.s.activeSeconds + sec);
+    const minutes = Math.floor(this.s.activeSeconds / 60) - before;
+    const a = app && this._app(app.appid, app.name);
+    if (a) a.playSeconds = r3(a.playSeconds + sec);
+    const delta = { coins: minutes * RULES.time.coinsPerMinute, xp: minutes * RULES.time.xpPerMinute };
+    this.s.coins += delta.coins;
+    this.s.xp += delta.xp;
+    if (minutes) this._changed();
+    else this._save();
+    return delta;
   }
 
-  // A Steam achievement unlocked while its game was hosted. Each (appid, apiName) pays out once ever.
+  // A Steam achievement unlocked while its game was hosted (achievement rewards on). Each pays out once.
   awardAchievement({ appid, game, apiName, name, desc, iconUrl } = {}) {
-    if (appid == null || !apiName || this.r.achieved.has(`${appid}:${apiName}`)) return null;
-    const A = RULES.achievement;
-    const day = dayKey(this.now());
-    const coins = A.coins + (this._day(day).achievements === 0 ? A.firstOfDayBonus : 0);
-    this._append('achievement', { coins, xp: A.xp }, { appid, game: game || null, apiName: String(apiName), name: name || null, day });
-    const award = { appid, game: game || null, apiName: String(apiName), name: name || String(apiName), desc: desc || '', iconUrl: iconUrl || null, coins, xp: A.xp };
+    const id = Number(appid ?? NaN);
+    if (!this.s.settings.rewards.achievements || !Number.isSafeInteger(id) || id <= 0 || !apiName) return null;
+    const key = `${id}:${apiName}`;
+    if (this.s.achieved.has(key)) return null;
+    const { coins, xp } = RULES.achievement;
+    this.s.achieved.add(key);
+    this.s.achievements++;
+    this._app(id, game).achievements++;
+    this.s.coins += coins;
+    this.s.xp += xp;
+    const award = { appid: id, game: game || null, apiName: String(apiName), name: name || String(apiName), desc: desc || '', iconUrl: iconUrl || null, coins, xp };
+    this._log('achievement', { appid: award.appid, apiName: award.apiName, coins, xp });
     this.emit('unlock', award); // before any levelUp it causes
     this._changed();
     return award;
   }
 
-  addFlag(flag, info) {
-    if (!flag || this.r.flags.has(flag)) return false;
-    this._append('flag', { coins: 0, xp: 0 }, { flag: String(flag), ...(info && typeof info === 'object' ? { info } : {}) });
-    this.emit('state', this.getState());
-    return true;
-  }
-
   // Debug/test only (wired up when SHELLCADE_TEST=1).
   grant({ coins = 0, xp = 0 } = {}) {
-    this._append('grant', { coins: Math.max(-this.r.coins, Math.trunc(coins) || 0), xp: Math.max(0, Math.trunc(xp) || 0) }, { debug: true });
+    this.s.coins = Math.max(0, this.s.coins + (Math.trunc(coins) || 0));
+    this.s.xp += Math.max(0, Math.trunc(xp) || 0);
     this._changed();
     return this.getState();
   }
 
-  // ---- Spending -----------------------------------------------------------
+  // ---- Spending and choices -------------------------------------------------
+
+  _fail(reason) { return { ok: false, reason, state: this.getState() }; }
+  _ok() { this._changed(); return { ok: true, state: this.getState() }; }
 
   purchase(itemId) {
-    if (itemId === 'backdrop-slot') return this.buyBackdropSlot();
+    if (itemId === 'wallpaper-preset') return this.buyWallpaperPreset();
     const item = catalogLib.index(this.catalog()).get(itemId);
-    const fail = (reason) => ({ ok: false, reason, state: this.getState() });
-    if (!item) return fail('unknown');
-    if (this.owns(item)) return fail('owned');
-    if (item.price && item.price.usd) return fail('paid');
-    if (!item.price || !item.price.coins) return fail('locked');
-    if (this.r.coins < item.price.coins) return fail('insufficient');
-    this._append('purchase', { coins: -item.price.coins, xp: 0 }, { itemId: item.id });
-    this._changed();
-    return { ok: true, state: this.getState() };
+    if (!item) return this._fail('unknown');
+    if (this.owns(item)) return this._fail('owned');
+    if (item.dlc || (item.price && item.price.usd)) return this._fail('paid'); // Steam DLC, not sold for coins
+    if (!item.price || !item.price.coins) return this._fail('locked');
+    if (this.s.coins < item.price.coins) return this._fail('insufficient');
+    this.s.coins -= item.price.coins;
+    this.s.items.add(item.id);
+    this._log('purchase', { itemId: item.id, coins: -item.price.coins });
+    return this._ok();
   }
 
   equip(slot, itemId) {
-    const fail = (reason) => ({ ok: false, reason, state: this.getState() });
-    if (!Object.prototype.hasOwnProperty.call(SLOTS, slot)) return fail('slot');
+    if (typeof slot !== 'string' || !own(SLOTS, slot)) return this._fail('slot');
     if (itemId == null) itemId = slot === 'fill' ? null : DEFAULT_EQUIPPED[slot];
     if (itemId !== null) {
       const item = catalogLib.index(this.catalog()).get(itemId);
-      if (!item || item.kind !== SLOTS[slot]) return fail('unknown');
-      if (!this.owns(item)) return fail('locked');
+      if (!item || item.kind !== SLOTS[slot]) return this._fail('unknown');
+      if (!this.owns(item)) return this._fail('locked');
     }
-    this.prefs.equipped[slot] = itemId;
-    this._savePrefs();
-    this._changed();
-    return { ok: true, state: this.getState() };
+    this.s.equipped[slot] = itemId;
+    if (slot === 'fill') this.s.active.fill = null; // the last choice wins: a fill replaces a wallpaper fill
+    return this._ok();
   }
 
-  buyBackdropSlot() {
-    const s = this._slotInfo();
-    const fail = (reason) => ({ ok: false, reason, state: this.getState() });
-    if (this.slotCount() >= s.max) return fail('max');
-    if (this.r.coins < s.price) return fail('insufficient');
-    this._append('slot', { coins: -s.price, xp: 0 }, { slot: this.r.slots });
-    this._changed();
-    return { ok: true, state: this.getState() };
+  buyWallpaperPreset() {
+    if (this.s.coins < RULES.preset.price) return this._fail('insufficient');
+    this.s.coins -= RULES.preset.price;
+    this.s.presetSlots++;
+    this._log('preset', { slot: this.s.presetSlots - 1, coins: -RULES.preset.price });
+    return this._ok();
   }
 
-  setBackdropSlot(slot, wallpaperId) {
-    const fail = (reason) => ({ ok: false, reason, state: this.getState() });
-    if (!Number.isInteger(slot) || slot < 0 || slot >= this.slotCount()) return fail('slot');
-    if (wallpaperId != null && !(typeof wallpaperId === 'string' && WALLPAPER_ID.test(wallpaperId))) return fail('invalid');
-    if (wallpaperId == null) delete this.prefs.backdrops[slot];
-    else this.prefs.backdrops[slot] = wallpaperId;
-    this._savePrefs();
-    this._changed();
-    return { ok: true, state: this.getState() };
+  setWallpaperPreset(slot, wallpaper) {
+    if (!Number.isInteger(slot) || slot < 0 || slot >= this.s.presetSlots) return this._fail('slot');
+    const ref = wallpaper == null ? null : wallpaperRef(wallpaper);
+    if (wallpaper != null && !ref) return this._fail('invalid');
+    if (ref) this.s.presets[slot] = ref;
+    else delete this.s.presets[slot];
+    return this._ok();
+  }
+
+  // The one free active wallpaper, as the stage backdrop or the shell fill. Any wallpaper, any time.
+  setActiveWallpaper(wallpaper, target = 'stage') {
+    if (!TARGETS.includes(target)) return this._fail('target');
+    const ref = wallpaper == null ? null : wallpaperRef(wallpaper);
+    if (wallpaper != null && !ref) return this._fail('invalid');
+    if (ref && (ref.source === 'shellcade' || ref.source === 'mod') && !(this.catalog().wallpapers || []).some((w) => w.id === ref.id)) return this._fail('unknown');
+    this.s.active[target] = ref;
+    return this._ok();
+  }
+
+  setSettings(patch = {}) {
+    const on = patch && patch.rewards && typeof patch.rewards.achievements === 'boolean' ? patch.rewards.achievements : null;
+    if (on !== null && on !== this.s.settings.rewards.achievements) {
+      this.s.settings.rewards.achievements = on;
+      this._save();
+      this.emit('settings', this.getSettings());
+      this.emit('state', this.getState());
+    }
+    return this.getSettings();
   }
 
   setSession(s) {
@@ -272,4 +281,4 @@ class Economy extends EventEmitter {
   }
 }
 
-module.exports = { Economy, RULES, DEFAULT_EQUIPPED, dayKey };
+module.exports = { Economy, RULES, DEFAULT_EQUIPPED, DEFAULT_SETTINGS, wallpaperRef };

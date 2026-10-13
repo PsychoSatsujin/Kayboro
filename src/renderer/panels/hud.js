@@ -14,7 +14,7 @@ function counter(el) {
       if (shown == null || reducedMotion() || shown === n) return set(n);
       const from = shown, t0 = performance.now(), dur = Math.min(1100, 350 + Math.abs(n - from) * 3);
       const step = now => {
-        const k = Math.min(1, (now - t0) / dur);
+        const k = Math.min(1, Math.max(0, (now - t0) / dur)); // a frame stamp can predate t0
         set(Math.round(from + (n - from) * (1 - (1 - k) ** 3)));
         if (k < 1) raf = requestAnimationFrame(step);
       };
@@ -46,10 +46,17 @@ export function mountHud(el, ctx = {}) {
   showMute(isMuted());
   const offMute = onMuteChange(showMute);
 
-  // +12 / -400 floating above the coin.
+  // +12 / -400 floating under the coin. One at a time: a change that lands while one is still
+  // floating replaces it (same direction: shows the running total) instead of stacking on top.
+  let floater = null;
   function floatDelta(d) {
     if (reducedMotion()) return;
-    const f = h('span', { className: `sc-hud-delta ${d > 0 ? 'up' : 'down'}`, textContent: `${d > 0 ? '+' : '−'}${fmt.format(Math.abs(d))}`, 'aria-hidden': 'true' });
+    if (floater?.isConnected) {
+      if (Math.sign(floater._d) === Math.sign(d)) d += floater._d;
+      floater.remove();
+    }
+    const f = floater = h('span', { className: `sc-hud-delta ${d > 0 ? 'up' : 'down'}`, textContent: `${d > 0 ? '+' : '−'}${fmt.format(Math.abs(d))}`, 'aria-hidden': 'true' });
+    f._d = d;
     coinBtn.append(f);
     setTimeout(() => f.remove(), 1300);
   }

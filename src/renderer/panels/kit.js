@@ -7,13 +7,21 @@ export function h(tag, props = {}, ...kids) {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(props || {})) {
     if (v == null || v === false) continue;
-    if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
+    if (k === 'style' && typeof v === 'object') for (const [p, x] of Object.entries(v)) { if (p.startsWith('--')) e.style.setProperty(p, x); else e.style[p] = x; }
     else if (/^(aria-|data-|role$|for$|tabindex$)/.test(k)) e.setAttribute(k, v === true ? 'true' : v);
     else e[k] = v;
   }
   e.append(...kids.flat(Infinity).filter(k => k != null && k !== false));
   return e;
 }
+
+// "1h 2m" as nodes: numbers stay in the pixel number face, unit letters drop to the UI font (the
+// number face is caps-only, so a bare "16m" would read as "16M").
+export const durNodes = text => String(text).split(/(\d+)/).filter(Boolean)
+  .map(p => (/^\d+$/.test(p) ? p : h('small', { className: 'sc-unit', textContent: p.trim() })));
+
+// replaceChildren that skips null/false kids (and flattens arrays) like h() does.
+export const put = (el, ...kids) => el.replaceChildren(...kids.flat(Infinity).filter(k => k != null && k !== false));
 
 const S = (...d) => d.map(x => `<path d="${x}"/>`).join('');
 const STROKE = {
@@ -47,6 +55,23 @@ const STROKE = {
   mute: S('M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5', 'M16 10l4 4m0 -4l-4 4'),
   chevL: S('M15 6l-6 6l6 6'), chevR: S('M9 6l6 6l-6 6'),
   target: S('M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0', 'M7 12a5 5 0 1 0 10 0a5 5 0 1 0 -10 0', 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0'),
+  eyeOff: S('M10.585 10.587a2 2 0 0 0 2.829 2.828', 'M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87', 'M3 3l18 18'),
+  folder: S('M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2'),
+  download: S('M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2', 'M7 11l5 5l5 -5', 'M12 4l0 12'),
+  upload: S('M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2', 'M7 9l5 -5l5 5', 'M12 4l0 12'),
+  settings: S('M12 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0', 'M4 6l8 0', 'M16 6l4 0', 'M6 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0', 'M4 12l2 0', 'M10 12l10 0',
+    'M15 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0', 'M4 18l11 0', 'M19 18l1 0'),
+  shield: S('M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3', 'M9 12l2 2l4 -4'),
+  puzzle: S('M4 7h3a1 1 0 0 0 1 -1v-1a2 2 0 0 1 4 0v1a1 1 0 0 0 1 1h3a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h1a2 2 0 0 1 0 4h-1a1 1 0 0 0 -1 1v3a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-1a2 2 0 0 0 -4 0v1a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h1a2 2 0 0 0 0 -4h-1a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1'),
+  mail: S('M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z', 'M3 7l9 6l9 -6'),
+  search: S('M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0', 'M21 21l-6 -6'),
+  send: S('M10 14l11 -11', 'M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5'),
+  table: S('M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z', 'M3 10h18', 'M10 3v18'),
+  trash: S('M4 7l16 0', 'M10 11l0 6', 'M14 11l0 6', 'M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12', 'M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3'),
+  bookmark: S('M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z'),
+  maximize: S('M4 8v-2a2 2 0 0 1 2 -2h2', 'M4 16v2a2 2 0 0 0 2 2h2', 'M16 4h2a2 2 0 0 1 2 2v2', 'M16 20h2a2 2 0 0 0 2 -2v-2'),
+  circleCheck: S('M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0', 'M9 12l2 2l4 -4'),
+  paypal: S('M10 13l2.5 0c2.5 0 5 -2.5 5 -5c0 -3 -1.9 -5 -5 -5h-5.5c-.5 0 -1 .5 -1 1l-2 14c0 .5 .5 1 1 1h2.8l1.2 -5c.1 -.6 .4 -1 1 -1zm7.5 -5.8c1.7 1 2.5 2.8 2.5 4.8c0 2.5 -2.5 4.5 -5 4.5h-2.6l-.6 3.6a1 1 0 0 1 -1 .8l-2.7 0a.5 .5 0 0 1 -.5 -.6l.2 -1.4'),
   steam: S('M16.5 5a4.5 4.5 0 1 1 -.653 8.953l-4.347 3.009l0 .038a3 3 0 0 1 -2.824 3l-.176 0a3 3 0 0 1 -2.94 -2.402l-2.56 -1.098v-3.5l3.51 1.755a2.989 2.989 0 0 1 2.834 -.635l2.727 -3.818a4.5 4.5 0 0 1 4.429 -5.302z'),
 };
 // Pixel-art icons (crisp 1-unit grid).
@@ -77,6 +102,12 @@ export const coinAmount = (n, cls = '') => h('span', { className: `sc-amt ${cls}
 export const rarityName = r => (r || 'common')[0].toUpperCase() + (r || 'common').slice(1);
 export const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 export const getShell = ctx => ctx?.shell || globalThis.window?.shell || null;
+// Calls shell[name](...args); resolves to null when the method is missing or fails (older main, plain browser).
+export async function call(shell, name, ...args) {
+  if (typeof shell?.[name] !== 'function') return null;
+  try { return await shell[name](...args); } catch (err) { console.warn(`[shellcade] ${name} failed:`, err?.message || err); return null; }
+}
+export const has = (shell, name) => typeof shell?.[name] === 'function';
 // Catalog file paths are relative to src/renderer/.
 export const assetUrl = file => new URL(`../${file}`, import.meta.url).href;
 export const swatchBg = cols => (cols?.length > 1 ? `linear-gradient(135deg, ${cols.join(', ')})` : cols?.[0] || 'var(--panel-3)');
@@ -85,14 +116,14 @@ export function replay(el, cls) { el.classList.remove(cls); void el.offsetWidth;
 // Stable hue for a name or id (avatars).
 export const hueOf = s => [...String(s)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7);
 
-// A small visual for any catalog item: frame art, a swatch dot or the backdrop-slot glyph.
+// A small visual for any catalog item: frame art, a swatch dot or the wallpaper glyph.
 export function itemThumb(it, cls = 'sc-ithumb') {
   if (!it) return h('span', { className: `${cls} sc-ithumb-x` }, icon('sparkles'));
-  if (it.kind === 'frame' && it.file) {
+  if (it.kind === 'frame' && (it.url || it.file)) {
     return h('span', { className: `${cls} is-frame${it.style === 'pixel' ? ' is-pixel' : ''}` },
-      h('img', { src: assetUrl(it.file), alt: '', decoding: 'async', loading: 'lazy', draggable: false }));
+      h('img', { src: it.url || assetUrl(it.file), alt: '', decoding: 'async', loading: 'lazy', draggable: false }));
   }
-  if (it.kind === 'backdrop-slot') return h('span', { className: `${cls} is-glyph` }, icon('wallpaper'));
+  if (it.kind === 'backdrop-slot' || it.kind === 'wallpaper') return h('span', { className: `${cls} is-glyph` }, icon('wallpaper'));
   return h('span', { className: `${cls} is-dot`, style: { background: swatchBg(it.swatch || it.colors) } });
 }
 

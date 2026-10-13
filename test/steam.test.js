@@ -269,7 +269,6 @@ function watch(opts = {}) {
   const w = new AchievementWatcher({ pollMs: 3600e3, now: () => clock.t, ...opts });
   const events = [];
   w.on('unlock', (e) => events.push(['unlock', e]));
-  w.on('suspicious', (e) => events.push(['suspicious', e]));
   return { w, clock, events };
 }
 
@@ -293,35 +292,16 @@ test('watcher: emits only achievements unlocked during the session, once', () =>
   assert.equal(w.check(), 0);
 });
 
-test('watcher: a burst of unlocks is reported as suspicious instead', () => {
+test('watcher: many unlocks at once are all reported', () => {
   writeUnlocks({ 0: T0 - 86400 });
-  const { w, clock, events } = watch();
+  const { w, events } = watch();
   w.start({ appid: 440, name: 'TF2', sessionStart: T0 }); // unix seconds are accepted too
   const many = { 0: T0 - 86400 };
   for (let b = 1; b <= 11; b++) many[b] = T0 + b;
   writeUnlocks(many);
-  assert.equal(w.check(), 0);
-  assert.deepEqual(events, [['suspicious', { appid: 440, count: 11 }]]);
-
-  clock.t += 61e3; // the window has passed: single unlocks count again
-  writeUnlocks({ ...many, 12: T0 + 70 });
-  assert.equal(w.check(), 1);
-  assert.equal(events.at(-1)[1].apiName, 'ACH_12');
-  w.stop();
-});
-
-test('watcher: unlocks spread over separate checks within a minute also trip the limit', () => {
-  writeUnlocks({});
-  const { w, events } = watch({ burstLimit: 3 });
-  w.start({ appid: 440, sessionStart: T0 * 1000 });
-  const times = {};
-  for (let b = 0; b < 5; b++) {
-    times[b] = T0 + b;
-    writeUnlocks(times);
-    w.check();
-  }
-  assert.deepEqual(events.map(([k]) => k), ['unlock', 'unlock', 'unlock', 'suspicious', 'suspicious']);
-  assert.equal(events[0][1].game, 'App 440');
+  assert.equal(w.check(), 11);
+  assert.deepEqual(events.map(([k, e]) => `${k}:${e.apiName}`), Array.from({ length: 11 }, (_, i) => `unlock:ACH_${i + 1}`));
+  assert.equal(events[0][1].game, 'TF2');
   w.stop();
 });
 

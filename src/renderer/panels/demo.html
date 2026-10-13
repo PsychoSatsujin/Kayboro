@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; media-src 'self' file: data: blob:; connect-src 'self' file: data:; font-src 'self' file: data:; object-src 'none'; base-uri 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Shellcade panels demo</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="panels.css">
+<script type="module" src="demo.js"></script>
+</head>
+<body>
+<!-- Panels with a fake window.shell (rich catalog + state). ?view=shop|profile|devs|toasts|gallery
+     (&tab=frames|finishes|colorways|fills|wallpapers, &empty=1 for a fresh profile, &poor=1 for few coins).
+     Screenshots: see demo-shot.cjs. -->
+<main id="stage" aria-label="Stage"><canvas id="demoBg"></canvas></main>
+<header id="hud" aria-label="Shellcade">
+  <div class="brand"><h1 class="wordmark" translate="no">Shellcade</h1></div>
+  <div id="hudMount" class="hud-mount"></div>
+</header>
+<aside id="ui" aria-label="Controls">
+  <div class="ui-head">
+    <div id="tabs" class="tabs" role="tablist" aria-label="Panels">
+      <button type="button" role="tab" data-v="stage" aria-selected="false"><span>Stage</span></button>
+      <button type="button" role="tab" data-v="shop" aria-selected="false"><span>Shop</span></button>
+      <button type="button" role="tab" data-v="profile" aria-selected="false"><span>Profile</span></button>
+      <button type="button" role="tab" data-v="devs" aria-selected="false"><span>Devs</span></button>
+    </div>
+  </div>
+  <section id="panel" class="panel" role="tabpanel" tabindex="-1"></section>
+  <footer class="ui-foot"><span class="meta">Panels demo</span><button type="button" class="play"><span>Play</span></button></footer>
+</aside>
+<div id="toasts" class="toasts"></div>
+</body>
+</html>

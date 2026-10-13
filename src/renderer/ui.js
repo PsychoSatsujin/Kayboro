@@ -212,9 +212,9 @@ export function initUI(app) {
       $(el).replaceChildren(...chips);
     }
   }
-  // The same chip markup also lists owned fills as stage screensavers.
+  // The same chip markup also lists owned animated fills as stage screensavers.
   function buildSavers() {
-    const items = app.catalog.fills.filter(it => app.owns(it.id));
+    const items = app.catalog.fills.filter(it => app.owns(it.id) && !it.media);
     $('bgSavers').replaceChildren(...items.map(it => h('button', { type: 'button', className: 'swatch', 'data-v': it.id, 'aria-pressed': 'false', title: it.desc || it.name,
       onclick: () => app.setBackground({ type: 'screensaver', id: it.id }) },
     h('span', { className: 'dot', style: `background: ${swatchBg(it.colors)}` }), h('span', { textContent: it.name }))));
@@ -225,8 +225,12 @@ export function initUI(app) {
   on('bgType', e => {
     if (e.target.name !== 'bgType') return;
     const type = e.target.value, b = app.scene.background;
-    if (type === 'screensaver' && !b.id) b.id = app.catalog.fills.find(it => app.owns(it.id))?.id || null;
-    if (type === 'wallpaper') app.refreshWallpapers().then(renderSlots);
+    if (type === 'screensaver' && !b.id) b.id = app.catalog.fills.find(it => app.owns(it.id) && !it.media)?.id || null;
+    if (type === 'wallpaper') {
+      const st = app.state || {}, first = app.wallpaperGallery().find(w => w.usable);
+      const ref = b.ref || st.activeWallpaper?.stage || st.wallpaperPresets?.find(p => p.wallpaper)?.wallpaper || (first && { source: first.source, id: first.id });
+      return app.setWallpaper(ref || null, 'stage');
+    }
     app.setBackground({ type });
   }, 'change');
   on('bgColor', e => app.setBackground({ color: e.target.value }), 'input');
@@ -236,23 +240,22 @@ export function initUI(app) {
   for (const [id, kind, type] of [['bgImage', 'image', 'image'], ['bgVideo', 'video', 'video']]) {
     on(id, async () => { const url = await ror.pickFile(kind).catch(() => null); if (url) app.setBackground({ type, url }); });
   }
-  on('wpRefresh', () => app.refreshWallpapers().then(renderSlots));
-  function renderSlots() {
-    const slots = app.state?.backdropSlots || [], b = app.scene.background;
-    $('wpActions').hidden = !slots.length;
-    if (!slots.length) {
-      return $('bgSlots').replaceChildren(h('div', { className: 'empty' },
-        h('p', { textContent: 'Backdrop slots hold video or image wallpapers from your own Wallpaper Engine library. Your first slot is free at level 5.' }),
-        h('button', { type: 'button', className: 'btn sm', 'data-goto': 'shop' }, icon('bag'), 'Open Shop')));
-    }
-    $('bgSlots').replaceChildren(...slots.map(sl => {
-      const w = sl.wallpaperId && app.wallpapers.find(x => x.id === sl.wallpaperId);
-      const on = b.type === 'wallpaper' && b.slot === sl.slot;
-      return h('button', { type: 'button', className: `slot${on ? ' on' : ''}`, 'aria-pressed': String(on), disabled: !w?.usable,
-        title: w ? w.title : 'Empty slot: assign a wallpaper in the Shop', onclick: () => app.setBackground({ type: 'wallpaper', slot: sl.slot }) },
-      h('span', { className: 'thumb' }, w?.previewUrl ? h('img', { src: w.previewUrl, alt: '', width: 64, height: 36 }) : icon('wallpaper')),
-      h('span', { className: 'name', textContent: w ? w.title : sl.wallpaperId ? 'Wallpaper not found' : `Slot ${sl.slot + 1} is empty` }));
-    }));
+  on('wpRefresh', () => app.refreshWallpapers());
+  on('wpGallery', () => { showTab('shop'); mounted.shop?.showTab?.('wallpapers'); });
+  // The wallpaper on the stage, then the saved presets (one click swaps). Every wallpaper is free.
+  function renderWallPane() {
+    const b = app.scene.background, cur = b.type === 'wallpaper' ? app.wallpaperEntry(b.ref) : null;
+    const presets = (app.state?.wallpaperPresets || []).filter(p => p.wallpaper);
+    const tile = (w, ref, label, on) => h('button', { type: 'button', className: `slot${on ? ' on' : ''}`, 'aria-pressed': String(on), disabled: !w?.usable,
+      title: w ? w.name : 'This wallpaper is gone', onclick: () => app.setWallpaper(ref, 'stage') },
+    h('span', { className: 'thumb' }, w?.preview ? h('img', { src: w.preview, alt: '', width: 64, height: 36 }) : icon('wallpaper')),
+    h('span', { className: 'name', textContent: label }));
+    const same = (a, x) => !!a && !!x && a.source === x.source && (a.id ?? a.url) === (x.id ?? x.url);
+    const rows = [];
+    if (cur && !presets.some(p => same(p.wallpaper, b.ref))) rows.push(tile(cur, b.ref, cur.name, true));
+    for (const p of presets) { const w = app.wallpaperEntry(p.wallpaper); rows.push(tile(w, p.wallpaper, `${p.slot + 1}. ${w ? w.name : 'Missing wallpaper'}`, b.type === 'wallpaper' && same(p.wallpaper, b.ref))); }
+    if (!rows.length) rows.push(h('p', { className: 'empty', textContent: 'Pick any wallpaper in the gallery. They are all free. Coins buy preset slots for quick swaps.' }));
+    $('bgSlots').replaceChildren(...rows);
   }
 
   // ---- Displays ----
@@ -322,7 +325,7 @@ export function initUI(app) {
     $('bgPanel').dataset.type = bg.type;
     $('bgColor').value = /^#[0-9a-f]{6}$/i.test(bg.color) ? bg.color : '#000000';
     for (const b of $('bgSavers').children) if ('v' in b.dataset) press(b, bg.type === 'screensaver' && b.dataset.v === bg.id);
-    if (bg.type === 'wallpaper') renderSlots();
+    renderWallPane();
     $('bgFile').textContent = bg.url && /^(image|video)$/.test(bg.type) ? decodeURIComponent(bg.url.split(/[\\/]/).pop()).slice(0, 60) : '';
     $('play').querySelector('span').textContent = app.playing ? 'Stop' : 'Play';
     $('play').querySelector('use').setAttribute('href', app.playing ? '#i-stop' : '#i-play');
@@ -333,23 +336,24 @@ export function initUI(app) {
     $('selName').classList.toggle('none', !s);
   }
 
-  // Economy state changed (coins, level, inventory, slots): rebuild what depends on ownership.
+  // Economy state changed (coins, level, inventory, presets): rebuild what depends on ownership.
   let owned = null;
   function stateChanged() {
     const inv = [...(app.state?.inventory || [])].sort().join();
     if (inv !== owned) { owned = inv; buildFrames(); buildLooks(); buildSavers(); }
-    renderSlots();
     try { hud?.update?.(app.state); } catch {}
     for (const m of Object.values(mounted)) { try { m?.update?.(app.state); } catch {} }
     render();
   }
+  // New catalog (mods reloaded, takedowns): rebuild every list even if the inventory is the same.
+  function catalogChanged() { owned = null; stateChanged(); }
 
   stateChanged();
   let tab = 'stage';
   try { tab = localStorage.getItem('shellcade.tab') || 'stage'; } catch {}
   showTab(tab);
   refreshSources(); refreshDisplays(); refreshScenes();
-  return { render, stateChanged, saveScene, refreshSources, showTab, toaster };
+  return { render, stateChanged, catalogChanged, saveScene, refreshSources, showTab, toaster };
 }
 
 // ---- Fallbacks (used only when a panel module is missing) ----

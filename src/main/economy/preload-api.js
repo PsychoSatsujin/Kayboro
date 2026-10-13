@@ -11,26 +11,23 @@ const on = (ch) => (cb) => {
 };
 
 const api = {
-  getState: call('getState'),
-  listCatalog: call('listCatalog'),
-  listDevelopers: call('listDevelopers'),
-  purchase: call('purchase'),
-  equip: call('equip'),
-  setBackdropSlot: call('setBackdropSlot'),
-  buyBackdropSlot: call('buyBackdropSlot'),
-  listLocalWallpapers: call('listLocalWallpapers'),
-  sessionStart: call('sessionStart'),
-  sessionStop: call('sessionStop'),
-  openLink: call('openLink'),
+  ...Object.fromEntries([
+    'getState', 'listCatalog', 'listDevelopers', 'purchase', 'equip',
+    'setActiveWallpaper', 'setWallpaperPreset', 'buyWallpaperPreset', 'listLocalWallpapers',
+    'sessionStart', 'sessionStop', 'openLink', 'getSettings', 'setSettings', 'getIntegrity',
+    'getMods', 'reloadMods', 'openModsFolder', 'submitDeveloper', 'listSubmissions', 'exportPayoutSheet',
+  ].map((n) => [n, call(n)])),
   onState: on('state'),
   onUnlock: on('unlock'),
   onLevelUp: on('levelUp'),
   onGameLaunched: on('gameLaunched'),
+  onCatalog: on('catalog'),
 };
 
 if (process.env.SHELLCADE_TEST === '1') {
   api.debugSimulateUnlock = call('debugSimulateUnlock');
   api.debugGrant = call('debugGrant');
+  api.debugAdvanceTime = call('debugAdvanceTime');
 }
 
 module.exports = api;

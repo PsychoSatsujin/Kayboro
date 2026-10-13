@@ -117,21 +117,28 @@ export class Stage {
   }
 
   // Colorway on the frame image, finish overlay above it, shell fill behind it (only where it can show).
+  // Looks the catalog no longer has (taken down) or the user doesn't own fall back to the defaults.
   applyLook(s, v, f) {
-    const fx = this.fx, cw = s.colorway || 'default';
+    const fx = this.fx, app = this.app;
+    const look = (kind, id, dflt) => (id && app.item(kind, id) && app.owns(id) ? id : dflt);
+    const cw = look('colorways', s.colorway, 'default'), item = app.item('colorways', cw);
+    const known = !!fx.COLORWAYS?.[cw]; // FX recipe; mod colorways bring their own filter/opacity
     if (v.look.colorway !== `${cw}|${f.url}`) {
       v.look.colorway = `${cw}|${f.url}`;
-      const item = this.app.item('colorways', cw);
       try {
-        if (fx.applyColorway) fx.applyColorway(v.frame, cw);
-        else Object.assign(v.frame.style, { filter: item?.filter && item.filter !== 'none' ? item.filter : '', opacity: item?.translucent ? '0.55' : '' });
+        if (fx.applyColorway) fx.applyColorway(v.frame, known ? cw : 'default');
+        if (!known || !fx.applyColorway) {
+          Object.assign(v.frame.style, { filter: item?.filter && item.filter !== 'none' ? item.filter : '',
+            opacity: item?.opacity < 1 ? String(item.opacity) : item?.translucent ? '0.55' : '' });
+        }
       } catch (err) { console.warn('[shellcade] colorway failed:', err); }
     }
-    const seeThrough = fx.needsShellFill ? fx.needsShellFill(f, cw) : f.translucent || !!this.app.item('colorways', cw)?.translucent;
-    const fin = s.finish && s.finish !== 'none' ? s.finish : '';
-    this.setLayer(v, 'finish', fin && fx.applyFinish ? `${fin}|${f.url}` : '', () => fx.applyFinish(v.front, f.url, fin, { intensity: 1 }));
-    const fill = s.fill && seeThrough ? s.fill : '';
-    this.setLayer(v, 'fill', fill && fx.applyShellFill ? `${fill}|${f.url}` : '', () => fx.applyShellFill(v.back, f.url, { type: 'screensaver', id: fill }));
+    const seeThrough = known && fx.needsShellFill ? fx.needsShellFill(f, cw) : f.translucent || !!item?.translucent || item?.opacity < 1;
+    const fin = look('finishes', s.finish, 'none');
+    this.setLayer(v, 'finish', fin !== 'none' && fx.applyFinish ? `${fin}|${f.url}` : '', () => fx.applyFinish(v.front, f.url, fin, { intensity: 1 }));
+    const p = app.preview?.target === 'fill' && s.id === app.scene.selectedId ? app.preview.entry : null;
+    const fill = seeThrough ? (p ? app.wallpaperSpec(p) : app.fillSpec(s.fill)) : null;
+    this.setLayer(v, 'fill', fill && fx.applyShellFill ? `${JSON.stringify(fill)}|${f.url}` : '', () => fx.applyShellFill(v.back, f.url, { ...fill, palette: fill.palette || undefined }));
   }
 
   setLayer(v, name, key, apply) {
@@ -206,22 +213,31 @@ export class Stage {
     } else if (b.type === 'screensaver' && b.id && this.fx.createScreensaver) {
       const c = make('canvas', 'saver');
       this.bg.append(c);
-      try { this.saver = this.fx.createScreensaver(b.id, c, {}); } catch (err) { console.warn('[shellcade] screensaver failed:', err); }
+      try { this.saver = this.fx.createScreensaver(b.id, c, { palette: b.palette || undefined }); } catch (err) { console.warn('[shellcade] screensaver failed:', err); }
     }
   }
 
-  // Animated colour bars on every screen that has no live picture.
+  // Animated colour bars on every screen that has no live picture, drawn at the screen's own size and
+  // shape so the pattern fills the hole crisply instead of a letterboxed, upscaled 16:9 bitmap.
   drawPatterns(t) {
     for (const v of this.views.values()) {
       if (v.el.classList.contains('live') || v.el.hidden) continue;
-      const c = v.canvas.getContext('2d'), W = 320, H = 180, bw = W / BARS.length;
-      BARS.forEach((col, i) => { c.fillStyle = col; c.fillRect(i * bw, 0, bw + 1, H * 0.68); });
-      c.fillStyle = '#0f0d16'; c.fillRect(0, H * 0.68, W, H * 0.32);
-      c.fillStyle = '#ff6ad5'; c.fillRect(((t / 6) % (W + 60)) - 60, H * 0.68, 60, 4);
-      const s = this.app.get(v.id);
-      c.fillStyle = '#eee9ff';
-      c.font = '700 14px "Pixelify Sans", ui-monospace, monospace'; c.textAlign = 'center';
-      c.fillText(v.sourceId ? `NO SIGNAL · ${s?.sourceName || ''}`.slice(0, 40) : 'NO SOURCE', W / 2, H * 0.89);
+      const s = this.app.get(v.id), r = s?.rect;
+      if (!r || !(r.w > 0 && r.h > 0)) continue;
+      const k = Math.min(2, devicePixelRatio || 1), W = Math.max(64, Math.round(Math.min(r.w * k, 1600))), H = Math.max(36, Math.round(W * r.h / r.w));
+      if (v.canvas.width !== W || v.canvas.height !== H) Object.assign(v.canvas, { width: W, height: H });
+      const c = v.canvas.getContext('2d'), bw = W / BARS.length, top = Math.round(H * 0.68), u = Math.max(2, Math.round(H / 60));
+      BARS.forEach((col, i) => { c.fillStyle = col; c.fillRect(Math.round(i * bw), 0, Math.ceil(bw) + 1, top); });
+      c.fillStyle = '#0f0d16'; c.fillRect(0, top, W, H - top);
+      const sw = W / 5;
+      c.fillStyle = '#ff6ad5'; c.fillRect(((t / 2400) * (W + sw)) % (W + sw) - sw, top, sw, u);
+      const label = v.sourceId ? `NO SIGNAL · ${s.sourceName || ''}`.slice(0, 40) : 'NO SOURCE';
+      let px = Math.round(Math.min(H * 0.1, W * 0.07));
+      c.font = `700 ${px}px "Pixelify Sans", ui-monospace, monospace`;
+      const fit = c.measureText(label).width;
+      if (fit > W * 0.86) { px = Math.max(8, Math.floor(px * W * 0.86 / fit)); c.font = `700 ${px}px "Pixelify Sans", ui-monospace, monospace`; }
+      c.fillStyle = '#eee9ff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(label, W / 2, top + (H - top) / 2 + u / 2);
     }
   }
 }

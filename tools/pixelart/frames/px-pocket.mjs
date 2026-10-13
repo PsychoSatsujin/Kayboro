@@ -78,7 +78,7 @@ export default {
 
     // See-through pass: thick edges stay denser than the flat faces.
     const thick = body.edge().or(body.erode(1).edge());
-    cv.fill(body, (x, y, c) => (P.includes(c) ? alpha(c, thick.has(x, y) ? 0.92 : 0.76) : c));
+    cv.fill(body, (x, y, c) => (P.includes(c) ? alpha(c, thick.has(x, y) ? 0.92 : 0.6) : c));
 
     cv.outline(INK);
     return cv.punch(...HOLE);

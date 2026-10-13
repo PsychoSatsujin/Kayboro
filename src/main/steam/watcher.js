@@ -1,8 +1,6 @@
 'use strict';
 // Emits 'unlock' for Steam achievements the hosted game unlocks during a Shellcade session, by watching
 // Steam's local stats cache. Unlocks already there at start, or timed before the session, are ignored.
-// More than `burstLimit` unlocks within `burstWindowMs` (an unlocker tool, a stats reset) emit
-// 'suspicious' {appid, count} instead of 'unlock'.
 const fs = require('fs');
 const { EventEmitter } = require('events');
 const { steamRoot } = require('./paths');
@@ -12,9 +10,9 @@ const GRACE_MS = 60e3; // Steam's unlock time can be a little earlier than our s
 const indexSchema = (list) => new Map(list.map((a) => [`${a.statId}:${a.bit}`, a]));
 
 class AchievementWatcher extends EventEmitter {
-  constructor({ pollMs = 4000, debounceMs = 250, burstLimit = 10, burstWindowMs = 60e3, now = Date.now } = {}) {
+  constructor({ pollMs = 4000, debounceMs = 250, now = Date.now } = {}) {
     super();
-    Object.assign(this, { pollMs, debounceMs, burstLimit, burstWindowMs, now });
+    Object.assign(this, { pollMs, debounceMs, now });
     this.session = null;
   }
 
@@ -36,7 +34,6 @@ class AchievementWatcher extends EventEmitter {
       start: t < 1e12 ? t * 1000 : t,
       seen: new Set(Object.keys(ach.readUnlockTimes(accountId, appid, root))),
       schema: indexSchema(ach.readSchema(appid, root)),
-      recent: [],
     });
     s.live = (fn) => () => this.session === s && fn();
     try {
@@ -72,12 +69,6 @@ class AchievementWatcher extends EventEmitter {
       if (sec * 1000 >= s.start - GRACE_MS) fresh.push([key, sec * 1000]);
     }
     if (!fresh.length) return 0;
-    const now = this.now();
-    s.recent = s.recent.filter((t) => now - t < this.burstWindowMs).concat(fresh.map(() => now));
-    if (s.recent.length > this.burstLimit) {
-      this.emit('suspicious', { appid: s.appid, count: s.recent.length });
-      return 0;
-    }
     if (fresh.some(([k]) => !s.schema.has(k))) s.schema = indexSchema(ach.readSchema(s.appid, s.root));
     for (const [key, unlockedAt] of fresh) {
       const a = s.schema.get(key) || {};

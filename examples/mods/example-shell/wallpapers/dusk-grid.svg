@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" preserveAspectRatio="xMidYMid slice">
+<!-- Example wallpaper: a dusk sky over a soft grid. -->
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1036"/><stop offset=".55" stop-color="#6b2d6f"/><stop offset="1" stop-color="#ff8a7a"/></linearGradient>
+  <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe29a"/><stop offset="1" stop-color="#ff6ad5"/></linearGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1340"/><stop offset="1" stop-color="#0f0d16"/></linearGradient>
+</defs>
+<rect width="1920" height="1080" fill="url(#sky)"/>
+<circle cx="960" cy="640" r="260" fill="url(#sun)"/>
+<rect y="640" width="1920" height="440" fill="url(#floor)"/>
+<g stroke="#ff6ad5" stroke-opacity=".55" stroke-width="3">
+  <path d="M0 680H1920M0 730H1920M0 800H1920M0 890H1920M0 1000H1920"/>
+  <path d="M960 640V1080M960 640L0 1000M960 640L1920 1000M960 640L420 1080M960 640L1500 1080M960 640L-600 1080M960 640L2520 1080"/>
+</g>
+</svg>

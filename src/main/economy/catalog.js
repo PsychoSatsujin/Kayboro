@@ -1,15 +1,24 @@
 'use strict';
-// Loads the shop catalog from src/catalog/*.json. Frame lists are optional (missing/broken files are
-// skipped); the five built-in starter frames are always present, free and owned.
+// Loads the shop catalog from src/catalog/*.json, appends mod items and hides taken-down ids.
+// Frame lists are optional (missing/broken files are skipped); the five built-in starter frames are
+// always present, free and owned. Wallpapers are never locked: they carry no price.
 const fs = require('fs');
 const path = require('path');
+const { pathToFileURL } = require('url');
 
 const DIR = path.join(__dirname, '..', '..', 'catalog');
+const RENDERER = path.join(__dirname, '..', '..', 'renderer');
 const FILES = { frames: ['frames-pixel.json', 'frames-vector.json'], finishes: ['finishes.json'], colorways: ['colorways.json'],
-  fills: ['fills.json'], backdrops: ['backdrops.json'], levels: ['levels.json'], developers: ['developers.json'] };
-const KINDS = { frames: 'frame', finishes: 'finish', colorways: 'colorway', fills: 'fill', backdrops: 'backdrop-slot' };
+  fills: ['fills.json'], wallpapers: ['wallpapers.json'], levels: ['levels.json'], developers: ['developers.json'], takedowns: ['takedowns.json'] };
+const KINDS = { frames: 'frame', finishes: 'finish', colorways: 'colorway', fills: 'fill' }; // ownable shop items
+const ITEM_KEYS = [...Object.keys(KINDS), 'wallpapers'];
 const RARITY = ['common', 'rare', 'epic', 'legendary'];
+const SCREENSAVERS = ['starfield', 'bubbles', 'plasma', 'pixel-rain', 'sakura-petals', 'aurora'];
 const SAFE_FILE = /^frames\/(?:[\w-]+\/)*[\w-]+\.(?:svg|png|webp)$/;
+const WP_FILE = /^wallpapers\/(?:[\w-]+\/)*[\w-]+\.[a-z0-9]+$/i;
+const MEDIA = { video: /\.(?:mp4|webm|m4v)$/i, image: /\.(?:png|jpe?g|webp|svg)$/i, gif: /\.gif$/i, preview: /\.(?:png|jpe?g|webp|gif|svg)$/i };
+const ID = /^[\w-]{1,64}$/;
+const HEX = /^#[0-9a-f]{3,8}$/i;
 
 // Mirrors src/renderer/frames/frames.js (an ES module the main process can't require).
 const starter = (id, name, W, H, x, y, w, h) => ({
@@ -36,18 +45,50 @@ function readList(file, key) {
   }
 }
 
+const str = (s, max = 200) => (typeof s === 'string' ? s.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max) : '');
 const price = (p) => (p && Number.isInteger(p.coins) && p.coins >= 0 ? { coins: p.coins }
   : p && Number.isFinite(p.usd) && p.usd > 0 ? { usd: p.usd } : null);
+const palette = (p) => (Array.isArray(p) && p.length && p.length <= 6 && p.every((c) => HEX.test(c)) ? [...p] : null);
 
 function normItem(it, kind) {
-  if (!it || typeof it !== 'object' || typeof it.id !== 'string' || !/^[\w-]{1,64}$/.test(it.id)) return null;
-  const isStarter = STARTERS.includes(it);
+  if (!it || typeof it !== 'object' || typeof it.id !== 'string' || !ID.test(it.id)) return null;
   if (kind === 'frame' && !SAFE_FILE.test(String(it.file || ''))) return null;
-  return {
-    ...it, kind, starter: isStarter, name: String(it.name || it.id), rarity: RARITY.includes(it.rarity) ? it.rarity : 'common', price: price(it.price),
+  const out = {
+    ...it, kind, starter: STARTERS.includes(it), name: String(it.name || it.id), rarity: RARITY.includes(it.rarity) ? it.rarity : 'common', price: price(it.price),
     unlockLevel: Number.isInteger(it.unlockLevel) && it.unlockLevel >= 1 ? it.unlockLevel : null, author: it.author || 'Shellcade',
   };
+  // Paid designs ship as Steam DLC: passed through as a badge, never bought with coins.
+  if (it.dlc && typeof it.dlc === 'object') out.dlc = { appid: Number.isSafeInteger(it.dlc.appid) && it.dlc.appid > 0 ? it.dlc.appid : null };
+  else delete out.dlc;
+  return out;
 }
+
+// A wallpaper item. `resolve(file, re)` turns a media/preview path into a URL (null when unusable).
+// Types: video, image, gif, or screensaver ({fill, palette?}: one of the fill animations).
+function normWallpaper(it, resolve) {
+  if (!it || typeof it !== 'object' || typeof it.id !== 'string' || !ID.test(it.id)) return null;
+  const m = it.media && typeof it.media === 'object' ? it.media : {};
+  const type = String(m.type || '').toLowerCase();
+  let media;
+  if (type === 'screensaver') {
+    if (!SCREENSAVERS.includes(m.fill)) return null;
+    media = { type, fill: m.fill, ...(palette(m.palette) ? { palette: palette(m.palette) } : {}) };
+  } else {
+    const url = MEDIA[type] && type !== 'preview' ? resolve(m.file, MEDIA[type]) : null;
+    if (!url) return null;
+    media = { type, file: String(m.file), url };
+  }
+  const previewUrl = it.preview ? resolve(it.preview, MEDIA.preview) : null;
+  const c = it.credit && typeof it.credit === 'object' ? it.credit : null;
+  return {
+    id: it.id, kind: 'wallpaper', name: str(it.name) || it.id, desc: str(it.desc, 500), media,
+    preview: previewUrl ? String(it.preview) : null, previewUrl, rarity: RARITY.includes(it.rarity) ? it.rarity : 'common',
+    credit: c ? { artist: str(c.artist), source: str(c.source), url: /^https:\/\//.test(c.url) ? str(c.url, 500) : null } : null,
+    author: str(it.author) || 'Shellcade', tags: Array.isArray(it.tags) ? it.tags.filter((t) => typeof t === 'string') : [], price: null,
+  };
+}
+
+const rendererFile = (f, re) => (WP_FILE.test(String(f || '')) && re.test(f) && !String(f).includes('..') ? pathToFileURL(path.join(RENDERER, f)).href : null);
 
 function build() {
   const seen = new Set();
@@ -56,6 +97,7 @@ function build() {
     const raw = key === 'frames' ? [...STARTERS, ...FILES.frames.flatMap((f) => readList(f, 'frames'))] : readList(FILES[key][0], key);
     out[key] = raw.map((it) => normItem(it, kind)).filter((it) => it && !seen.has(it.id) && seen.add(it.id));
   }
+  out.wallpapers = readList(FILES.wallpapers[0], 'wallpapers').map((it) => normWallpaper(it, rendererFile)).filter((it) => it && !seen.has(it.id) && seen.add(it.id));
   out.levels = readList(FILES.levels[0], 'levels').filter((r) => r && Number.isInteger(r.level))
     .map((r) => ({ level: r.level, xpRequired: r.xpRequired, rewards: { coins: Math.max(0, Math.floor(r.rewards?.coins) || 0), items: (r.rewards?.items || []).filter((i) => typeof i === 'string') }, ...(r.milestone ? { milestone: true } : {}) }))
     .sort((a, b) => a.level - b.level);
@@ -65,24 +107,44 @@ function build() {
     links: { patreon: d.links?.patreon || null, kofi: d.links?.kofi || null, itch: d.links?.itch || null, website: d.links?.website || null },
     verified: !!d.verified, sample: !!d.sample,
   }));
+  out.takedowns = readList(FILES.takedowns[0], 'removed').map((t) => (typeof t === 'string' ? t : t && t.id)).filter((id) => typeof id === 'string' && id);
   // levels.json is the source of truth for when an item unlocks.
   const byId = index(out);
   for (const r of out.levels) for (const id of r.rewards.items) {
     const it = byId.get(id);
-    if (it && !it.price?.usd && (it.unlockLevel == null || r.level < it.unlockLevel)) it.unlockLevel = r.level;
+    if (it && !it.price?.usd && !it.dlc && (it.unlockLevel == null || r.level < it.unlockLevel)) it.unlockLevel = r.level;
   }
   return out;
 }
 
-// Map of every purchasable/equippable item by id.
-const index = (cat) => new Map(Object.keys(KINDS).flatMap((k) => cat[k] || []).map((it) => [it.id, it]));
-
-let cache = null;
-let cacheKey = '';
-function load() {
-  const key = Object.values(FILES).flat().map((f) => { try { return fs.statSync(path.join(DIR, f)).mtimeMs; } catch { return 0; } }).join(',');
-  if (!cache || key !== cacheKey) { cache = build(); cacheKey = key; }
-  return cache;
+// Appends mod items (already free of id clashes, see mods.js) and removes every taken-down id
+// from the items, the level rewards and the developer listing.
+function finish(base, mods, extraTakedowns = []) {
+  const gone = new Set([...base.takedowns, ...extraTakedowns]);
+  const keep = (it) => it && !gone.has(it.id);
+  const out = { ...base, takedowns: [...gone] };
+  for (const k of ITEM_KEYS) out[k] = [...base[k], ...((mods && mods[k]) || [])].filter(keep);
+  out.levels = base.levels.map((r) => ({ ...r, rewards: { ...r.rewards, items: r.rewards.items.filter((id) => !gone.has(id)) } }));
+  out.developers = base.developers.filter((d) => !gone.has(d.devId));
+  return out;
 }
 
-module.exports = { load, index, STARTERS, DIR };
+// Map of every ownable item (frames, finishes, colorways, fills) by id.
+const index = (cat) => new Map(Object.keys(KINDS).flatMap((k) => cat[k] || []).map((it) => [it.id, it]));
+
+let base = null, baseKey = '', merged = null, mergedFor;
+// The catalog with `mods` (a loadMods() result) merged in. Rebuilt when a catalog file changes.
+function load(mods = null) {
+  const key = Object.values(FILES).flat().map((f) => { try { return fs.statSync(path.join(DIR, f)).mtimeMs; } catch { return 0; } }).join(',');
+  if (!base || key !== baseKey) { base = build(); baseKey = key; merged = null; }
+  if (!merged || mergedFor !== mods) { merged = finish(base, mods); mergedFor = mods; }
+  return merged;
+}
+
+// Every id the static catalog uses (mods may not reuse them).
+const reservedIds = () => {
+  const c = load();
+  return new Set(ITEM_KEYS.flatMap((k) => c[k].map((it) => it.id)));
+};
+
+module.exports = { load, index, finish, normItem, normWallpaper, reservedIds, STARTERS, SCREENSAVERS, MEDIA, ID, HEX, DIR, RENDERER };
