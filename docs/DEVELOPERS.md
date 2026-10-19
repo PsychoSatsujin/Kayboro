@@ -1,12 +1,12 @@
 # Developer Program
 
-Indie developers whose games are played inside Shellcade get a support page in the **Devs** tab and **70% of Shellcade's net revenue**, split by how much their games are played in Shellcade.
+Indie developers whose games are played inside Kayboro get a support page in the **Devs** tab and **70% of Kayboro's net revenue**, split by how much their games are played in Kayboro.
 
 ## Join
 
 Pick one:
 
-- **In-app**: Devs tab > **List your game**. Fill in the form and tick the 70/30 checkbox. The submission is saved to `<userData>/shellcade/dev-submissions.json`; send that entry to the Shellcade team.
+- **In-app**: Devs tab > **List your game**. Fill in the form and tick the 70/30 checkbox. The submission is saved to `<userData>/kayboro/dev-submissions.json`; send that entry to the Kayboro team.
 - **Pull request**: add yourself to `src/catalog/developers.json`:
 
 ```json
@@ -32,14 +32,14 @@ Support links open in the system browser. Allowed hosts: patreon.com, ko-fi.com,
 
 ## The 70/30 split
 
-- **70%** of net revenue goes to listed developers. **30%** stays with Shellcade.
-- Each developer earns **points**: whole minutes their games were hosted in Shellcade (plus 10 per achievement unlocked while hosted, when achievement rewards are on).
+- **70%** of net revenue goes to listed developers. **30%** stays with Kayboro.
+- Each developer earns **points**: whole minutes their games were hosted in Kayboro (plus 10 per achievement unlocked while hosted, when achievement rewards are on).
 - The 70% pool is split in proportion to points. Cents are rounded with the largest-remainder method, so the rows always add up exactly.
 - The math lives in `src/main/economy/revenue.js` (`computePayouts`) and is unit-tested.
 
 ## Payout sheet
 
-1. **One install**: `shell.exportPayoutSheet({ revenueCents })` (Devs tab > Export payout sheet) saves an Excel-ready CSV (UTF-8 with BOM). One row per developer: name, email, Ko-fi, PayPal, Patreon, appids, play minutes, points, share %, payout. Then a **Shellcade (30%)** row and totals.
+1. **One install**: `shell.exportPayoutSheet({ revenueCents })` (Devs tab > Export payout sheet) saves an Excel-ready CSV (UTF-8 with BOM). One row per developer: name, email, Ko-fi, PayPal, Patreon, appids, play minutes, points, share %, payout. Then a **Kayboro (30%)** row and totals.
 2. **Many installs**: merge exported usage files (JSON or CSV) from every install into one sheet with the same 70/30 math. `--revenue` is the period's net revenue in USD (or `--revenue-cents`), `--out` the CSV to write (`-` for stdout).
 
 ```bash

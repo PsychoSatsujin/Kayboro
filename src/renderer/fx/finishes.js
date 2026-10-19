@@ -3,7 +3,9 @@
 // from it), so effects land on the shell only, never on the transparent screen hole.
 //   finish layers: siblings after the frame image (z-index 1), each with its own mix-blend-mode
 //   fill layer:    first child of the view, painted behind the capture and the frame
+//   depth layer:   right after the frame image: the shell's 3D shading (depth.js), solid or glass
 import { createScreensaver } from './screensavers.js';
+import { shellDepth, isShadow } from './depth.js';
 import { onFrame, reducedMotion, onReducedMotionChange } from './ticker.js';
 import { colorwayOf } from './colorways.js';
 
@@ -85,7 +87,11 @@ async function carve(img) {
   for (let i = 0; i < out.length; i++) if (out[i]) px[i * 4 + 3] = 0;
   g.putImageData(id, 0, 0);
   const skin = blob();
-  for (let i = 3; i < px.length; i += 4) px[i] = px[i] > 4 ? 255 : 0;
+  // The silhouette leaves out drop shadows (dark and see-through), so a fill stays inside the shell.
+  for (let i = 3; i < px.length; i += 4) {
+    const luma = (0.2126 * px[i - 3] + 0.7152 * px[i - 2] + 0.0722 * px[i - 1]) / 255;
+    px[i] = px[i] > 4 && !isShadow(px[i] / 255, luma) ? 255 : 0;
+  }
   g.putImageData(id, 0, 0);
   const [s, sh] = await Promise.all([skin, blob()]);
   return s && sh ? { skin: s, shape: sh } : null;
@@ -226,10 +232,78 @@ function star(i) {
   return s;
 }
 
+// applyDepth(viewEl, frameUrl, { glass, grid }) -> dispose(). Lights the shell as a moulded 3D part from
+// its depth map: `glass` for see-through plastic (rims, caustics), `grid` ({w, h}) for pixel shells
+// (computed on their pixel grid, scaled up crisp). Re-applying replaces.
+const depths = new WeakMap();
+export function applyDepth(viewEl, frameUrl, { glass = false, grid = null } = {}) {
+  depths.get(viewEl)?.();
+  const h = host(viewEl), url = frameUrl || h.img?.src;
+  if (!url) return noop;
+  ensureFxStyles();
+  const wrap = el('div', `fx-depth${glass ? ' fx-depth-glass' : ''}${grid ? ' fx-depth-pixel' : ''}`);
+  if (h.img) h.img.after(wrap); else h.box.append(wrap);
+  const unfollow = follow(h, wrap, url);
+  let live = true;
+  shellDepth(new URL(url, document.baseURI).href, { grid }).then(m => {
+    if (live && m) wrap.style.backgroundImage = cssUrl(glass ? m.glass : m.light);
+  });
+  const dispose = () => {
+    live = false;
+    if (depths.get(viewEl) === dispose) depths.delete(viewEl);
+    unfollow(); wrap.remove();
+  };
+  depths.set(viewEl, dispose);
+  return dispose;
+}
+
+// Bends `layer` (the fill behind clear plastic) with the shell's refraction maps: an SVG displacement
+// filter sized to the layer in px, so it follows every resize. The map blends from the full one (edges
+// and a gentle dome over the body) to the edges-only one as fill clarity rises. Returns
+// { resize(w, h), clarity(v), dispose() }; `onFilter(css)` receives the CSS filter to use (or '').
+let refractIds = 0;
+function refraction(layer, frameUrl, grid, onFilter) {
+  const NS = 'http://www.w3.org/2000/svg', id = `fx-refract-${++refractIds}`, mk = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const svg = mk('svg', { width: 0, height: 0, 'aria-hidden': 'true', class: 'fx-defs' });
+  const filter = mk('filter', { id, filterUnits: 'userSpaceOnUse', primitiveUnits: 'userSpaceOnUse', 'color-interpolation-filters': 'sRGB', x: 0, y: 0 });
+  const full = mk('feImage', { result: 'full', x: 0, y: 0, preserveAspectRatio: 'none' });
+  const lip = mk('feImage', { result: 'lip', x: 0, y: 0, preserveAspectRatio: 'none' });
+  const mix = mk('feComposite', { in: 'full', in2: 'lip', operator: 'arithmetic', k1: 0, k2: 1, k3: 0, k4: 0, result: 'map' });
+  const disp = mk('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', xChannelSelector: 'R', yChannelSelector: 'G', scale: 0 });
+  filter.append(full, lip, mix, disp);
+  svg.append(filter);
+  layer.parentElement.append(svg);
+  let bevel = 0.045, w = 0, h = 0, v = 0, ready = false, live = true;
+  const apply = () => {
+    mix.setAttribute('k2', (1 - v).toFixed(3));
+    mix.setAttribute('k3', v.toFixed(3));
+    if (!ready || !w || !h) return;
+    for (const e of [filter, full, lip]) { e.setAttribute('width', w); e.setAttribute('height', h); }
+    disp.setAttribute('scale', (Math.min(w, h) * bevel * 1.25).toFixed(1)); // up to ~60% of the bevel width
+    onFilter(`url(#${id})`);
+  };
+  shellDepth(new URL(frameUrl, document.baseURI).href, { grid }).then(m => {
+    if (!live || !m) return;
+    full.setAttribute('href', m.refract);
+    lip.setAttribute('href', m.refractEdge);
+    bevel = m.bevel;
+    ready = true;
+    apply();
+  });
+  return {
+    resize(nw, nh) { w = nw; h = nh; apply(); },
+    clarity(nv) { v = nv; apply(); },
+    dispose() { live = false; onFilter(''); svg.remove(); },
+  };
+}
+
 // applyShellFill(viewEl, frameUrl, { type: 'none'|'screensaver'|'image'|'video', id, url, palette }, opts)
 // -> dispose(). The fill shows through translucent shell plastic (and the 'clear' colorway).
-// opts: { fps, pixelRatio } for screensavers (pixelRatio defaults to min(devicePixelRatio, 1)).
-export function applyShellFill(viewEl, frameUrl, fill, { fps, pixelRatio } = {}) {
+// opts: { fps, pixelRatio } for screensavers (pixelRatio defaults to min(devicePixelRatio, 1));
+// { refract: true, grid } bends the fill near the shell's edges, as if held inside curved plastic.
+// setFillClarity() adjusts a live fill (its colour and bend) without rebuilding it.
+const fillLooks = new WeakMap(); // viewEl -> { clarity(v) }
+export function applyShellFill(viewEl, frameUrl, fill, { fps, pixelRatio, refract = false, grid = null } = {}) {
   fills.get(viewEl)?.();
   const type = fill?.type;
   if (!type || type === 'none' || !(type === 'screensaver' ? fill.id : fill.url) || !FILL_TYPES.includes(type)) return noop;
@@ -254,13 +328,41 @@ export function applyShellFill(viewEl, frameUrl, fill, { fps, pixelRatio } = {})
     if (type === 'video' && !reducedMotion()) media.play().catch(noop);
   }
   h.box.prepend(wrap);
-  const unfollow = follow(h, wrap, frameUrl, () => saver?.resize());
+  // The layer's CSS filter: the bend (if any), then a little extra colour as clarity rises.
+  let bendCss = '', v = 0;
+  const paint = () => { layer.style.filter = [bendCss, v > 0 ? `saturate(${(1 + 0.3 * v).toFixed(3)})` : ''].filter(Boolean).join(' '); };
+  const bend = refract && (frameUrl || h.img?.src) ? refraction(layer, frameUrl || h.img.src, grid, css => { bendCss = css; paint(); }) : null;
+  fillLooks.set(viewEl, { clarity(nv) { v = nv; bend?.clarity(nv); paint(); } });
+  const unfollow = follow(h, wrap, frameUrl, (w, hh) => { saver?.resize(); bend?.resize(w, hh); });
   const dispose = () => {
     if (fills.get(viewEl) === dispose) fills.delete(viewEl);
+    fillLooks.delete(viewEl);
+    bend?.dispose();
     saver?.stop();
     if (media?.tagName === 'VIDEO') { media.pause(); media.removeAttribute('src'); media.load(); }
     unfollow(); wrap.remove();
   };
   fills.set(viewEl, dispose);
   return dispose;
+}
+
+// Fill clarity (0..1) of a see-through shell: how much its face stops covering the fill. The face (frame
+// art, finish and depth shading in `frontEl`) thins to 1 - 0.9 * v over the body while a band along every
+// edge stays as it is (rims, glare, corners); the fill in `backEl` bends only at the edges and gets a
+// little more colour. 0 = the shell's normal look. Cheap to call on every render.
+export function setFillClarity(frontEl, backEl, frameUrl, v, { grid = null } = {}) {
+  v = Math.min(1, Math.max(0, Number(v) || 0));
+  fillLooks.get(backEl)?.clarity(v);
+  const key = v > 0 && frameUrl ? `${frameUrl}|${grid ? `${grid.w}x${grid.h}` : ''}|${v.toFixed(3)}` : '';
+  if (frontEl.fxClarity === key) return;
+  frontEl.fxClarity = key;
+  const clear = () => { for (const k of ['maskImage', 'maskSize', 'maskRepeat', 'maskComposite']) frontEl.style[k] = ''; };
+  if (!key) return clear();
+  shellDepth(new URL(frameUrl, document.baseURI).href, { grid }).then(m => {
+    if (frontEl.fxClarity !== key) return;
+    if (!m) return clear();
+    const a = (1 - 0.9 * v).toFixed(3);
+    Object.assign(frontEl.style, { maskImage: `linear-gradient(rgba(0,0,0,${a}), rgba(0,0,0,${a})), ${cssUrl(m.edge)}`,
+      maskSize: '100% 100%', maskRepeat: 'no-repeat', maskComposite: 'add' });
+  });
 }

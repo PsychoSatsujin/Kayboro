@@ -1,0 +1,4 @@
+{
+  "_doc": "Curated weekly bundles, one per ISO week ('YYYY-Www'). Make one in Kayboro's Shop > Weekly > Bundle Studio (shown when running from source), then add the saved file with: node tools/bundles/publish.mjs <file.json>. Weeks without a curated bundle get an automatic one (src/main/economy/bundles.js).",
+  "bundles": []
+}

@@ -3,7 +3,7 @@
 // Open in Electron, or screenshot with demo-shot.cjs.
 import { FRAMES } from '../frames/frames.js';
 import { frameOuterRect } from '../layout.js';
-import { applyFinish, applyShellFill, FINISH_IDS, ensureFxStyles } from './finishes.js';
+import { applyFinish, applyShellFill, applyDepth, setFillClarity, FINISH_IDS, ensureFxStyles } from './finishes.js';
 import { applyColorway, COLORWAY_IDS } from './colorways.js';
 import { createScreensaver, SCREENSAVER_IDS } from './screensavers.js';
 
@@ -33,7 +33,7 @@ function game(canvas, hue) {
   g.fillStyle = 'rgba(255,255,255,.9)'; g.font = 'bold 34px system-ui'; g.textAlign = 'center'; g.fillText('GAME', W / 2, H / 2 + 12);
 }
 
-function cell(parent, label, frameId, height, { finish = 'none', colorway = 'default', fill = null } = {}) {
+function cell(parent, label, frameId, height, { finish = 'none', colorway = 'default', fill = null, depth = q.has('depth'), clarity = 0 } = {}) {
   const f = frameOf(frameId);
   if (!f) return;
   const fw = height * (f.size.w / f.size.h), sw = fw * f.hole.w, sh = height * f.hole.h;
@@ -48,9 +48,12 @@ function cell(parent, label, frameId, height, { finish = 'none', colorway = 'def
   media.append(cv); front.append(img); scr.append(back, media, front); box.append(scr);
   c.append(box, make('span', 'lbl', label)); parent.append(c);
   applyColorway(img, colorway);
-  if (fill) applyShellFill(back, f.url, fill);
+  const grid = f.style === 'pixel' && f.size?.w ? f.size : null;
+  if (fill) applyShellFill(back, f.url, fill, { refract: depth, grid });
+  if (depth) applyDepth(front, f.url, { glass: !!f.translucent || colorway === 'clear', grid });
   if (q.has('ghost')) img.style.opacity = q.get('ghost'); // debug: see the fill behind the frame
   applyFinish(front, f.url, finish);
+  if (fill && clarity) setFillClarity(front, back, f.url, clarity, { grid });
 }
 
 function section(title, build) {
@@ -76,6 +79,22 @@ const views = {
     s.append(cv); c.append(s, make('span', 'lbl', id)); row.append(c);
     createScreensaver(id, cv);
   })),
+  depth: () => {
+    const ids = (q.get('frames') || 'crt-tv,handheld,px-crt,vx-neko-tv').split(','), h = H * 0.55;
+    const fill = q.has('fillurl') ? { type: 'image', url: q.get('fillurl') } : { type: 'screensaver', id: q.get('saver') || 'aurora' };
+    const part = q.get('part') || 'both';
+    if (part === 'clarity') return section('Fill clarity · 0% / 50% / 100%', row => ids.forEach(id => {
+      for (const c of [0, 0.5, 1]) cell(row, `${id} · ${c * 100}%`, id, h, { colorway: 'clear', fill, depth: true, finish: q.get('finish') || 'gloss', clarity: c });
+    }));
+    if (part !== 'clear') section('3D depth · flat / with depth', row => ids.forEach(id => {
+      cell(row, `${id} · flat`, id, h, { depth: false });
+      cell(row, `${id} · depth`, id, h, { depth: true });
+    }));
+    if (part !== 'solid') section('Clear colorway · the fill held inside', row => ids.forEach(id => {
+      cell(row, `${id} · clear, flat`, id, h, { colorway: 'clear', fill, depth: false });
+      cell(row, `${id} · clear, depth`, id, h, { colorway: 'clear', fill, depth: true });
+    }));
+  },
   combos: () => section('Combos', row => {
     cell(row, 'holo · sakura fill', 'vx-sakura-handheld', H * 0.42, { finish: 'holo', fill: { type: 'screensaver', id: 'sakura-petals' } });
     cell(row, 'glitter · starfield', 'px-pocket', H * 0.8, { finish: 'glitter', fill: { type: 'screensaver', id: 'starfield' } });

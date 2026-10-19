@@ -1,4 +1,4 @@
-Fonts bundled with Shellcade (latin subsets, WOFF2, from Fontsource packages of the Google Fonts releases).
+Fonts bundled with Kayboro (latin subsets, WOFF2, from Fontsource packages of the Google Fonts releases).
 
 - nunito-wght.woff2: Copyright 2014 The Nunito Project Authors (https://github.com/googlefonts/nunito)
 - pixelify-sans-400.woff2, pixelify-sans-700.woff2: Copyright 2021 The Pixelify Sans Project Authors (https://github.com/eifetx/Pixelify-Sans)

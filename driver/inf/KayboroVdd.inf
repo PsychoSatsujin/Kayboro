@@ -1,0 +1,76 @@
+;
+; KayboroVdd.inf: Kayboro Virtual Screen Driver (Indirect Display Driver, UMDF 2).
+; Derived from Microsoft's IddSampleDriver.inf (Microsoft Public License).
+; DriverVer and UmdfLibraryVersion are stamped by build.ps1 (stampinf).
+;
+
+[Version]
+PnpLockDown=1
+Signature="$Windows NT$"
+ClassGUID={4D36E968-E325-11CE-BFC1-08002BE10318}
+Class=Display
+ClassVer=2.0
+Provider=%ManufacturerName%
+CatalogFile=KayboroVdd.cat
+DriverVer=
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$.10.0...19041
+
+[Standard.NT$ARCH$.10.0...19041]
+%DeviceName%=KayboroVdd_Install, Root\KayboroVDD
+
+[SourceDisksFiles]
+KayboroVdd.dll=1
+
+[SourceDisksNames]
+1=%DiskName%
+
+; =================== UMDF Device ==================================
+
+[KayboroVdd_Install.NT]
+Include=WUDFRD.inf
+Needs=WUDFRD.NT
+CopyFiles=UMDriverCopy
+
+[KayboroVdd_Install.NT.hw]
+Include=WUDFRD.inf
+Needs=WUDFRD.NT.HW
+AddReg=KayboroVdd_HardwareDeviceSettings
+
+[KayboroVdd_HardwareDeviceSettings]
+HKR,, "UpperFilters", %REG_MULTI_SZ%, "IndirectKmd"
+HKR, "WUDF", "DeviceGroupId", %REG_SZ%, "KayboroVddGroup"
+; System and administrators: full access. Interactive users (Kayboro runs without admin rights): read/write
+; to send IOCTL_KBVDD_* requests.
+HKR,, "Security",, "D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GRGW;;;IU)"
+
+[KayboroVdd_Install.NT.Services]
+Include=WUDFRD.inf
+Needs=WUDFRD.NT.Services
+
+[KayboroVdd_Install.NT.Wdf]
+UmdfService=KayboroVdd,KayboroVdd_UmdfInstall
+UmdfServiceOrder=KayboroVdd
+UmdfKernelModeClientPolicy=AllowKernelModeClients
+
+[KayboroVdd_UmdfInstall]
+UmdfLibraryVersion=$UMDFVERSION$
+ServiceBinary=%13%\KayboroVdd.dll
+UmdfExtensions=IddCx0102
+
+[DestinationDirs]
+UMDriverCopy=13 ; the driver store folder of this package
+
+[UMDriverCopy]
+KayboroVdd.dll
+
+; =================== Generic ==================================
+
+[Strings]
+ManufacturerName="Kayboro"
+DiskName="Kayboro Virtual Screen Driver"
+DeviceName="Kayboro Virtual Screen"
+
+REG_MULTI_SZ=0x00010000
+REG_SZ=0x00000000

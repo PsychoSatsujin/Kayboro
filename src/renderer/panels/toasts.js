@@ -48,7 +48,7 @@ export function createToaster(root, opts = {}) {
 
   const closeBtn = el => h('button', { type: 'button', className: 'sc-toast-x', 'aria-label': 'Dismiss', title: 'Dismiss (Esc)', onclick: () => dismiss(el()) }, icon('x'));
   const actionBtn = (action, el) => action?.label ? h('button', { type: 'button', className: 'btn sm sc-toast-act', textContent: action.label,
-    onclick: () => { dismiss(el()); try { action.onClick?.(); } catch (err) { console.warn('[shellcade] toast action failed:', err); } } }) : null;
+    onclick: () => { dismiss(el()); try { action.onClick?.(); } catch (err) { console.warn('[kayboro] toast action failed:', err); } } }) : null;
   const timer = () => h('i', { className: 'sc-toast-timer', 'aria-hidden': 'true' });
 
   function show({ title = '', body = '', icon: ic = null, action = null, kind = 'info', ttl } = {}) {

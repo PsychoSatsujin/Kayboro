@@ -33,14 +33,26 @@ function subpathBox(d) {
   return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys), radii };
 }
 
-test('catalogue lists exactly the eight contract frames', () => {
-  assert.deepEqual(frames.map((f) => f.id).sort(), Object.keys(CONTRACT).sort());
+const { ORDER } = require('../tools/vectorart/build.js');
+const COLLECTIONS = ['pocket-pals', 'coin-op', 'blue-cel', 'wild-pixels', 'world-tour', 'dreamscapes', 'fan-favorites',
+  'sci-fi-signals', 'old-masters', 'legends-dread', 'wild-tuneful', 'curio-cabinet'];
+
+test('catalogue lists every built frame in build order, the eight originals first', () => {
+  assert.deepEqual(frames.map((f) => f.id), ORDER);
+  assert.deepEqual(ORDER.slice(0, 8).sort(), Object.keys(CONTRACT).sort());
 });
 
 test('items follow the FrameItem contract', () => {
   for (const f of frames) {
-    assert.equal(f.kind, 'frame', f.id); assert.equal(f.style, 'vector', f.id); assert.equal(f.author, 'Shellcade', f.id);
-    assert.equal(f.price, null, f.id); assert.equal(f.unlockLevel, null, f.id);
+    assert.equal(f.kind, 'frame', f.id); assert.equal(f.style, 'vector', f.id); assert.equal(f.author, 'Kayboro', f.id);
+    assert.equal(f.unlockLevel, null, f.id);
+    assert.ok(f.price === null || (Number.isInteger(f.price.coins) && f.price.coins > 0), `${f.id}.price`);
+    if (CONTRACT[f.id]) assert.equal(f.price, null, `${f.id}: originals are level rewards`);
+    else {
+      assert.ok(COLLECTIONS.includes(f.collection), `${f.id}.collection`);
+      assert.ok(['CC-BY-4.0', 'fan-art'].includes(f.license), `${f.id}.license`);
+      assert.doesNotMatch(f.desc, /—/, `${f.id}: no em dash in desc`);
+    }
     assert.equal(f.file, `frames/vector/${f.id}.svg`, f.id);
     assert.match(f.file, /^frames\/(?:[\w-]+\/)*[\w-]+\.(?:svg|png|webp)$/, 'catalog.js SAFE_FILE');
     for (const k of ['name', 'theme', 'desc']) assert.ok(typeof f[k] === 'string' && f[k].length, `${f.id}.${k}`);
@@ -50,15 +62,16 @@ test('items follow the FrameItem contract', () => {
     assert.ok(x > 0 && y > 0 && w > 0 && h > 0 && x + w < 1 && y + h < 1, `${f.id} hole inside the frame`);
     assert.ok(f.holeRadius >= 0 && f.holeRadius <= 0.5, `${f.id}.holeRadius`);
     assert.ok(Math.abs(f.aspect - (w * f.size.w) / (h * f.size.h)) < 1e-4, `${f.id} aspect matches the hole`);
-    assert.ok(Math.abs(f.aspect - CONTRACT[f.id]) < 1e-5, `${f.id} aspect ${f.aspect} vs contract ${CONTRACT[f.id]}`);
+    if (CONTRACT[f.id]) assert.ok(Math.abs(f.aspect - CONTRACT[f.id]) < 1e-5, `${f.id} aspect ${f.aspect} vs contract ${CONTRACT[f.id]}`);
   }
 });
 
 test('rarity mix, translucency and the rounded compact mirror', () => {
-  const count = (r) => frames.filter((f) => f.rarity === r).length;
+  const originals = frames.filter((f) => CONTRACT[f.id]);
+  const count = (r) => originals.filter((f) => f.rarity === r).length;
   assert.deepEqual([count('common'), count('rare'), count('epic'), count('legendary')], [2, 3, 2, 1]);
   assert.equal(frames.find((f) => f.id === 'vx-gallery').rarity, 'legendary');
-  assert.deepEqual(frames.filter((f) => f.translucent).map((f) => f.id).sort(), ['vx-sakura-handheld', 'vx-ufo-pet']);
+  assert.deepEqual(originals.filter((f) => f.translucent).map((f) => f.id).sort(), ['vx-sakura-handheld', 'vx-ufo-pet']);
   assert.ok(frames.find((f) => f.id === 'vx-magical-compact').holeRadius >= 0.15);
 });
 

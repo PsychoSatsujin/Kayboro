@@ -1,5 +1,5 @@
 'use strict';
-// Shellcade end-to-end smoke test. Electron entry point:
+// Kayboro end-to-end smoke test. Electron entry point:
 //
 //   npx electron test/e2e/smoke.js                    (Windows / macOS)
 //   xvfb-run -a -s "-screen 0 1600x900x24" npx electron --no-sandbox test/e2e/smoke.js   (Linux)
@@ -9,8 +9,8 @@
 // clicks in the page, and window.ror / window.shell calls. Windows-only checks (Steam detection, window moving,
 // play mode, global hotkey) need a running fake game: set FAKE_GAME_TITLE (see .github/workflows/smoke.yml).
 //
-// Shellcade checks use the test-only window.shell hooks (SHELLCADE_TEST=1, set below), a fake Steam
-// install (SHELLCADE_STEAM_ROOT: two games and two Wallpaper Engine wallpapers) and the example mod.
+// Kayboro checks use the test-only window.shell hooks (KAYBORO_TEST=1, set below), a fake Steam
+// install (KAYBORO_STEAM_ROOT: two games and two Wallpaper Engine wallpapers) and the example mod.
 // The takedown/integrity check briefly rewrites src/catalog/takedowns.json and src/integrity.json; both
 // are restored afterwards (and on the next run if this one was killed).
 //
@@ -25,7 +25,7 @@ const zlib = require('zlib');
 const { execFileSync } = require('child_process');
 const { pathToFileURL } = require('url');
 
-process.env.SHELLCADE_TEST = '1'; // main and the preload read it: debugGrant, debugAdvanceTime, debugSimulateUnlock
+process.env.KAYBORO_TEST = '1'; // main and the preload read it: debugGrant, debugAdvanceTime, debugSimulateUnlock
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const OUT = path.join(__dirname, 'out');
@@ -55,7 +55,7 @@ app.setPath('userData', USER_DATA);
 // RESTORE until they are put back, so a killed run is repaired by the next one.
 const TAKEDOWNS = path.join(ROOT, 'src', 'catalog', 'takedowns.json');
 const MANIFEST = path.join(ROOT, 'src', 'integrity.json');
-const RESTORE = path.join(os.tmpdir(), 'shellcade-smoke-restore.json');
+const RESTORE = path.join(os.tmpdir(), 'kayboro-smoke-restore.json');
 function restoreShipped() {
   let r;
   try { r = JSON.parse(fs.readFileSync(RESTORE, 'utf8')); } catch { return false; }
@@ -256,7 +256,7 @@ function installHelpers() {
   if (window.__smoke) return true;
   const S = (window.__smoke = { toasts: [], cursor: [], hotkeys: [], playStates: [] });
   // Every app.toast() announces its text (whatever the toaster renders it as).
-  document.addEventListener('shellcade:toast', (e) => S.toasts.push({ at: Date.now(), text: e.detail?.text || '' }));
+  document.addEventListener('kayboro:toast', (e) => S.toasts.push({ at: Date.now(), text: e.detail?.text || '' }));
   if (window.ror) {
     window.ror.onCursor((c) => S.cursor.push({ at: Date.now(), ...c }));
     window.ror.onHotkey((name) => S.hotkeys.push({ at: Date.now(), name }));
@@ -424,7 +424,7 @@ function fixture(name, buf) {
 const solidPng = (w, h, rgb) => encodePng(w, h, () => [...rgb, 255]);
 
 // Fake Steam install: two installed games (their exes under steamapps/common) and two Wallpaper Engine
-// workshop items (a usable image and a scene that needs Wallpaper Engine). Read through SHELLCADE_STEAM_ROOT.
+// workshop items (a usable image and a scene that needs Wallpaper Engine). Read through KAYBORO_STEAM_ROOT.
 const STEAM = path.join(TMP, 'steam');
 const GAMES = [{ appid: 4242001, name: 'Fake Quest', dir: 'FakeQuest', secs: 600 }, { appid: 4242002, name: 'Tiny Racer', dir: 'TinyRacer', secs: 300 }];
 const gameExe = (g) => path.join(STEAM, 'steamapps', 'common', g.dir, `${g.dir}.exe`);
@@ -446,11 +446,11 @@ const FILE_WP_COLOR = [40, 96, 224];
   fs.writeFileSync(path.join(img, 'project.json'), JSON.stringify({ title: WE_IMAGE.title, type: 'image', file: 'sunset.png', preview: 'sunset.png' }));
   fs.writeFileSync(path.join(scene, 'scene.pkg'), 'x');
   fs.writeFileSync(path.join(scene, 'project.json'), JSON.stringify({ title: WE_SCENE.title, type: 'scene', file: 'scene.pkg' }));
-  process.env.SHELLCADE_STEAM_ROOT = STEAM;
+  process.env.KAYBORO_STEAM_ROOT = STEAM;
 }
 // The example mod, installed in this run's userData before the app starts.
 const MOD_ID = 'example-shell';
-fs.cpSync(path.join(ROOT, 'examples', 'mods', MOD_ID), path.join(USER_DATA, 'shellcade', 'mods', MOD_ID), { recursive: true });
+fs.cpSync(path.join(ROOT, 'examples', 'mods', MOD_ID), path.join(USER_DATA, 'kayboro', 'mods', MOD_ID), { recursive: true });
 
 // ---- Windows API for independent verification (own koffi bindings) ----------------------------
 
@@ -512,7 +512,7 @@ const ctx = {}; // shared between checks: frames, game, levels, ...
 const ipcSince = (n, ch) => ipcLog.slice(n).filter((e) => e.ch === 'ror:' + ch);
 const now = () => Date.now();
 
-// Shellcade helpers: tabs, the selected screen, frames, level rewards, the economy's history.jsonl.
+// Kayboro helpers: tabs, the selected screen, frames, level rewards, the economy's history.jsonl.
 async function showTab(t) {
   await R((t) => { document.getElementById('tab-' + t).click(); return true; }, t);
   await waitFor(`the ${t} tab`, () => R((t) => { const p = document.getElementById('panel-' + t); return { ok: !p.hidden && p.childElementCount > 0 }; }, t), 3000);
@@ -533,7 +533,7 @@ async function useFrame(id) {
 }
 const levelCoins = (from, to) => (ctx.levels || []).filter((l) => l.level > from && l.level <= to).reduce((s, l) => s + l.rewards.coins, 0);
 const history = () => {
-  try { return fs.readFileSync(path.join(USER_DATA, 'shellcade', 'history.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l)); } catch { return []; }
+  try { return fs.readFileSync(path.join(USER_DATA, 'kayboro', 'history.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l)); } catch { return []; }
 };
 
 const CHECKS = [
@@ -567,7 +567,7 @@ const CHECKS = [
     assert(st.api.length === 0, `window.ror is missing: ${st.api.join(', ')}`);
     assert(st.shellApi.length === 0, `window.shell is missing: ${st.shellApi.join(', ')}`);
     assert(!st.stub, 'window.ror is the browser stub (preload did not run)');
-    assert(st.title === 'Shellcade', `document title "${st.title}"`);
+    assert(st.title === 'Kayboro', `document title "${st.title}"`);
     assert(st.screens === 1, `expected 1 screen on first run, got ${st.screens}`);
     assert(st.catalogFrames === st.allFrames && st.allFrames > ctx.frames.length, `frame list has ${st.allFrames} frames, catalog ${st.catalogFrames}`);
     assert(st.frameTiles === st.allFrames + 1, `expected ${st.allFrames + 1} frame tiles, got ${st.frameTiles}`);
@@ -620,7 +620,7 @@ const CHECKS = [
     await waitFor('ArrowLeft to select Stage', () => R(() => ({ ok: document.getElementById('tab-stage').getAttribute('aria-selected') === 'true' && document.activeElement?.id === 'tab-stage' })), 2000);
     await R(() => { document.activeElement?.blur(); return true; });
     const hud = await R(() => { const e = document.getElementById('hud'); return { w: e.getBoundingClientRect().width, text: e.textContent.replace(/\s+/g, ' ').trim(), mounted: document.getElementById('hudMount').childElementCount }; });
-    assert(hud.w > 0 && /Shellcade/.test(hud.text) && hud.mounted > 0, `HUD not shown: ${brief(hud)}`);
+    assert(hud.w > 0 && /Kayboro/.test(hud.text) && hud.mounted > 0, `HUD not shown: ${brief(hud)}`);
     return `${out.join(', ')} by mouse; arrows move selection + focus; HUD "${hud.text.slice(0, 60)}"`;
   } },
 
@@ -632,7 +632,7 @@ const CHECKS = [
         const l = await window.ror.listSources();
         const bad = l.filter((s) => !s.id || typeof s.name !== 'string' || !/^(screen|window)$/.test(s.kind) || !/^data:image\//.test(s.thumbnail || ''));
         const screens = l.filter((s) => s.kind === 'screen');
-        // The app must not offer its own window as a source (title "Shellcade").
+        // The app must not offer its own window as a source (title "Kayboro").
         const own = l.filter((s) => s.kind === 'window' && s.name === document.title).map((s) => s.id);
         return { ok: screens.length > 0, n: l.length, screens: screens.map((s) => `${s.id} "${s.name}"`), windows: l.length - screens.length, bad: bad.map((s) => s.id), own };
       });
@@ -1265,7 +1265,7 @@ const CHECKS = [
     return `clip ${fmtRect(s.clip)} == virtual screen, alwaysOnTop false${note}`;
   } },
 
-  // ---- Shellcade: catalog, rewards, shop, wallpapers, mods, takedowns, developers ----
+  // ---- Kayboro: catalog, rewards, shop, wallpapers, mods, takedowns, developers ----
 
   { name: 'catalog-frames', timeout: 20000, async fn() {
     const PIXEL = ['px-pocket', 'px-crt', 'px-pet-egg', 'px-arcade', 'px-dungeon', 'px-cloud-castle', 'px-cat-monitor', 'px-space-console'];
@@ -1285,7 +1285,7 @@ const CHECKS = [
         debug: ['debugGrant', 'debugAdvanceTime', 'debugSimulateUnlock'].filter((k) => typeof window.shell[k] !== 'function') };
     });
     ctx.levels = c.levels;
-    assert(!c.debug.length, `window.shell test hooks missing (SHELLCADE_TEST): ${c.debug.join(', ')}`);
+    assert(!c.debug.length, `window.shell test hooks missing (KAYBORO_TEST): ${c.debug.join(', ')}`);
     const missing = [...PIXEL, ...VECTOR].filter((id) => !c.ids.includes(id));
     assert(c.ids.length === 21 && c.starters.length === 5 && !missing.length, `catalog has ${c.ids.length} frames (${c.starters.length} starters), missing: ${missing.join(', ')}`);
     assert(PIXEL.every((id) => c.styles[id] === 'pixel') && VECTOR.every((id) => c.styles[id] === 'vector'), `frame styles ${brief(c.styles, 400)}`);
@@ -1482,7 +1482,7 @@ const CHECKS = [
     await R(() => { const c = [...document.querySelectorAll('#panel-shop .sc-src .chip')].find((x) => /^All/.test(x.textContent)); c.click(); return true; });
     const counts = await waitFor('the gallery with every source', () => R(() => {
       const n = Object.fromEntries([...document.querySelectorAll('#panel-shop .sc-src .chip')].map((c) => [c.firstChild.textContent, Number(c.querySelector('.sc-n').textContent)]));
-      return { ok: n.Shellcade === 3 && n.Mods === 1 && n['Wallpaper Engine'] === 2 && document.querySelectorAll('#panel-shop .sc-wp:not(.is-add)').length === 6, n };
+      return { ok: n.Kayboro === 3 && n.Mods === 1 && n['Wallpaper Engine'] === 2 && document.querySelectorAll('#panel-shop .sc-wp:not(.is-add)').length === 6, n };
     }), 6000);
     const tileSel = (name) => `#panel-shop .sc-wp:not(.is-add)[title^="${name}"]`;
     // Hovering a tile previews it on the stage; leaving restores.
@@ -1504,7 +1504,7 @@ const CHECKS = [
       steps.push(name);
       return g;
     };
-    await apply('Nebula Drift', { source: 'shellcade', id: 'wp-nebula-drift' }, { canvas: true });
+    await apply('Nebula Drift', { source: 'kayboro', id: 'wp-nebula-drift' }, { canvas: true });
     await apply(WE_IMAGE.title, { source: 'we', id: WE_IMAGE.id }, { img: 'sunset.png' });
     const fp = await R(() => __smoke.freePoint());
     const px = await waitFor('Wallpaper Engine pixels on the stage', async () => { const c = await pixelAt(fp.x, fp.y); return { ok: colorNear(c, WE_COLOR, 24), c }; }, 3000, 50);
@@ -1658,7 +1658,7 @@ const CHECKS = [
       const li = [...document.querySelectorAll('#panel-devs .sc-support li')].find((x) => x.querySelector('b')?.textContent === name);
       return { ok: li?.querySelector('.sc-tag')?.textContent === 'Submitted', tag: li?.querySelector('.sc-tag')?.textContent };
     }, g.name), 3000);
-    const disk = JSON.parse(fs.readFileSync(path.join(USER_DATA, 'shellcade', 'dev-submissions.json'), 'utf8'));
+    const disk = JSON.parse(fs.readFileSync(path.join(USER_DATA, 'kayboro', 'dev-submissions.json'), 'utf8'));
     assert(disk.submissions.length === 1 && disk.submissions[0].id === saved.id, 'dev-submissions.json does not hold the submission');
     // A second studio for the other game (API), then both show in the Devs tab.
     const r2 = await R((g) => window.shell.submitDeveloper({ name: 'Tiny Wheels', email: 'tw@tiny.example', games: [{ name: g.name, appid: g.appid }], paypal: 'https://paypal.me/tinywheels', agree: true }), GAMES[1]);
@@ -1687,11 +1687,11 @@ const CHECKS = [
     const head = rows[0], col = (n) => head.indexOf(n);
     assert(['Name', 'Email', 'Ko-fi', 'PayPal', 'Patreon', 'Steam appids', 'Play minutes', 'Points', 'Share %', 'Payout (USD)'].every((n) => col(n) >= 0), `CSV header ${head.join(',')}`);
     const cents = (r) => Math.round(Number(r[col('Payout (USD)')]) * 100);
-    const devs = rows.slice(1).filter((r) => !r[0].startsWith('_')), sc = rows.find((r) => r[0] === '_shellcade'), total = rows.find((r) => r[0] === '_total');
+    const devs = rows.slice(1).filter((r) => !r[0].startsWith('_')), sc = rows.find((r) => r[0] === '_kayboro'), total = rows.find((r) => r[0] === '_total');
     assert(devs.length === 2 && sc && total && !rows.some((r) => r[0] === '_unallocated'), `CSV rows ${brief(rows.map((r) => r.slice(0, 2)))}`);
     const devSum = devs.reduce((s, r) => s + cents(r), 0);
-    assert(devSum === 7000 && cents(sc) === 3000 && cents(total) === 10000, `dev payouts sum ${devSum} cents, Shellcade ${cents(sc)}, total ${cents(total)} (want 7000 / 3000 / 10000)`);
-    assert(sc[col('Name')] === 'Shellcade (30%)', `Shellcade row "${sc[col('Name')]}"`);
+    assert(devSum === 7000 && cents(sc) === 3000 && cents(total) === 10000, `dev payouts sum ${devSum} cents, Kayboro ${cents(sc)}, total ${cents(total)} (want 7000 / 3000 / 10000)`);
+    assert(sc[col('Name')] === 'Kayboro (30%)', `Kayboro row "${sc[col('Name')]}"`);
     GAMES.forEach((g, i) => {
       const r = devs.find((x) => x[col('Steam appids')] === String(g.appid));
       assert(r, `no row for appid ${g.appid}`);
@@ -1705,9 +1705,9 @@ const CHECKS = [
       { cwd: ROOT, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, stdio: 'pipe' });
     const m = fs.readFileSync(merged, 'utf8').slice(1).trim().split(/\r\n/).map((l) => l.split(','));
     const mDevs = m.slice(1).filter((r) => !r[0].startsWith('_')), mSum = mDevs.reduce((s, r) => s + cents(r), 0);
-    assert(mDevs.length === 2 && mSum === 17500 && cents(m.find((r) => r[0] === '_shellcade')) === 7500, `merged sheet ${brief(m)}`);
+    assert(mDevs.length === 2 && mSum === 17500 && cents(m.find((r) => r[0] === '_kayboro')) === 7500, `merged sheet ${brief(m)}`);
     await R(() => document.querySelector('#panel-devs .sc-payout').scrollIntoView({ block: 'center' }));
-    return `CSV (BOM, ${devs.length} devs): ${devs.map((r) => `${r[col('Name')]} ${r[col('Points')]} pts $${r[col('Payout (USD)')]}`).join(', ')}, Shellcade (30%) $${sc[col('Payout (USD)')]}, total $${total[col('Payout (USD)')]}; merge-sheets over 2 files: devs $${(mSum / 100).toFixed(2)} of $250`;
+    return `CSV (BOM, ${devs.length} devs): ${devs.map((r) => `${r[col('Name')]} ${r[col('Points')]} pts $${r[col('Payout (USD)')]}`).join(', ')}, Kayboro (30%) $${sc[col('Payout (USD)')]}, total $${total[col('Payout (USD)')]}; merge-sheets over 2 files: devs $${(mSum / 100).toFixed(2)} of $250`;
   } },
 
   { name: 'profile-track', timeout: 10000, async fn() {
@@ -1859,7 +1859,7 @@ async function runCheck(c) {
 }
 
 app.whenReady().then(async () => {
-  console.log(`[smoke] Shellcade smoke on ${process.platform}, Electron ${process.versions.electron}, userData ${USER_DATA}` +
+  console.log(`[smoke] Kayboro smoke on ${process.platform}, Electron ${process.versions.electron}, userData ${USER_DATA}` +
     (GAME_TITLE ? `, fake game "${GAME_TITLE}"` : ''));
   for (const c of CHECKS) {
     if (finished) return;

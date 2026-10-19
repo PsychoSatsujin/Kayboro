@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob: https://cdn.cloudflare.steamstatic.com https://shared.cloudflare.steamstatic.com https://steamcdn-a.akamaihd.net; media-src 'self' file: data: blob: mediastream:; connect-src 'self' file: data: blob:; font-src 'self' file: data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob: kaybo: https://cdn.cloudflare.steamstatic.com https://shared.cloudflare.steamstatic.com https://steamcdn-a.akamaihd.net; media-src 'self' file: data: blob: mediastream:; connect-src 'self' file: data: blob:; font-src 'self' file: data:; object-src 'none'; base-uri 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0f0d16">
-<title>Shellcade</title>
+<title>Kayboro</title>
 <link rel="stylesheet" href="styles.css">
 <script type="module" src="app.js"></script>
 </head>
 <body>
 <svg class="sprite" aria-hidden="true" focusable="false">
-<!-- Icons: Tabler Icons (MIT, assets/TABLER-ICONS-LICENSE.txt). Pixel coin + logo: Shellcade. -->
+<!-- Icons: Tabler Icons (MIT, assets/TABLER-ICONS-LICENSE.txt). Pixel coin + logo: Kayboro. -->
 <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z" /></symbol>
 <symbol id="i-stop" viewBox="0 0 24 24" fill="currentColor"><path d="M17 4h-10a3 3 0 0 0 -3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3 -3v-10a3 3 0 0 0 -3 -3z" /></symbol>
 <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" /><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" /></symbol>
@@ -50,7 +50,8 @@
 <symbol id="i-swatch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3h-4a2 2 0 0 0 -2 2v12a4 4 0 0 0 8 0v-12a2 2 0 0 0 -2 -2" /><path d="M13 7.35l-2 -2a2 2 0 0 0 -2.828 0l-2.828 2.828a2 2 0 0 0 0 2.828l9 9" /><path d="M7.3 13h-2.3a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h12" /><path d="M17 17l0 .01" /></symbol>
 <symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" /></symbol>
 <symbol id="i-coin-px" viewBox="0 0 9 9" shape-rendering="crispEdges"><path fill="#9a5b12" d="M2 0h5v1H2zM2 8h5v1H2zM0 2h1v5H0zM8 2h1v5H8zM1 1h1v1H1zM7 1h1v1H7zM1 7h1v1H1zM7 7h1v1H7z"/><path fill="#ffd166" d="M2 1h5v7H2zM1 2h7v5H1z"/><path fill="#e8a33a" d="M7 2h1v5H7zM2 7h5v1H2zM4 3h1v3H4z"/><path fill="#fff5cf" d="M2 2h1v3H2zM3 2h1v1H3z"/></symbol>
-<symbol id="i-logo" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#ff6ad5" d="M3 0h10v1H3zM2 1h12v13H2zM3 14h11v1H3zM3 15h9v1H3z"/><path fill="#c23f9f" d="M13 13h1v1h-1zM12 14h2v1h-2zM3 14h1v1H3z"/><path fill="#2a1630" d="M4 2h8v6H4zM4 10h3v1H4zM5 9h1v3H5z"/><path fill="#7af0ff" d="M5 3h6v4H5z"/><path fill="#eaffff" d="M5 3h2v1H5zM5 4h1v1H5z"/><path fill="#ffd166" d="M10 10h1v1h-1zM12 9h1v1h-1z"/></symbol>
+<symbol id="i-logo" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#2a0b22" d="M1 3h14v1h-14zM0 4h1v9h-1zM15 4h1v9h-1zM6 9h1v1h-1zM9 9h1v1h-1zM7 10h2v1h-2zM1 13h1v1h-1zM14 13h1v1h-1zM2 14h12v1h-12z"/><path fill="#3fc0e6" d="M3 10h1v1h-1zM12 10h1v1h-1z"/><path fill="#7af0ff" d="M1 1h1v1h-1zM3 7h1v3h-1zM5 7h6v1h-6zM12 7h1v3h-1z"/><path fill="#9e2b80" d="M2 1h1v1h-1zM13 1h1v1h-1zM3 2h1v1h-1zM12 2h1v1h-1zM2 5h12v1h-12zM2 6h1v6h-1zM13 6h1v6h-1zM3 11h1v1h-1zM6 11h4v1h-4zM12 11h1v1h-1zM2 15h2v1h-2zM12 15h2v1h-2z"/><path fill="#c9fbff" d="M3 6h10v1h-10z"/><path fill="#d9459f" d="M14 5h1v8h-1zM2 13h12v1h-12z"/><path fill="#e0962f" d="M14 1h1v1h-1z"/><path fill="#e2c6f0" d="M11 10h1v1h-1z"/><path fill="#ff6ad5" d="M3 4h12v1h-12zM1 7h1v6h-1zM2 12h5v1h-5zM8 12h6v1h-6z"/><path fill="#ff8fcf" d="M5 10h1v1h-1zM10 10h1v1h-1z"/><path fill="#ffa6ea" d="M1 4h2v1h-2zM1 5h1v2h-1z"/><path fill="#ffd166" d="M14 0h1v1h-1zM7 12h1v1h-1z"/><path fill="#fff3fa" d="M4 7h1v5h-1zM11 7h1v3h-1zM5 8h6v1h-6zM5 9h1v1h-1zM7 9h2v1h-2zM10 9h1v1h-1zM6 10h1v1h-1zM9 10h1v1h-1zM5 11h1v1h-1zM10 11h2v1h-2z"/><path fill="#ffffff" d="M1 0h1v1h-1z"/></symbol>
+<symbol id="i-logo-24" viewBox="0 0 24 24" shape-rendering="crispEdges"><path fill="#2a0b22" d="M2 0h2v1h-2zM20 0h2v1h-2zM1 1h1v2h-1zM4 1h1v2h-1zM19 1h1v2h-1zM22 1h1v2h-1zM2 3h2v1h-2zM20 3h2v1h-2zM9 5h6v1h-6zM8 6h1v2h-1zM15 6h1v2h-1zM1 7h7v1h-7zM9 7h6v1h-6zM16 7h7v1h-7zM0 8h1v14h-1zM23 8h1v14h-1zM3 9h18v1h-18zM3 10h1v10h-1zM20 10h1v10h-1zM7 11h2v1h-2zM15 11h2v1h-2zM6 12h1v9h-1zM9 12h6v1h-6zM17 12h1v9h-1zM8 14h1v2h-1zM15 14h1v2h-1zM10 16h1v1h-1zM13 16h1v1h-1zM11 17h2v1h-2zM9 19h1v2h-1zM14 19h1v2h-1zM4 20h2v1h-2zM10 20h4v1h-4zM18 20h2v1h-2zM7 21h2v2h-2zM15 21h2v2h-2zM1 22h6v1h-6zM9 22h6v1h-6zM17 22h6v1h-6zM3 23h1v1h-1zM6 23h1v1h-1zM17 23h1v1h-1zM20 23h1v1h-1z"/><path fill="#3fc0e6" d="M2 2h2v1h-2zM5 15h1v4h-1zM18 15h1v4h-1z"/><path fill="#7af0ff" d="M3 1h1v1h-1zM5 12h1v3h-1zM18 12h1v3h-1z"/><path fill="#9e2b80" d="M4 10h16v1h-16zM4 11h1v9h-1zM19 11h1v9h-1zM5 19h1v1h-1zM10 19h4v1h-4zM18 19h1v1h-1zM4 23h2v1h-2zM18 23h2v1h-2z"/><path fill="#b9a8d6" d="M4 3h1v1h-1zM19 3h1v1h-1zM5 4h1v1h-1zM18 4h1v1h-1zM6 5h1v1h-1zM17 5h1v1h-1zM7 6h1v1h-1zM16 6h1v1h-1z"/><path fill="#c9fbff" d="M5 11h1v1h-1zM9 11h6v1h-6zM17 11h2v1h-2z"/><path fill="#d9459f" d="M9 6h1v1h-1zM14 6h1v1h-1zM22 9h1v13h-1z"/><path fill="#e0962f" d="M21 2h1v1h-1z"/><path fill="#e2c6f0" d="M16 13h1v3h-1zM16 17h1v4h-1z"/><path fill="#ff6ad5" d="M10 6h4v1h-4zM6 8h17v1h-17zM2 9h1v13h-1zM21 9h1v13h-1zM1 11h1v11h-1zM3 20h1v2h-1zM20 20h1v2h-1zM4 21h3v1h-3zM9 21h2v1h-2zM13 21h2v1h-2zM17 21h3v1h-3z"/><path fill="#ff8fcf" d="M7 12h1v1h-1zM16 12h1v1h-1zM7 16h1v1h-1zM16 16h1v1h-1z"/><path fill="#ffa6ea" d="M1 8h5v1h-5zM1 9h1v2h-1z"/><path fill="#ffd166" d="M21 1h1v1h-1zM20 2h1v1h-1zM11 21h2v1h-2z"/><path fill="#fff3fa" d="M8 12h1v2h-1zM15 12h1v2h-1zM7 13h1v3h-1zM9 13h6v3h-6zM8 16h2v3h-2zM11 16h2v1h-2zM14 16h2v3h-2zM7 17h1v4h-1zM10 17h1v2h-1zM13 17h1v2h-1zM11 18h2v1h-2zM8 19h1v2h-1zM15 19h1v2h-1z"/><path fill="#ffffff" d="M2 1h1v1h-1zM20 1h1v1h-1zM6 11h1v1h-1z"/></symbol>
 </svg>
 
 <main id="stage" aria-label="Stage">
@@ -64,15 +65,17 @@
   <div id="cursor" hidden><svg width="22" height="22" viewBox="0 0 22 22"><path d="M2 1V18L6.5 13.8 9.6 20.5 12.4 19.2 9.4 12.6H15.5Z" fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
 </main>
 
-<header id="hud" aria-label="Shellcade">
-  <div class="brand"><svg class="logo" aria-hidden="true"><use href="#i-logo"/></svg><h1 class="wordmark" translate="no">Shellcade</h1></div>
+<header id="hud" aria-label="Kayboro">
+  <div class="brand"><svg class="logo" aria-hidden="true"><use href="#i-logo-24"/></svg><h1 class="wordmark" translate="no">Kayboro</h1></div>
   <div id="hudMount" class="hud-mount"></div>
 </header>
 
 <aside id="ui" aria-label="Controls">
+  <div id="uiResize" class="ui-resize" role="separator" aria-orientation="vertical" aria-label="Resize panel" title="Drag to resize the panel. Double-click to reset." tabindex="0"></div>
   <div class="ui-head">
     <div id="tabs" class="tabs" role="tablist" aria-label="Panels">
       <button type="button" role="tab" id="tab-stage" aria-controls="panel-stage" aria-selected="true"><svg class="i" aria-hidden="true"><use href="#i-gamepad"/></svg><span>Stage</span></button>
+      <button type="button" role="tab" id="tab-kaybo" aria-controls="panel-kaybo" aria-selected="false" tabindex="-1" title="Community art from the Kaybo site"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg><span>Kaybo</span></button>
       <button type="button" role="tab" id="tab-shop" aria-controls="panel-shop" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-bag"/></svg><span>Shop</span></button>
       <button type="button" role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-user"/></svg><span>Profile</span></button>
       <button type="button" role="tab" id="tab-devs" aria-controls="panel-devs" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><span>Devs</span></button>
@@ -99,11 +102,14 @@
       <summary><svg class="i" aria-hidden="true"><use href="#i-layers"/></svg>Screens<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
       <div class="sec">
         <ul id="screenList" class="list" aria-label="Screens, top first"></ul>
-        <div class="row">
-          <button id="scrAdd" type="button" class="btn"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg>Add</button>
-          <button id="scrClear" type="button" class="btn" data-needs-sel><svg class="i" aria-hidden="true"><use href="#i-x"/></svg>Clear Source</button>
+        <div class="row wrap">
+          <button id="scrAdd" type="button" class="btn grow"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg>Add</button>
+          <button id="scrClear" type="button" class="btn grow" data-needs-sel title="Clear the source of this screen"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg>Clear</button>
+          <button id="scrPop" type="button" class="btn grow" data-needs-sel title="Put this console in its own window you can place anywhere"><svg class="i" aria-hidden="true"><use href="#i-share"/></svg><span>Pop Out</span></button>
           <button id="scrRemove" type="button" class="icon-btn danger" data-needs-sel aria-label="Remove screen" title="Remove screen (Del)"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
         </div>
+        <button id="scrHide" type="button" class="btn wide" data-needs-sel title="Run the game on an invisible screen so it only shows inside Kayboro"><svg class="i" aria-hidden="true"><use href="#i-eye-off"/></svg><span>Hide Game Window</span></button>
+        <p id="scrHideHint" class="hint">Moves the game to an invisible screen. It keeps running at full speed, and Kayboro is the only place it shows.</p>
       </div>
     </details>
 
@@ -120,7 +126,8 @@
           <label><input type="radio" name="fit" value="cover" data-needs-sel><span>Cover</span></label>
           <label><input type="radio" name="fit" value="stretch" data-needs-sel><span>Stretch</span></label>
         </div>
-        <p class="hint">Drag to move, handles to resize (Shift unlocks). Arrows nudge, +/- scale, [ ] reorder, double-click toggles fit.</p>
+        <button id="gameReset" type="button" class="btn" data-needs-sel hidden title="Make the game fill the shell's opening again">Reset Game Size</button>
+        <p class="hint">Drag to move, handles to resize (Shift unlocks). With a shell, square handles resize the shell and round ones resize the game inside it (Alt+drag moves the game). Arrows nudge, +/- scale, [ ] reorder, double-click toggles fit.</p>
       </div>
     </details>
 
@@ -136,6 +143,17 @@
         <div id="colorways" class="swatches" aria-label="Colorway"></div>
         <div class="label-row"><span class="label">Shell fill</span><span class="meta">Shows through clear shells</span></div>
         <div id="fills" class="swatches" aria-label="Shell fill"></div>
+        <div id="fillClarityRow" class="slider" hidden>
+          <label class="label-row" for="fillClarity"><span class="label">Fill clarity</span><span id="fillClarityVal" class="meta">0%</span></label>
+          <input type="range" id="fillClarity" min="0" max="100" step="1" value="0" data-needs-sel
+            title="Clear the shell's face so the fill shows in full colour, with less gloss and bending. The edges keep their rim and glare.">
+        </div>
+        <div class="label-row"><span class="label">Effects</span><span class="meta">On shells that have them</span></div>
+        <div class="fx-switches">
+          <label class="switch"><input type="checkbox" id="fxParticles" role="switch"><span class="track" aria-hidden="true"></span><span>Particles</span></label>
+          <label class="switch"><input type="checkbox" id="fxGlass" role="switch"><span class="track" aria-hidden="true"></span><span>Screen Glass</span></label>
+          <label class="switch" title="Shade every shell like a moulded 3D part; clear shells bend the fill behind them"><input type="checkbox" id="fxDepth" role="switch"><span class="track" aria-hidden="true"></span><span>3D Depth</span></label>
+        </div>
       </div>
     </details>
 
@@ -195,7 +213,8 @@
           <button id="dispRefresh" type="button" class="icon-btn" aria-label="Refresh displays" title="Refresh displays"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
           <button id="dispMove" type="button" class="btn grow" data-needs-sel>Move Game to Display</button>
         </div>
-        <p class="hint">Add a virtual monitor (IddCx virtual display driver), move the game there and capture that monitor.</p>
+        <p id="vsStatus" class="hint">Checking for the Kayboro Virtual Screen driver…</p>
+        <button id="vsInstall" type="button" class="btn wide" hidden><svg class="i" aria-hidden="true"><use href="#i-monitor"/></svg><span>Install Virtual Screen Driver</span></button>
       </div>
     </details>
 
@@ -217,6 +236,7 @@
   <section id="panel-shop" class="panel" role="tabpanel" aria-labelledby="tab-shop" tabindex="-1" hidden></section>
   <section id="panel-profile" class="panel" role="tabpanel" aria-labelledby="tab-profile" tabindex="-1" hidden></section>
   <section id="panel-devs" class="panel" role="tabpanel" aria-labelledby="tab-devs" tabindex="-1" hidden></section>
+  <section id="panel-kaybo" class="panel" role="tabpanel" aria-labelledby="tab-kaybo" tabindex="-1" hidden></section>
 
   <footer class="ui-foot">
     <label class="switch"><input type="checkbox" id="fullscreen" role="switch"><span class="track" aria-hidden="true"></span><span>Fullscreen</span></label>
@@ -225,6 +245,16 @@
 </aside>
 <button id="showUi" type="button" class="icon-btn floating" aria-label="Show panel (H)" title="Show panel (H)"><svg class="i" aria-hidden="true"><use href="#i-panel-open"/></svg></button>
 <div id="toasts" class="toasts"></div>
+
+<dialog id="driverNotice" aria-labelledby="driverNoticeTitle">
+  <form method="dialog">
+    <h2 id="driverNoticeTitle">Kayboro Virtual Screen is installed</h2>
+    <p>Kayboro installed a small display driver so Hide Game Window can run your game on an invisible screen. You get one copy of the game, inside your shell, at full speed.</p>
+    <p>It only makes screens while you use Hide Game Window and removes them when Kayboro closes. It records nothing and has no network access.</p>
+    <p>To remove it, uninstall Kayboro, or open Device Manager, Display adapters, Kayboro Virtual Screen. Details are in EULA.txt in the Kayboro folder.</p>
+    <div class="row actions"><button value="ok" class="btn primary" autofocus>Got It</button></div>
+  </form>
+</dialog>
 
 <dialog id="insets" aria-labelledby="insetsTitle">
   <form method="dialog">

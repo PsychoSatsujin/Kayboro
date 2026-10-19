@@ -14,14 +14,14 @@ const { SessionManager } = require('../src/main/economy/session');
 const { ActivityTracker } = require('../src/main/economy/activity');
 const { allowedLink } = require('../src/main/economy/ipc');
 
-const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'shellcade-eco-'));
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'kayboro-eco-'));
 after(() => fs.rmSync(TMP, { recursive: true, force: true }));
 let n = 0;
 const freshDir = () => path.join(TMP, String(++n));
 
 const FRAME_IDS = ['px-pocket', 'px-crt', 'px-pet-egg', 'px-arcade', 'px-dungeon', 'px-cloud-castle', 'px-cat-monitor', 'px-space-console',
   'vx-sakura-handheld', 'vx-magical-compact', 'vx-mecha-hud', 'vx-cozy-wood-tv', 'vx-neko-tv', 'vx-synthwave', 'vx-ufo-pet', 'vx-gallery'];
-const STARTER_IDS = ['crt-tv', 'virtual-pet', 'handheld', 'arcade', 'bezel'];
+const STARTER_IDS = ['crt-tv', 'virtual-pet', 'handheld', 'arcade', 'bezel', 'pocket-brick', 'wide-pocket', 'split-pad', 'sleek-portable', 'plain-bezel', 'plain-handheld', 'plain-tv'];
 
 const clock = () => {
   const c = { t: new Date(2026, 0, 5, 10).getTime() };
@@ -78,13 +78,27 @@ test('levels.json: matches the curve, coins 20 -> 150, every frame unlocks once'
   const at = new Map(levels.flatMap((r) => r.rewards.items.map((id) => [id, r.level])));
   assert.equal(levels.flatMap((r) => r.rewards.items).length, at.size, 'no item granted twice');
   for (const id of FRAME_IDS) assert.ok(at.has(id), `${id} unlocks somewhere`);
+  // Every catalog shell is earned exactly one way: a level reward or a coin price.
+  const shells = catalogLib.load().frames.filter((f) => !f.starter && !f.mod);
+  for (const f of shells) assert.ok(at.has(f.id) !== !!f.price?.coins, `${f.id}: level reward xor coin price`);
+  assert.ok(!at.has('px-tung-sahur'), 'fan art is never a level reward');
+  for (const r of levels) assert.ok(r.rewards.items.length <= 2, `level ${r.level}: at most 2 items`);
+  const collections = new Set(shells.map((f) => f.collection).filter(Boolean));
+  for (const c of collections) if (c !== 'fan-favorites') assert.ok(shells.some((f) => f.collection === c && at.has(f.id)), `${c} has a free level reward`);
   assert.equal(at.get('vx-gallery'), 100);
-  const known = new Set([...FRAME_IDS, ...finishes, ...colorways, ...fills].map((x) => x.id || x));
+  const known = new Set([...catalogLib.load().frames, ...finishes, ...colorways, ...fills].map((x) => x.id || x));
   for (const id of at.keys()) assert.ok(known.has(id), `unknown reward ${id}`);
   for (const it of [...finishes, ...colorways, ...fills]) if (it.unlockLevel) assert.equal(at.get(it.id), it.unlockLevel, it.id);
 });
 
 // ---- Catalog --------------------------------------------------------------------
+
+test('economy: shell coin sink is 55-80% of the coins earned by level 100', () => {
+  const { levels, frames } = catalogLib.load();
+  const earned = levels.reduce((t, r) => t + r.rewards.coins, 0) + (P.xpForLevel(100) / RULES.time.xpPerMinute) * RULES.time.coinsPerMinute;
+  const sink = frames.reduce((t, f) => t + (f.price?.coins || 0), 0);
+  assert.ok(sink / earned >= 0.55 && sink / earned <= 0.8, `sink ${sink} / earned ${Math.round(earned)} = ${(sink / earned).toFixed(2)}`);
+});
 
 test('catalog: cosmetic ids, prices, wallpapers and the built-in starters', async () => {
   const cat = catalogLib.load();
@@ -198,6 +212,21 @@ test('economy: levelling up grants levels.json rewards once and emits levelUp', 
   assert.equal(log.filter((x) => x.type === 'levelup').length, 99);
 });
 
+test('economy: items later added to levels already passed are granted on load, without their coins', () => {
+  const e = make();
+  e.grant({ xp: P.xpForLevel(60) });
+  const before = e.getState();
+  // A player saved before vx-bot-buddy became the level 51 reward: drop it from their state file.
+  const file = path.join(e.dir, 'state.json'), st = JSON.parse(fs.readFileSync(file, 'utf8'));
+  st.items = st.items.filter((id) => id !== 'vx-bot-buddy');
+  fs.writeFileSync(file, JSON.stringify(st));
+  const e2 = make(clock(), e.dir), after = e2.getState();
+  assert.ok(after.inventory.includes('vx-bot-buddy'), 'caught up');
+  assert.equal(after.coins, before.coins, 'no coins paid twice');
+  const log = fs.readFileSync(path.join(e.dir, 'history.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  assert.deepEqual(log.filter((x) => x.type === 'levelcatchup').map((x) => x.item), ['vx-bot-buddy']);
+});
+
 test('economy: achievement rewards are off by default; on, +50 coins +120 XP once each', () => {
   const e = make();
   const ach = { appid: 480, game: 'Spacewar', apiName: 'ACH_WIN', name: 'Winner', iconUrl: 'https://cdn.cloudflare.steamstatic.com/x.jpg' };
@@ -263,10 +292,10 @@ test('economy: wallpapers are free; presets cost 200 coins each with no maximum'
   const we = { source: 'we', id: '2846051789' };
   const file = { source: 'file', url: 'file:///C:/Users/me/Videos/loop.mp4' };
   // The active wallpaper: any source, any time, stage or shell fill.
-  assert.deepEqual(e.setActiveWallpaper({ source: 'shellcade', id: 'wp-nebula-drift' }).state.activeWallpaper.stage, { source: 'shellcade', id: 'wp-nebula-drift' });
-  assert.deepEqual(e.setActiveWallpaper(file, 'fill').state.activeWallpaper, { stage: { source: 'shellcade', id: 'wp-nebula-drift' }, fill: file });
+  assert.deepEqual(e.setActiveWallpaper({ source: 'kayboro', id: 'wp-nebula-drift' }).state.activeWallpaper.stage, { source: 'kayboro', id: 'wp-nebula-drift' });
+  assert.deepEqual(e.setActiveWallpaper(file, 'fill').state.activeWallpaper, { stage: { source: 'kayboro', id: 'wp-nebula-drift' }, fill: file });
   assert.equal(e.setActiveWallpaper(we, 'stage').ok, true);
-  assert.equal(e.setActiveWallpaper({ source: 'shellcade', id: 'nope' }).reason, 'unknown');
+  assert.equal(e.setActiveWallpaper({ source: 'kayboro', id: 'nope' }).reason, 'unknown');
   assert.equal(e.setActiveWallpaper({ source: 'file', url: 'https://evil.example/x.mp4' }).reason, 'invalid');
   assert.equal(e.setActiveWallpaper({ source: 'we', id: '../x' }).reason, 'invalid');
   assert.equal(e.setActiveWallpaper(we, 'hat').reason, 'target');
@@ -302,8 +331,8 @@ test('economy: taken-down items disappear from inventory, equipped looks and wal
   e.equip('finish', 'pearl');
   e.equip('fill', 'plasma');
   e.buyWallpaperPreset();
-  e.setWallpaperPreset(0, { source: 'shellcade', id: 'wp-deep-lagoon' });
-  e.setActiveWallpaper({ source: 'shellcade', id: 'wp-deep-lagoon' }, 'stage');
+  e.setWallpaperPreset(0, { source: 'kayboro', id: 'wp-deep-lagoon' });
+  e.setActiveWallpaper({ source: 'kayboro', id: 'wp-deep-lagoon' }, 'stage');
   e.setActiveWallpaper({ source: 'we', id: '777' }, 'fill');
 
   const base = catalogLib.load();
@@ -443,4 +472,20 @@ test('openLink allowlist: https, known hosts and listed developer websites only'
     'https://github.com/a/b', 'https://example.com/', 'https://www.example.com/page']) assert.ok(allowedLink(ok, dev), ok);
   for (const bad of ['http://patreon.com/x', 'https://patreon.com.evil.io/', 'https://evilpatreon.com/', 'https://user:pw@github.com/',
     'https://github.com:8443/', 'javascript:alert(1)', 'file:///C:/Windows', 'https://sub.example.com/', 'not a url', null, 42]) assert.equal(allowedLink(bad, dev), null, String(bad));
+});
+
+test('economy: buying the weekly bundle unlocks what is missing, once, at the quoted price', () => {
+  const B = require('../src/main/economy/bundles');
+  const e = make();
+  const b = B.autoBundle('2026-W44', e.catalog());
+  assert.equal(e.buyBundle(b).reason, 'insufficient');
+  const q = B.quote(b, e.catalog(), (id) => e.owns(catalogLib.index(e.catalog()).get(id)));
+  e.grant({ coins: q.coins + 5 });
+  const r = e.buyBundle(b);
+  assert.ok(r.ok, r.reason);
+  assert.equal(r.state.coins, 5);
+  for (const id of q.missing) assert.ok(r.state.inventory.includes(id), id);
+  assert.equal(e.buyBundle(b).reason, 'owned');
+  const log = fs.readFileSync(path.join(e.dir, 'history.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  assert.deepEqual(log.filter((x) => x.type === 'bundle').map((x) => [x.bundle, x.coins]), [[b.id, -q.coins]]);
 });

@@ -44,7 +44,7 @@ export default {
     cv.grad(mq, MQ.slice(0, 4), { soft: 0.7 });
     cv.glow(mq, 112, 34, 70, 1);
     cv.rect(16, 6, W - 32, 4, G[1]).rect(16, 6, W - 32, 1, G[3]).rect(16, 56, W - 32, 3, G[1]).rect(16, 56, W - 32, 1, G[3]);
-    const logo = cv.textMask('SHELLCADE', 112, 25, { font: 5, scale: 2, align: 'center' });
+    const logo = cv.textMask('KAYBORO', 112, 25, { font: 5, scale: 2, align: 'center' });
     for (let k = 3; k >= 1; k--) cv.fill(logo.shift(k, k), k === 3 ? INK : T[0]);
     cv.outline(INK, logo.or(logo.shift(1, 1)).or(logo.shift(2, 2)), { all: true });
     cv.grad(logo, [Y[4], Y[2], O[2]], { from: 25, to: 38, soft: 0.6 });

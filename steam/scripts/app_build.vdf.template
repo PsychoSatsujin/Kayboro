@@ -1,0 +1,18 @@
+// SteamPipe app build script for Kayboro. Filled in by steam/upload.ps1 (placeholders in {{...}}),
+// written to steam/out/app_build_<APPID>.vdf and handed to steamcmd +run_app_build.
+// Reference: https://partner.steamgames.com/doc/sdk/uploading
+"AppBuild"
+{
+	"AppID" "{{APPID}}"
+	"Desc" "{{DESC}}"            // shown in the Builds list on Steamworks
+	"Preview" "{{PREVIEW}}"      // "1": only log what would be uploaded; "0": upload
+	"Local" ""                   // optional local content server, unused
+	"SetLive" "{{BRANCH}}"       // branch to set live after the upload ("" = none; "default" needs a manual publish)
+	"ContentRoot" "{{CONTENT_ROOT_PARENT}}"
+	"BuildOutput" "{{BUILD_OUTPUT}}"
+
+	"Depots"
+	{
+{{DEPOTS}}
+	}
+}

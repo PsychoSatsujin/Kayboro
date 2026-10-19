@@ -1,0 +1,88 @@
+name: build and sign
+
+# Builds the Kayboro Virtual Screen Driver and gets it signed by SignPath Foundation (free code signing for
+# open-source projects: https://signpath.org). Lives in the driver's own public repository; the Kayboro app
+# repository consumes the signed package (KBVDD_PACKAGE when running `npm run dist:steam`).
+#
+# One-time setup (repository settings > Secrets and variables > Actions):
+#   secret   SIGNPATH_API_TOKEN          the CI user token from SignPath
+#   variable SIGNPATH_ORGANIZATION_ID    your SignPath organization id
+#   variable SIGNPATH_PROJECT_SLUG       e.g. kayboro-virtual-screen
+#   variable SIGNPATH_POLICY_SLUG        release-signing (test-signing while SignPath reviews the project)
+# SignPath artifact configurations: "binaries" (a zip with KayboroVdd.dll + kbvdd-setup.exe, sign both) and
+# "catalog" (a zip with kayborovdd.cat, sign it).
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  driver:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build (unsigned)
+        shell: cmd
+        run: |
+          nuget restore packages.config -PackagesDirectory packages -NonInteractive
+          call build.cmd Release
+
+      - name: Upload binaries for signing
+        id: binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: |
+            build/Release/package/KayboroVdd.dll
+            build/Release/package/kbvdd-setup.exe
+
+      - name: Sign binaries (SignPath)
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: binaries
+          github-artifact-id: ${{ steps.binaries.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: build/Release/package
+
+      - name: Catalog over the signed binaries
+        shell: cmd
+        run: call build.cmd catalog
+
+      - name: Upload catalog for signing
+        id: catalog
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog
+          path: build/Release/package/kayborovdd.cat
+
+      - name: Sign catalog (SignPath)
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: catalog
+          github-artifact-id: ${{ steps.catalog.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: build/Release/package
+
+      - name: Signed package
+        uses: actions/upload-artifact@v4
+        with:
+          name: KayboroVdd-signed
+          path: |
+            build/Release/package/KayboroVdd.dll
+            build/Release/package/KayboroVdd.inf
+            build/Release/package/kayborovdd.cat
+            build/Release/package/kbvdd-setup.exe
+            build/Release/package/LICENSE.txt

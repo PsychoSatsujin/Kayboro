@@ -1,0 +1,30 @@
+// Steam install script for Kayboro (filled in by steam/upload.ps1 and written to the depot root as
+// installscript.vdf; the depot build script flags it with "InstallScript"). Steam runs "Run Process" once per
+// install, elevated, the first time the player starts Kayboro, and "Run Process On Uninstall" on removal.
+// Reference: https://partner.steamgames.com/doc/sdk/installscripts
+"InstallScript"
+{
+	"Run Process"
+	{
+		// The Kayboro Virtual Screen Driver: invisible screens for Hide Game Window. A non-zero exit code
+		// (e.g. 4: restart Windows to finish) makes Steam retry on the next launch.
+		"KayboroVirtualScreen"
+		{
+			"HasRunKey" "HKEY_LOCAL_MACHINE\\Software\\Valve\\Steam\\Apps\\{{APPID}}"
+			"Process 1" "%INSTALLDIR%\\driver\\kbvdd-setup.exe"
+			"Command 1" "install"
+			"Requirement_OS"
+			{
+				"Is64BitWindows" "1"
+			}
+		}
+	}
+	"Run Process On Uninstall"
+	{
+		"KayboroVirtualScreen"
+		{
+			"Process 1" "%INSTALLDIR%\\driver\\kbvdd-setup.exe"
+			"Command 1" "uninstall"
+		}
+	}
+}

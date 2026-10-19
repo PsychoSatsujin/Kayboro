@@ -4,16 +4,16 @@
       "desc": "Pink and cyan stars drifting through a violet nebula.",
       "media": { "type": "screensaver", "fill": "starfield", "palette": ["#120a24", "#ffe9fb", "#ff6ad5", "#7af0ff"] },
       "preview": "wallpapers/previews/wp-nebula-drift.svg",
-      "credit": { "artist": "Shellcade", "source": "Original", "url": null }, "price": null, "tags": ["space", "stars", "animated"] },
+      "credit": { "artist": "Kayboro", "source": "Original", "url": null }, "price": null, "tags": ["space", "stars", "animated"] },
     { "id": "wp-deep-lagoon", "kind": "wallpaper", "name": "Deep Lagoon", "rarity": "common",
       "desc": "Slow bubbles rising through teal water.",
       "media": { "type": "screensaver", "fill": "bubbles", "palette": ["#06283a", "#6ee7a8", "#e8fff6"] },
       "preview": "wallpapers/previews/wp-deep-lagoon.svg",
-      "credit": { "artist": "Shellcade", "source": "Original", "url": null }, "price": null, "tags": ["water", "calm", "animated"] },
+      "credit": { "artist": "Kayboro", "source": "Original", "url": null }, "price": null, "tags": ["water", "calm", "animated"] },
     { "id": "wp-night-rain", "kind": "wallpaper", "name": "Night Rain", "rarity": "rare",
       "desc": "Chunky neon pixels raining over a midnight arcade.",
       "media": { "type": "screensaver", "fill": "pixel-rain", "palette": ["#0b0a1a", "#ff6ad5", "#ffd166"] },
       "preview": "wallpapers/previews/wp-night-rain.svg",
-      "credit": { "artist": "Shellcade", "source": "Original", "url": null }, "price": null, "tags": ["pixel", "neon", "animated"] }
+      "credit": { "artist": "Kayboro", "source": "Original", "url": null }, "price": null, "tags": ["pixel", "neon", "animated"] }
   ]
 }

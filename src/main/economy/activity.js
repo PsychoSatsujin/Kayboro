@@ -1,6 +1,6 @@
 'use strict';
-// Time spent in Shellcade. Every tickMs (and on every window/play change) the time since the last
-// tick is credited to the economy when Shellcade was active at the start of that interval: visible
+// Time spent in Kayboro. Every tickMs (and on every window/play change) the time since the last
+// tick is credited to the economy when Kayboro was active at the start of that interval: visible
 // and not minimized, or in play mode. The hosted game (getApp) collects the same seconds per appid.
 class ActivityTracker {
   constructor({ economy, isActive, getApp = () => null, now = Date.now, tickMs = 15e3 }) {

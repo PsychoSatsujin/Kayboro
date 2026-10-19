@@ -12,7 +12,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..', '..');
 const argv = process.argv.slice(process.argv.findIndex((a) => a.endsWith('render.js')) + 1);
 const opt = (k, d) => { const i = argv.indexOf(k); return i >= 0 ? argv.splice(i, 2)[1] : d; };
-const OUT = path.resolve(opt('--out', path.join(os.tmpdir(), 'shellcade-vectorart')));
+const OUT = path.resolve(opt('--out', path.join(os.tmpdir(), 'kayboro-vectorart')));
 const MAX = +opt('--max', 1000);
 const CROP = opt('--crop', ''); // x,y,w,h in frame px: also writes <id>-crop.png at 1:1
 const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'catalog', 'frames-vector.json'), 'utf8')).frames;

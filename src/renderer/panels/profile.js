@@ -1,4 +1,4 @@
-// Profile: level ring and XP, stats, the 100-level reward track, games played inside Shellcade, and
+// Profile: level ring and XP, stats, the 100-level reward track, games played inside Kayboro, and
 // Settings (achievement rewards, sounds, app file check, mods).
 import { h, put, icon, coinIcon, fmt, getShell, call, has, itemThumb, hueOf, reducedMotion, durNodes } from './kit.js';
 import { levelProgress, rewardTrack, indexCatalog, fmtDuration, gameStats, rankTitle, initials, MAX_LEVEL } from './logic.js';
@@ -27,7 +27,7 @@ export function mountProfile(el, ctx = {}) {
     return [h('div', { className: 'sc-stat' }, ic, h('span', { className: 'sc-stat-v' }, v, h('small', { textContent: label }))), v];
   };
   const [sCoins, vCoins] = stat(coinIcon('sc-coin'), 'Coins');
-  const [sTime, vTime] = stat(icon('clock'), 'In Shellcade');
+  const [sTime, vTime] = stat(icon('clock'), 'In Kayboro');
   const [sHost, vHost] = stat(icon('gamepad'), 'Hosted play');
   const [sAch, vAch] = stat(icon('trophy'), 'Achievements');
 
@@ -44,18 +44,21 @@ export function mountProfile(el, ctx = {}) {
 
   // ---- Games ----
   const games = h('ul', { className: 'sc-games' });
-  const gamesSec = h('section', { className: 'sc-sec' }, h('div', { className: 'sc-sec-head' }, h('h3', {}, icon('gamepad'), 'Played in Shellcade')), games);
+  const gamesSec = h('section', { className: 'sc-sec' }, h('div', { className: 'sc-sec-head' }, h('h3', {}, icon('gamepad'), 'Played in Kayboro')), games);
 
   // ---- Settings ----
   const settings = h('div', { className: 'sc-settings' });
   const mods = h('div', { className: 'sc-mods' });
   const settingsSec = h('section', { className: 'sc-sec' }, h('div', { className: 'sc-sec-head' }, h('h3', {}, icon('settings'), 'Settings')), settings, mods);
 
+  // ---- Tester tools: only in the tester sandbox (KAYBORO_SANDBOX=1, see src/main/sandbox.js) ----
+  const testerSec = shell?.sandbox === true ? testerTools() : null;
+
   el.replaceChildren(h('div', { className: 'sc-panel sc-profile' },
     hero,
-    h('p', { className: 'sc-earn' }, icon('clock'), h('span', {}, 'Each minute in Shellcade: ', h('b', { className: 'c' }, '+1 coin'), ', ', h('b', { className: 'x' }, '+10 XP'))),
+    h('p', { className: 'sc-earn' }, icon('clock'), h('span', {}, 'Each minute in Kayboro: ', h('b', { className: 'c' }, '+1 coin'), ', ', h('b', { className: 'x' }, '+10 XP'))),
     h('div', { className: 'sc-stats' }, sCoins, sTime, sHost, sAch),
-    trackSec, gamesSec, settingsSec));
+    testerSec, trackSec, gamesSec, settingsSec));
 
   function renderHero() {
     const lvl = st?.level || 1, p = levelProgress(st), max = !(st?.xpForNext > 0);
@@ -200,9 +203,68 @@ export function mountProfile(el, ctx = {}) {
     b?.classList.remove('busy');
     renderMods();
     await app.refreshCatalog?.();
-    dispatchEvent(new CustomEvent('shellcade:catalog'));
+    dispatchEvent(new CustomEvent('kayboro:catalog'));
     const n = (modList || []).length, bad = (modList || []).filter(m => m.errors?.length).length;
     toast({ title: `Mods reloaded: ${n} found`, body: bad ? `${bad} with warnings. Check the list in Settings.` : '', kind: bad ? 'warn' : 'ok' });
+  }
+
+  // ---- Tester tools (sandbox only) ----
+  function testerTools() {
+    const refresh = async () => update(await call(shell, 'getState'));
+    const run = fn => async e => {
+      const b = e.currentTarget;
+      if (b.disabled) return;
+      b.disabled = true;
+      try { await fn(b); } catch (err) { toast({ title: 'That didn’t work', body: String(err?.message || err), kind: 'error' }); }
+      finally { b.disabled = false; }
+    };
+    const btn = (ic, label, fn, cls = '') => h('button', { type: 'button', className: `btn sm ${cls}`.trim(), onclick: run(fn) }, ic, h('span', { textContent: label }));
+    const grant = coins => async () => {
+      if (!(await call(shell, 'debugGrant', { coins }))) throw new Error('No coins were granted. Restart Kayboro with START_SANDBOX.bat.');
+      await refresh();
+      play('coin');
+      toast({ title: `+${fmt.format(coins)} coins`, body: 'Added to the sandbox profile.', kind: 'coin' });
+    };
+    const advance = hours => async () => {
+      const r = await call(shell, 'debugAdvanceTime', hours * 3600);
+      const d = k => Math.max(0, (r?.state?.[k] || 0) - (r?.before?.[k] || 0));
+      await refresh();
+      toast(d('xp') ? { title: `${hours} hour${hours === 1 ? '' : 's'} passed`, body: `+${fmt.format(d('coins'))} coins and +${fmt.format(d('xp'))} XP, level rewards included.`, kind: 'ok' }
+        : { title: 'No time counted', body: 'Time only counts while the Kayboro window is visible. Keep it open and try again.', kind: 'warn' });
+    };
+    // A made-up achievement for the hosted game (Spacewar, appid 480, when nothing is hosted). Rewards arrive as the usual toast.
+    const simulate = async () => {
+      const appid = Number(st?.session?.appid) > 0 ? Number(st.session.appid) : 480;
+      const r = await call(shell, 'debugSimulateUnlock', appid, `KB_SANDBOX_${Date.now().toString(36).toUpperCase()}`);
+      if (!r) return toast({ title: 'No achievement reward', body: 'Turn on Achievement rewards (beta) in Settings below, then try again.', kind: 'warn' });
+      await refresh();
+    };
+    // Two clicks within 4 s: the first one arms the button, the second resets.
+    let armed = null;
+    const disarm = b => { clearTimeout(armed); armed = null; b.classList.remove('is-armed'); b.lastChild.textContent = 'Reset Sandbox Profile'; };
+    const reset = async b => {
+      if (!armed) {
+        armed = setTimeout(() => disarm(b), 4000);
+        b.classList.add('is-armed');
+        b.lastChild.textContent = 'Click Again to Reset';
+        return;
+      }
+      disarm(b);
+      const s = await call(shell, 'debugResetSandbox');
+      if (!s || s.ok === false) throw new Error('The sandbox profile could not be reset. Check the terminal for details.');
+      update(s);
+      toast({ title: 'Sandbox profile reset', body: 'Back to level 1 with 0 coins. Mods and scenes are kept.', kind: 'ok' });
+    };
+    return h('section', { className: 'sc-sec sc-tester', 'aria-label': 'Tester tools' },
+      h('div', { className: 'sc-sec-head' }, h('h3', {}, icon('target'), 'Tester tools'), h('span', { className: 'meta', textContent: 'Sandbox' })),
+      h('p', { className: 'sc-tester-note' }, icon('info'), h('span', { textContent: 'Sandbox profile: progress here is separate and never touches your real save.' })),
+      h('div', { className: 'sc-tester-acts' },
+        btn(coinIcon('sc-coin'), 'Grant 1,000 Coins', grant(1000)),
+        btn(coinIcon('sc-coin'), 'Grant 10,000 Coins', grant(10000)),
+        btn(icon('clock'), 'Advance 1 Hour', advance(1)),
+        btn(icon('clock'), 'Advance 10 Hours', advance(10)),
+        btn(icon('trophy'), 'Simulate Achievement', simulate, 'sc-tester-wide'),
+        btn(icon('trash'), 'Reset Sandbox Profile', reset, 'ghost sc-tester-wide sc-tester-reset')));
   }
 
   // ---- State ----
@@ -218,7 +280,7 @@ export function mountProfile(el, ctx = {}) {
     const c = await call(shell, 'listCatalog');
     if (c?.levels) { cat = { ...cat, ...c }; idx = indexCatalog(cat); trackSig = ''; renderTrack(); }
   };
-  addEventListener('shellcade:catalog', onCatalog);
+  addEventListener('kayboro:catalog', onCatalog);
   const offCatalog = typeof shell?.onCatalog === 'function' ? shell.onCatalog(c => { if (c?.levels) { cat = { ...cat, ...c }; idx = indexCatalog(cat); trackSig = ''; renderTrack(); } }) : null;
   const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => centre()) : null;
   ro?.observe(scroller);
@@ -231,7 +293,7 @@ export function mountProfile(el, ctx = {}) {
 
   return {
     update,
-    destroy() { offMute(); ro?.disconnect(); removeEventListener('shellcade:catalog', onCatalog); if (typeof offCatalog === 'function') offCatalog(); el.replaceChildren(); },
+    destroy() { offMute(); ro?.disconnect(); removeEventListener('kayboro:catalog', onCatalog); if (typeof offCatalog === 'function') offCatalog(); el.replaceChildren(); },
   };
 }
 

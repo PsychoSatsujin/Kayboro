@@ -10,11 +10,20 @@ const { loadMods } = require('./mods');
 const integrity = require('./integrity');
 const payouts = require('./payouts');
 const catalog = require('./catalog');
+const bundles = require('./bundles');
+const selfStats = require('../steam/selfStats'); // Kayboro's own Steam achievements and DLC; no-ops without steamworks.js
+const kbAchievements = require('../steam/kayboroAchievements');
 
 // Wallpaper Engine scanning lives in ../wallpaperEngine.js (owned by the Steam integration).
-const listWallpaperEngine = () => {
+// The user's Wallpaper Engine folders, scanned at most once a minute (the gallery asks often).
+let weCache = null;
+const listWallpaperEngine = async () => {
+  if (weCache && Date.now() - weCache.at < 60e3) return weCache.list;
   try {
-    return require('../wallpaperEngine').listLocalWallpapers();
+    const libs = await require('../steam/library').probeLibraries(); // never scan a hung drive
+    const list = await require('../wallpaperEngine').listLocalWallpapers(libs);
+    weCache = { at: Date.now(), list };
+    return list;
   } catch (err) {
     console.warn('[shell] wallpapers unavailable:', err.message);
     return [];
@@ -50,13 +59,13 @@ const pad = (n) => String(n).padStart(2, '0');
 function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = () => false, userDataDir }) {
   const { app, shell, dialog } = require('electron');
   const win32 = require('../win32');
-  const dir = path.join(userDataDir, 'shellcade');
+  const dir = path.join(userDataDir, 'kayboro');
   const modsDir = path.join(dir, 'mods');
-  const test = process.env.SHELLCADE_TEST === '1';
+  const test = process.env.KAYBORO_TEST === '1';
 
   let mods = loadMods(modsDir, { reserved: catalog.reservedIds() });
   const cat = () => catalog.load(mods);
-  const economy = new Economy({ dir, catalog: cat });
+  const economy = new Economy({ dir, catalog: cat, ownsDlc: selfStats.ownsDlc });
   const submissions = new Submissions(dir);
   let tracker = null, clock = 0; // clock: test-only fast-forward (debugAdvanceTime)
   const session = new SessionManager({ economy, detectSteamGame, getProcessInfo: (h) => win32.getProcessInfo(h), beforeChange: () => tracker && tracker.tick() });
@@ -73,6 +82,18 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
     if (w && !w.isDestroyed()) w.webContents.send('shell:' + ch, data);
   };
   economy.on('state', (s) => send('state', s));
+  // Kayboro's own Steam achievements: re-checked on every state change (level, purchase, time, mods) and on play start.
+  const achievements = kbAchievements.createUnlocker({ stats: selfStats });
+  const achCtx = { played: false, mods: 0 };
+  const syncAchievements = (s = economy.getState()) => {
+    try {
+      achCtx.mods = mods.mods.filter((m) => !m.skipped && m.items > 0).length;
+      achievements.sync(s, cat(), achCtx);
+    } catch (err) {
+      console.warn('[steam] achievements:', err.message);
+    }
+  };
+  economy.on('state', syncAchievements);
   economy.on('levelUp', (e) => send('levelUp', e));
   economy.on('unlock', (e) => send('unlock', e));
   economy.on('settings', () => session.refreshWatcher());
@@ -101,9 +122,9 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
     buyWallpaperPreset: () => economy.buyWallpaperPreset(),
     setWallpaperPreset: (slot, wallpaper) => economy.setWallpaperPreset(Number(slot), wallpaper ?? null),
     setActiveWallpaper: (wallpaper, target) => economy.setActiveWallpaper(wallpaper ?? null, target ?? 'stage'),
-    listLocalWallpapers: () => {
+    listLocalWallpapers: async () => {
       const gone = new Set(cat().takedowns);
-      return listWallpaperEngine().filter((w) => !gone.has(w.id));
+      return (await listWallpaperEngine()).filter((w) => !gone.has(w.id));
     },
     sessionStart: (info) => session.sessionStart(info && typeof info === 'object' ? info : {}),
     sessionStop: () => session.sessionStop(),
@@ -112,6 +133,29 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
       if (!href) return false;
       await shell.openExternal(href);
       return true;
+    },
+    // Weekly bundle: { bundle, price: { coins, full, missing }, week } for this player right now.
+    getWeeklyBundle() {
+      const c = cat(), b = bundles.weekly(c, c.bundles);
+      if (!b) return null;
+      const idx = catalog.index(c), q = bundles.quote(b, c, (id) => economy.owns(idx.get(id)));
+      return { bundle: b, price: { coins: q.coins, full: q.full, missing: q.missing } };
+    },
+    buyBundle(id) {
+      const c = cat(), b = bundles.weekly(c, c.bundles);
+      return b && b.id === id ? economy.buyBundle(b) : { ok: false, reason: 'expired', state: economy.getState() };
+    },
+    // Bundle Studio (developers, running from source): validates a bundle and saves it as a file for publish.mjs.
+    async exportBundle(raw) {
+      const b = bundles.normBundle(raw, bundles.sellable(cat()));
+      if (!b) return { error: 'A bundle needs a week (YYYY-Www) and at least two sellable items.' };
+      const o = { title: 'Save bundle', defaultPath: path.join(app.getPath('documents'), `kayboro-bundle-${b.week}.json`), filters: [{ name: 'Kayboro bundle', extensions: ['json'] }] };
+      const w = getWindow();
+      const r = await (w && !w.isDestroyed() ? dialog.showSaveDialog(w, o) : dialog.showSaveDialog(o));
+      if (r.canceled || !r.filePath) return null;
+      const { curated, id, ...file } = b;
+      fs.writeFileSync(r.filePath, JSON.stringify(file, null, 2) + '\n', 'utf8');
+      return { file: r.filePath, bundle: b };
     },
     getSettings: () => economy.getSettings(),
     setSettings: (patch) => economy.setSettings(patch && typeof patch === 'object' ? patch : {}),
@@ -138,7 +182,7 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
       let file = test && typeof opts?.filePath === 'string' ? opts.filePath : null;
       if (!file) {
         const d = new Date();
-        const o = { title: 'Export payout sheet', defaultPath: path.join(app.getPath('documents'), `shellcade-payouts-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.csv`),
+        const o = { title: 'Export payout sheet', defaultPath: path.join(app.getPath('documents'), `kayboro-payouts-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.csv`),
           filters: [{ name: 'Spreadsheet (CSV)', extensions: ['csv'] }, { name: 'Usage file for merging (JSON)', extensions: ['json'] }] };
         const w = getWindow();
         const r = await (w && !w.isDestroyed() ? dialog.showSaveDialog(w, o) : dialog.showSaveDialog(o));
@@ -152,10 +196,13 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
       return file;
     },
   };
-  if (test) {
-    HANDLERS.debugSimulateUnlock = (appid, apiName) => session.simulateUnlock(appid, apiName);
+  // Tester sandbox (KAYBORO_SANDBOX=1, see ../sandbox.js): the debug hooks below, plus a reset of the sandbox profile only.
+  const sandbox = require('../sandbox');
+  if (sandbox.enabled) HANDLERS.debugResetSandbox = () => sandbox.resetProfile({ economy, dir });
+  if (test || sandbox.enabled) {
+    HANDLERS.debugSimulateUnlock =(appid, apiName) => session.simulateUnlock(appid, apiName);
     HANDLERS.debugGrant = (g) => economy.grant(g && typeof g === 'object' ? g : {});
-    // Fast clock: `seconds` of Shellcade time pass through the real tracker (window visibility, hosted game).
+    // Fast clock: `seconds` of Kayboro time pass through the real tracker (window visibility, hosted game).
     HANDLERS.debugAdvanceTime = (seconds) => {
       tracker.tick(); // credit the real time so far and sample the window's current state
       const before = economy.getState();
@@ -202,7 +249,13 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
     onPlayState: (playing, hwnd) => safe('play state', () => {
       tracker.tick();
       session.setPlaying(!!playing, hwnd);
+      if (playing) {
+        achCtx.played = true;
+        syncAchievements();
+      }
     }),
+    // --self-test (src/main/selftest.js): the counts it reports.
+    selfTestProbe: () => ({ catalog: { frames: cat().frames.length, wallpapers: cat().wallpapers.length }, steamworks: selfStats.available, mods: mods.mods.length }),
     onWindowState: () => safe('window state', () => tracker.tick()),
     economy, session, tracker, dispose,
   };

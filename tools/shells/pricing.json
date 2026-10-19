@@ -1,0 +1,11 @@
+{
+  "_doc": "Coin prices for catalog shells, keyed by id. Read by tools/vectorart/build.js and tools/pixelart/build.mjs. Shells not listed here are level rewards (src/catalog/levels.json). Prices by rarity: common 150, rare 300, epic 550, legendary 1000.",
+  "px-pager-pal": 150,
+  "vx-flip-clam": 300, "vx-photo-booth": 300, "px-ghost-pet": 300, "px-clear-wide": 300, "px-racer-cab": 300,
+  "px-cel-scifi": 300, "px-cel-analog": 300, "px-cel-magical": 300, "px-cel-constellation": 300, "px-jungle": 300,
+  "px-safari": 300, "px-animals": 300, "px-ramen": 300, "px-mongolian-ger": 300, "px-ocean": 300,
+  "vx-handheld-pc": 550, "vx-claw-crane": 550, "px-mole-bash": 550, "px-cel-cyberpunk": 550, "px-cel-future": 550,
+  "px-cel-universe": 550, "px-kamishibai": 550, "px-chinese-pavilion": 550, "px-deep-sea": 550, "vx-space-station": 550,
+  "px-tung-sahur": 550, "vx-saucer-beam": 550,
+  "vx-star-pinball": 1000, "px-cel-steampunk": 1000, "vx-neon-oni": 1000
+}

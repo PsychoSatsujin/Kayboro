@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1056 636" width="1056" height="636" data-frame="plain-bezel">
+<defs><clipPath id="shell-cut"><path clip-rule="evenodd" d="M0 0H1056V636H0ZM60 48H996A12 12 0 0 1 1008 60V576A12 12 0 0 1 996 588H60A12 12 0 0 1 48 576V60A12 12 0 0 1 60 48Z"/></clipPath>
+<!--
+  Plain Bezel: a plain Kayboro shell to use as is or to repaint.
+  viewBox: 1056 x 636 frame units.
+  Screen opening: x=48 y=48 w=960 h=540 (16:9), corner radius 12.
+  The clip path above is the whole canvas minus the opening (even-odd). All the artwork below is
+  clipped by it, so the opening stays fully transparent and the game shows through it.
+-->
+<!-- body colour: one subtle top-to-bottom gradient -->
+<linearGradient id="pb-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4d55"/><stop offset="1" stop-color="#383b42"/></linearGradient>
+</defs>
+<g clip-path="url(#shell-cut)">
+<!-- body: 1056x636, corner radius 60 -->
+<rect x="0" y="0" width="1056" height="636" rx="60" fill="url(#pb-body)"/>
+<!-- lip: the opening grown by 8 on every side; the cut removes its middle, leaving a ring 8 wide -->
+<rect x="40" y="40" width="976" height="556" rx="20" fill="#1d1f24"/>
+</g>
+</svg>

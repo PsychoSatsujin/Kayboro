@@ -9,7 +9,7 @@ const COLOR = '#ff00ff';
 
 Menu.setApplicationMenu(null); // no menu bar: keeps the client area exactly 800x600 and Alt inert
 // CI runners have no GPU. Software compositing keeps the window's pixels readable by every Windows
-// capture backend (WGC and GDI), and the RateofReality window covers this one during the smoke test,
+// capture backend (WGC and GDI), and the Kayboro window covers this one during the smoke test,
 // so don't let Chromium's occlusion tracking stop painting it.
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');

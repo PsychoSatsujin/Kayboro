@@ -11,9 +11,12 @@ const stub = {
   getClientRect: () => null, // client area in screen px: { x, y, width, height }
   getWindowRect: () => null,
   getCursorPos: () => null,
+  setCursorPos: () => false, // physical screen px
   clipCursor: () => false, // rect {x,y,width,height} or null to release
   getClipCursor: () => null, // current clip rect (the whole virtual screen when unclipped)
   moveWindow: () => false, // keep size, move top-left to (x, y)
+  placeWindow: () => false, // restore if minimized/maximized, then move + resize to {x, y, width, height}
+  isZoomed: () => false,
 };
 
 // 64-bit HWNDs are sign-extended 32-bit values, so Chromium can print them as negative ids.
@@ -33,12 +36,14 @@ function bind(koffi) {
   const GetWindowThreadProcessId = f(u, 'uint32 __stdcall GetWindowThreadProcessId(intptr_t hWnd, _Out_ uint32 *pid)');
   const IsWindow = f(u, 'int __stdcall IsWindow(intptr_t hWnd)');
   const IsIconic = f(u, 'int __stdcall IsIconic(intptr_t hWnd)');
+  const IsZoomed = f(u, 'int __stdcall IsZoomed(intptr_t hWnd)');
   const ShowWindow = f(u, 'int __stdcall ShowWindow(intptr_t hWnd, int cmd)');
   const SetForegroundWindow = f(u, 'int __stdcall SetForegroundWindow(intptr_t hWnd)');
   const GetForegroundWindow = f(u, 'intptr_t __stdcall GetForegroundWindow()');
   const GetClientRect = f(u, 'int __stdcall GetClientRect(intptr_t hWnd, _Out_ RECT *r)');
   const ClientToScreen = f(u, 'int __stdcall ClientToScreen(intptr_t hWnd, _Inout_ POINT *p)');
   const GetCursorPos = f(u, 'int __stdcall GetCursorPos(_Out_ POINT *p)');
+  const SetCursorPos = f(u, 'int __stdcall SetCursorPos(int x, int y)');
   const ClipCursor = f(u, 'int __stdcall ClipCursor(const RECT *r)');
   const GetClipCursor = f(u, 'int __stdcall GetClipCursor(_Out_ RECT *r)');
   const BringWindowToTop = f(u, 'int __stdcall BringWindowToTop(intptr_t hWnd)');
@@ -53,7 +58,7 @@ function bind(koffi) {
   const GetCurrentThreadId = f(k, 'uint32 __stdcall GetCurrentThreadId()');
 
   const SW_RESTORE = 9, VK_MENU = 0x12, KEYEVENTF_KEYUP = 2;
-  const SWP_NOSIZE = 0x1, SWP_NOZORDER = 0x4, SWP_NOACTIVATE = 0x10;
+  const SWP_NOSIZE = 0x1, SWP_NOZORDER = 0x4, SWP_NOACTIVATE = 0x10, SWP_FRAMECHANGED = 0x20;
   const PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
   const rectOut = (r) => ({ x: r.left, y: r.top, width: r.right - r.left, height: r.bottom - r.top });
 
@@ -120,6 +125,10 @@ function bind(koffi) {
       return GetCursorPos(p) ? { x: p.x, y: p.y } : null;
     },
 
+    setCursorPos(x, y) {
+      return Number.isFinite(x) && Number.isFinite(y) && !!SetCursorPos(Math.round(x), Math.round(y));
+    },
+
     clipCursor(rect) {
       const r = rect ? { left: rect.x, top: rect.y, right: rect.x + rect.width, bottom: rect.y + rect.height } : null;
       return !!ClipCursor(r);
@@ -135,6 +144,14 @@ function bind(koffi) {
       if (IsIconic(H(h))) ShowWindow(H(h), SW_RESTORE);
       return !!SetWindowPos(H(h), 0, Math.round(x), Math.round(y), 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
     },
+
+    placeWindow(h, rect) {
+      if (!H(h) || !IsWindow(H(h)) || !rect) return false;
+      if (IsIconic(H(h)) || IsZoomed(H(h))) ShowWindow(H(h), SW_RESTORE); // a maximized window ignores SetWindowPos sizes
+      return !!SetWindowPos(H(h), 0, Math.round(rect.x), Math.round(rect.y), Math.round(rect.width), Math.round(rect.height), SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+    },
+
+    isZoomed: (h) => !!H(h) && !!IsZoomed(H(h)),
   };
 }
 

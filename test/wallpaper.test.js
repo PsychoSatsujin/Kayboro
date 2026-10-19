@@ -6,10 +6,10 @@ const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'shellcade-we-'));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kayboro-we-'));
 const ROOT = path.join(tmp, 'Steam');
 const LIB2 = path.join(tmp, 'Lib2');
-process.env.SHELLCADE_STEAM_ROOT = ROOT;
+process.env.KAYBORO_STEAM_ROOT = ROOT;
 after(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
 const { listLocalWallpapers } = require('../src/main/wallpaperEngine');
@@ -39,8 +39,8 @@ project(ws(LIB2, 111), { title: 'Duplicate id in another library', type: 'scene'
 project(path.join(LIB2, 'steamapps', 'common', 'wallpaper_engine', 'projects', 'myprojects', 'mine1'), { title: 'My Loop', file: 'loop.webm' }, ['loop.webm']);
 put(path.join(ws(ROOT, 'stray-file')));
 
-test('lists video/image/scene/web wallpapers from every library, usable first', () => {
-  const list = listLocalWallpapers();
+test('lists video/image/scene/web wallpapers from every library, usable first', async () => {
+  const list = (await listLocalWallpapers());
   assert.deepEqual(list.map((w) => w.id), ['444', 'mine1', '111', '999', '333', '666', '222', '777']);
   const by = Object.fromEntries(list.map((w) => [w.id, w]));
   assert.deepEqual(by[111], {
@@ -53,8 +53,8 @@ test('lists video/image/scene/web wallpapers from every library, usable first', 
   assert.deepEqual([by.mine1.type, by.mine1.usable], ['video', true]); // type inferred from the file
 });
 
-test('ignores broken projects, applications and paths escaping the wallpaper folder', () => {
-  const by = Object.fromEntries(listLocalWallpapers().map((w) => [w.id, w]));
+test('ignores broken projects, applications and paths escaping the wallpaper folder', async () => {
+  const by = Object.fromEntries((await listLocalWallpapers()).map((w) => [w.id, w]));
   assert.equal(by[555], undefined);
   assert.equal(by[888], undefined);
   assert.deepEqual([by[666].fileUrl, by[666].previewUrl, by[666].usable], [null, null, false]);
@@ -62,8 +62,8 @@ test('ignores broken projects, applications and paths escaping the wallpaper fol
   assert.deepEqual([by[999].fileUrl, by[999].usable], [null, false]); // not playable in Chromium
 });
 
-test('explicit library list and empty cases', () => {
-  assert.deepEqual(listLocalWallpapers([LIB2]).map((w) => w.id).sort(), ['111', '444', '666', '777', '999', 'mine1']);
-  assert.deepEqual(listLocalWallpapers([path.join(tmp, 'none')]), []);
-  assert.deepEqual(listLocalWallpapers([]), []);
+test('explicit library list and empty cases', async () => {
+  assert.deepEqual((await listLocalWallpapers([LIB2])).map((w) => w.id).sort(), ['111', '444', '666', '777', '999', 'mine1']);
+  assert.deepEqual((await listLocalWallpapers([path.join(tmp, 'none')])), []);
+  assert.deepEqual((await listLocalWallpapers([])), []);
 });

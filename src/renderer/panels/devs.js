@@ -13,7 +13,7 @@ const FIELDS = [
   ['patreon', 'Patreon', 'url', 'https://patreon.com/yourname'],
   ['website', 'Website', 'url', 'https://yourstudio.com'],
 ];
-const REV_KEY = 'shellcade.payoutRevenue';
+const REV_KEY = 'kayboro.payoutRevenue';
 
 export function mountDevs(el, ctx = {}) {
   const shell = getShell(ctx), app = ctx.app || {};
@@ -32,15 +32,15 @@ export function mountDevs(el, ctx = {}) {
     now,
     h('section', { className: 'sc-sec sc-pool' },
       h('div', { className: 'sc-sec-head' }, h('h3', {}, icon('heart'), 'The creator pool')),
-      h('div', { className: 'sc-split', role: 'img', 'aria-label': `${DEV_SHARE}% to developers, ${100 - DEV_SHARE}% to Shellcade` },
+      h('div', { className: 'sc-split', role: 'img', 'aria-label': `${DEV_SHARE}% to developers, ${100 - DEV_SHARE}% to Kayboro` },
         h('span', { className: 'd', style: { flex: DEV_SHARE } }, h('b', { textContent: `${DEV_SHARE}%` }), h('small', { textContent: 'Developers' })),
-        h('span', { className: 's', style: { flex: 100 - DEV_SHARE } }, h('b', { textContent: `${100 - DEV_SHARE}%` }), h('small', { textContent: 'Shellcade' }))),
-      h('p', { className: 'sc-copy', textContent: `Paid shells ship as Steam DLC. ${DEV_SHARE}% of the net revenue goes to listed developers, split by how much their games are played inside Shellcade. Payouts start with the Steam release.` }),
+        h('span', { className: 's', style: { flex: 100 - DEV_SHARE } }, h('b', { textContent: `${100 - DEV_SHARE}%` }), h('small', { textContent: 'Kayboro' }))),
+      h('p', { className: 'sc-copy', textContent: `Paid shells ship as Steam DLC. ${DEV_SHARE}% of the net revenue goes to listed developers, split by how much their games are played inside Kayboro. Payouts start with the Steam release.` }),
       yourPlay),
     h('section', { className: 'sc-sec' }, h('div', { className: 'sc-sec-head' }, h('h3', {}, icon('stars'), 'Listed developers')), directory),
     h('section', { className: 'sc-sec sc-join', id: 'sc-join' },
       h('div', { className: 'sc-sec-head' }, h('h3', {}, icon('send'), 'List your game')),
-      h('p', { className: 'sc-copy', textContent: 'Made a game people play in Shellcade? List it to get your support links shown here and a share of the creator pool.' }),
+      h('p', { className: 'sc-copy', textContent: 'Made a game people play in Kayboro? List it to get your support links shown here and a share of the creator pool.' }),
       form.el),
     h('section', { className: 'sc-sec' }, h('div', { className: 'sc-sec-head' }, h('h3', {}, icon('table'), 'Submissions & payouts')), subList, payout.el)));
 
@@ -76,7 +76,7 @@ export function mountDevs(el, ctx = {}) {
           h('small', { textContent: (d.apps || []).map(a => a.name).join(', ') || 'No games yet' }))),
       d.blurb ? h('p', { className: 'sc-dev-blurb', textContent: d.blurb }) : null,
       links.length ? h('div', { className: 'sc-links' }, links.map(([k, label, ic]) => h('button', { type: 'button', className: `sc-link l-${k}`, title: d.links[k],
-        onclick: async () => { if (!(await call(shell, 'openLink', d.links[k]))) toast({ title: `Couldn't open ${label}`, body: 'Only https links to known sites open from Shellcade.', kind: 'error' }); } },
+        onclick: async () => { if (!(await call(shell, 'openLink', d.links[k]))) toast({ title: `Couldn't open ${label}`, body: 'Only https links to known sites open from Kayboro.', kind: 'error' }); } },
       icon(ic), label, icon('external', 'i sc-ext')))) : null);
   }
 
@@ -134,7 +134,7 @@ export function mountDevs(el, ctx = {}) {
       payF[3],
       h('div', { className: 'sc-field' }, h('label', { for: 'sc-dev-notes' }, 'Notes'), notes),
       h('label', { className: 'sc-check' }, agree, h('span', { className: 'sc-checkbox', 'aria-hidden': 'true' }, icon('check')),
-        h('span', {}, `I agree to the ${DEV_SHARE}/${100 - DEV_SHARE} split (${DEV_SHARE}% to developers, ${100 - DEV_SHARE}% to Shellcade)`)), errs.agree,
+        h('span', {}, `I agree to the ${DEV_SHARE}/${100 - DEV_SHARE} split (${DEV_SHARE}% to developers, ${100 - DEV_SHARE}% to Kayboro)`)), errs.agree,
       submit, h('p', { className: 'hint sc-center', textContent: 'Saved on this PC with your other submissions.' }));
 
     const read = () => ({
@@ -165,7 +165,7 @@ export function mountDevs(el, ctx = {}) {
       if (!r?.ok) {
         play('error');
         if (r?.errors && Object.keys(r.errors).length) { showErrors(r.errors); f.querySelector('[aria-invalid=true]')?.focus(); return; }
-        return toast({ title: 'Could not save your listing', body: r?.reason || (has(shell, 'submitDeveloper') ? 'Please check the form and try again.' : 'Listing needs the Shellcade desktop app.'), kind: 'error' });
+        return toast({ title: 'Could not save your listing', body: r?.reason || (has(shell, 'submitDeveloper') ? 'Please check the form and try again.' : 'Listing needs the Kayboro desktop app.'), kind: 'error' });
       }
       play('coin');
       toast({ title: 'Listing saved', body: `${v.value.name}, thanks! Your games: ${v.value.games.map(g => g.name).join(', ')}.`, kind: 'ok' });
@@ -212,7 +212,7 @@ export function mountDevs(el, ctx = {}) {
       input.setAttribute('aria-invalid', String(input.value.trim() !== '' && c == null));
       const s = splitRevenue(c || 0);
       split.replaceChildren(h('span', { className: 'd' }, h('small', { textContent: `Developers ${DEV_SHARE}%` }), h('b', { textContent: fmtUsd(s.devs) })),
-        h('span', { className: 's' }, h('small', { textContent: `Shellcade ${100 - DEV_SHARE}%` }), h('b', { textContent: fmtUsd(s.shellcade) })));
+        h('span', { className: 's' }, h('small', { textContent: `Kayboro ${100 - DEV_SHARE}%` }), h('b', { textContent: fmtUsd(s.kayboro) })));
       btn.disabled = c == null || !has(shell, 'exportPayoutSheet');
     };
     input.addEventListener('input', () => { show(); try { localStorage.setItem(REV_KEY, input.value); } catch {} });
@@ -230,7 +230,7 @@ export function mountDevs(el, ctx = {}) {
     return { el: h('div', { className: 'sc-payout' },
       h('label', { for: 'sc-rev', className: 'label' }, 'Net revenue to split (USD)'),
       h('div', { className: 'sc-money' }, h('span', { textContent: '$' }), input), split, btn,
-      h('p', { className: 'hint', textContent: 'Save as CSV for Excel (one row per developer with play minutes, points, share and payout, plus the Shellcade row and totals), or as JSON to merge with other installs.' })) };
+      h('p', { className: 'hint', textContent: 'Save as CSV for Excel (one row per developer with play minutes, points, share and payout, plus the Kayboro row and totals), or as JSON to merge with other installs.' })) };
   }
 
   async function loadDevs() {

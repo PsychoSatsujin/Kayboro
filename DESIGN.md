@@ -1,6 +1,6 @@
-# Shellcade DESIGN.md
+# Kayboro DESIGN.md
 
-Shellcade puts your games in a shell. The UI is the toy box around the stage: dark, soft and a little bit arcade, so the shells and the game stay the brightest things on screen.
+Kayboro puts your games in a shell. The UI is the toy box around the stage: dark, soft and a little bit arcade, so the shells and the game stay the brightest things on screen.
 
 Design read: a desktop companion app for PC players who decorate their games with cosmetic shells. Cute, game-y and premium. Native CSS tokens, Nunito for the interface, a pixel face for numbers and accents.
 
@@ -144,10 +144,10 @@ Press feedback is a 1px drop. Hover on frame tiles scales the art 5%. Loading us
 - Buttons are Title Case verbs or nouns: "Add Screen", "Latest Steam Game", "Custom Frame…", "Use Opening".
 - Errors say what to do next: "Capture failed: … Keep the window open and not minimized, then pick it again."
 - Numbers are numerals, formatted with `Intl.NumberFormat`. Ellipsis is `…`, quotes are curly.
-- Shellcade is always one word, capital S, never translated.
+- Kayboro is always one word, capital K, never translated.
 
 ## 11. Agent Prompt Guide
 
 - Background `#0f0d16`, panels `#17141f` / `#1f1b2b`, lines `#2c2740`, text `#eee9ff` / `#9a93b5`, accent `#ff6ad5` with ink `#2a0b22`, focus `#7af0ff`, coins `#ffd166`.
-- "Build a Shellcade panel: dark `--panel` surface, 16px padding, sections separated by `--line` hairlines, 32px bold 8px-radius buttons, pill chips that turn pink when pressed, pixel-font numbers in `--coin`, rarity-tinted card borders, every icon from the inline Tabler sprite (`<svg class="i"><use href="#i-name"/></svg>`)."
+- "Build a Kayboro panel: dark `--panel` surface, 16px padding, sections separated by `--line` hairlines, 32px bold 8px-radius buttons, pill chips that turn pink when pressed, pixel-font numbers in `--coin`, rarity-tinted card borders, every icon from the inline Tabler sprite (`<svg class="i"><use href="#i-name"/></svg>`)."
 - Available sprite icons: play, stop, refresh, plus, trash, x, eye, eye-off, monitor, window, steam, aspect, photo, movie, sparkles, lock, bag, user, heart, layers, chevron, maximize, minimize, save, folder, panel-close, panel-open, wallpaper, gamepad, handheld, share, droplet, check, upload, swatch, minus, coin-px (pixel coin, full colour), logo.

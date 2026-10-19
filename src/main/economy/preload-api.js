@@ -16,6 +16,7 @@ const api = {
     'setActiveWallpaper', 'setWallpaperPreset', 'buyWallpaperPreset', 'listLocalWallpapers',
     'sessionStart', 'sessionStop', 'openLink', 'getSettings', 'setSettings', 'getIntegrity',
     'getMods', 'reloadMods', 'openModsFolder', 'submitDeveloper', 'listSubmissions', 'exportPayoutSheet',
+    'getWeeklyBundle', 'buyBundle', 'exportBundle',
   ].map((n) => [n, call(n)])),
   onState: on('state'),
   onUnlock: on('unlock'),
@@ -24,10 +25,17 @@ const api = {
   onCatalog: on('catalog'),
 };
 
-if (process.env.SHELLCADE_TEST === '1') {
+// Developer tools (the Shop's Bundle Studio) when Kayboro runs from source (`electron .`) or with KAYBORO_DEV=1.
+api.devTools = process.env.KAYBORO_DEV_TOOLS === '1' || process.env.KAYBORO_DEV === '1';
+
+// Tester sandbox (KAYBORO_SANDBOX=1, src/main/sandbox.js): Profile shows its Tester tools when this is true.
+api.sandbox = require('../sandbox').enabled;
+
+if (process.env.KAYBORO_TEST === '1' || api.sandbox) {
   api.debugSimulateUnlock = call('debugSimulateUnlock');
   api.debugGrant = call('debugGrant');
   api.debugAdvanceTime = call('debugAdvanceTime');
 }
+if (api.sandbox) api.debugResetSandbox = call('debugResetSandbox');
 
 module.exports = api;

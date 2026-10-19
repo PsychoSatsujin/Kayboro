@@ -10,7 +10,7 @@ const { loadMods } = require('../src/main/economy/mods');
 const catalogLib = require('../src/main/economy/catalog');
 const { Economy } = require('../src/main/economy/economy');
 
-const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'shellcade-mods-'));
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'kayboro-mods-'));
 after(() => fs.rmSync(TMP, { recursive: true, force: true }));
 const EXAMPLE = path.join(__dirname, '..', 'examples', 'mods', 'example-shell');
 
@@ -39,7 +39,7 @@ test('example mod: loads every item with file:// urls inside its folder', () => 
   assert.deepEqual([m.id, m.name, m.version, m.items, m.errors, m.skipped], ['example-shell', 'Example Shell', '1.0.0', 4, [], false]);
   const f = r.frames[0];
   assert.equal(f.url, pathToFileURL(path.join(dir, 'example-shell', 'frames', 'example-shell.svg')).href);
-  assert.deepEqual(f.mod, { id: 'example-shell', name: 'Example Shell', author: 'Shellcade' });
+  assert.deepEqual(f.mod, { id: 'example-shell', name: 'Example Shell', author: 'Kayboro' });
   assert.deepEqual([f.kind, f.price, f.unlockLevel, f.starter], ['frame', null, null, false]);
   assert.ok(Math.abs(f.aspect - (f.hole.w * f.size.w) / (f.hole.h * f.size.h)) < 1e-3, 'aspect matches the hole');
   const viewBox = /viewBox="0 0 (\d+) (\d+)"/.exec(fs.readFileSync(path.join(EXAMPLE, f.file), 'utf8'));

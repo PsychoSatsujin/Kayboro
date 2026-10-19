@@ -14,6 +14,12 @@
 .fx-finish > .fx-l { z-index: 1; opacity: calc(var(--fx-i, 1) * var(--o, 1) * var(--fx-shell, 1)); }
 .fx-l > i { position: absolute; inset: 0; }
 
+/* Depth (depth.js): the shell's 3D shading, a precomputed overlay already shaped like the shell. Glass
+   (see-through plastic) is drawn at full strength even though the clear colorway thins the frame image. */
+.fx-depth { position: absolute; z-index: 1; pointer-events: none; background: no-repeat 0 0 / 100% 100%; opacity: var(--fx-depth, 1); }
+.fx-depth-pixel { image-rendering: pixelated; }
+.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none; }
+
 /* Edge lights: the silhouette minus itself shifted by --fx-rim leaves only the edges facing one way. */
 .fx-rim, .fx-rim-soft, .fx-rim-low, .fx-rim-side, .fx-rim-pearl {
   mask-image: var(--fx-shape), var(--fx-shape); mask-size: 100% 100%, 100% 100%; mask-repeat: no-repeat;

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 884 600" width="884" height="600" data-frame="plain-tv">
+<defs><clipPath id="shell-cut"><path clip-rule="evenodd" d="M0 0H884V600H0ZM84 60H676A24 24 0 0 1 700 84V516A24 24 0 0 1 676 540H84A24 24 0 0 1 60 516V84A24 24 0 0 1 84 60Z"/></clipPath>
+<!--
+  Plain TV: a plain Kayboro shell to use as is or to repaint.
+  viewBox: 884 x 600 frame units.
+  Screen opening: x=60 y=60 w=640 h=480 (4:3), corner radius 24.
+  The clip path above is the whole canvas minus the opening (even-odd). All the artwork below is
+  clipped by it, so the opening stays fully transparent and the game shows through it.
+-->
+</defs>
+<g clip-path="url(#shell-cut)">
+<!-- body: 884x600, corner radius 84 -->
+<rect x="0" y="0" width="884" height="600" rx="84" fill="#e3dccf"/>
+<!-- lip: the opening grown by 8 on every side; the cut removes its middle, leaving a ring 8 wide -->
+<rect x="52" y="52" width="656" height="496" rx="32" fill="#2e3036"/>
+<!-- knobs: radius 40, centred on x=796 -->
+<g fill="#3a3d44">
+  <circle cx="796" cy="240" r="40"/>
+  <circle cx="796" cy="360" r="40"/>
+</g>
+<!-- knob pointers -->
+<g fill="#e3dccf">
+  <rect x="792" y="206" width="8" height="28" rx="4"/>
+  <rect x="792" y="326" width="8" height="28" rx="4"/>
+</g>
+</g>
+</svg>

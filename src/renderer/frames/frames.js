@@ -1,17 +1,56 @@
 // Shell frames. Each image's viewBox is size.w x size.h; `hole` is its transparent screen opening as
 // fractions of the frame, `aspect` the opening's native width/height, `holeRadius` the opening's corner
-// radius as a fraction of the hole width. The five starters are built in; the rest come from the catalog.
-const def = (id, name, W, H, x, y, w, h) => ({
+// radius as a fraction of the hole width, `fx` its particles and screen glass (see normFx). The starters
+// are built in (tools/vectorart/build-starters.js prints their def lines); the rest come from
+// the catalog. Keep STARTERS in sync with src/main/economy/catalog.js (test/starters.test.js checks).
+const def = (id, name, W, H, x, y, w, h, r = 0, translucent = false) => ({
   id, name, url: new URL(`./${id}.svg`, import.meta.url).href, starter: true, style: 'vector', rarity: 'common',
-  size: { w: W, h: H }, hole: { x: x / W, y: y / H, w: w / W, h: h / H }, aspect: w / h, holeRadius: 0, translucent: false,
+  size: { w: W, h: H }, hole: { x: x / W, y: y / H, w: w / W, h: h / H }, aspect: w / h, holeRadius: r / w, translucent,
+  fx: normFx(STARTER_FX[id]),
 });
 
+// Particles + glass of the starters (catalog shells carry theirs in the catalog: tools/shells/fx.json).
+export const STARTER_FX = {
+  'crt-tv': { particles: 'sparkles', glass: 'crt' },
+  'virtual-pet': { particles: 'hearts', glass: 'round' },
+  handheld: { particles: 'bubbles', glass: 'round' },
+  arcade: { particles: 'pixel-stars', glass: 'crt' },
+  bezel: { particles: 'sparkles', glass: 'flat', density: 0.5 },
+  'pocket-brick': { particles: 'pixel-stars', glass: 'flat' },
+  'wide-pocket': { particles: 'sparkles', glass: 'flat', palette: ['#ffd27a', '#fff4dc', '#ffb6dc'] },
+  'split-pad': { particles: 'confetti', glass: 'flat', palette: ['#4fd6ff', '#ff5a6a', '#ffffff'], density: 0.6 },
+  'sleek-portable': { particles: 'sparkles', glass: 'flat', palette: ['#c9f0ff', '#e2d4ff', '#ffffff'], density: 0.6 },
+  // Plain shells stay plain: screen glass only, no particles.
+  'plain-bezel': { glass: 'flat' },
+  'plain-handheld': { glass: 'flat' },
+  'plain-tv': { glass: 'flat' },
+};
+export const PARTICLE_TYPES = ['sparkles', 'hearts', 'bubbles', 'pixel-stars', 'petals', 'embers', 'fireflies', 'confetti', 'snow', 'notes'];
+export const GLASS_TYPES = ['round', 'crt', 'flat'];
+const HEX = /^#[0-9a-f]{6}$/i;
+/** A shell's effects, or null: { particles: type|null, glass: type|null, palette?: [hex], density?: 0.2..2 }. */
+export function normFx(fx) {
+  if (!fx || typeof fx !== 'object') return null;
+  const out = { particles: PARTICLE_TYPES.includes(fx.particles) ? fx.particles : null, glass: GLASS_TYPES.includes(fx.glass) ? fx.glass : null };
+  if (Array.isArray(fx.palette) && fx.palette.length && fx.palette.length <= 6 && fx.palette.every((c) => HEX.test(c))) out.palette = [...fx.palette];
+  if (Number.isFinite(fx.density)) out.density = Math.min(2, Math.max(0.2, fx.density));
+  return out.particles || out.glass ? out : null;
+}
+
 export const STARTERS = [
-  def('crt-tv', 'CRT TV', 1000, 800, 100, 90, 640, 480),
-  def('virtual-pet', 'Virtual pet', 600, 720, 180, 200, 240, 240),
-  def('handheld', 'Handheld', 600, 1000, 130, 110, 340, 306),
-  def('arcade', 'Arcade cabinet', 800, 1000, 150, 200, 500, 375),
-  def('bezel', 'Thin bezel', 1000, 600, 20, 20, 960, 540),
+  def('crt-tv', 'CRT TV', 1040, 950, 130, 266, 640, 480, 34, false),
+  def('virtual-pet', 'Virtual Pet', 1040, 1340, 255, 384, 530, 530, 58, true),
+  def('handheld', 'Handheld', 1000, 1580, 220, 198, 560, 420, 18, true),
+  def('arcade', 'Arcade Cabinet', 840, 1080, 160, 264, 520, 390, 18, false),
+  def('bezel', 'Thin Bezel', 1012, 648, 26, 26, 960, 540, 8, false),
+  def('pocket-brick', 'Pocket Brick', 1000, 1600, 240, 256, 520, 468, 8, false),
+  def('wide-pocket', 'Wide Pocket', 1500, 960, 450, 206, 600, 400, 10, false),
+  def('split-pad', 'Split Pad', 1740, 850, 390, 132, 960, 540, 10, false),
+  def('sleek-portable', 'Sleek Portable', 1800, 870, 420, 156, 960, 540, 10, false),
+  // Plain shells: deliberately basic, to use as they are or as templates for your own (docs/MODDING.md).
+  def('plain-bezel', 'Plain Bezel', 1056, 636, 48, 48, 960, 540, 12, false),
+  def('plain-handheld', 'Plain Handheld', 600, 820, 60, 60, 480, 360, 12, false),
+  def('plain-tv', 'Plain TV', 884, 600, 60, 60, 640, 480, 24, false),
 ];
 
 // Live list: starters first, catalog frames appended by loadCatalogFrames().
@@ -35,7 +74,8 @@ export function fromCatalog(it) {
     style: it.style || 'vector', theme: it.theme || '', rarity: it.rarity || 'common', price: it.price || null,
     unlockLevel: it.unlockLevel ?? null, size, hole: { x: num(h.x), y: num(h.y), w: h.w, h: h.h },
     aspect: num(it.aspect) > 0 ? it.aspect : (h.w * size.w) / (h.h * size.h), holeRadius: Math.max(0, num(it.holeRadius)),
-    translucent: !!it.translucent, author: it.author || 'Shellcade', desc: it.desc || '', tags: it.tags || [],
+    translucent: !!it.translucent, author: it.author || 'Kayboro', desc: it.desc || '', tags: it.tags || [],
+    collection: it.collection || null, license: it.license || null, fx: normFx(it.fx),
   };
 }
 

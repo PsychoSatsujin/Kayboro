@@ -1,5 +1,5 @@
 'use strict';
-// Mods: <userData>/shellcade/mods/<folder>/mod.json adds frames, wallpapers, fills and colorways.
+// Mods: <userData>/kayboro/mods/<folder>/mod.json adds frames, wallpapers, fills and colorways.
 // Mod items are free and owned. Their files are resolved inside the mod folder and handed to the
 // renderer as file:// URLs. A broken mod.json skips the mod, a broken item skips the item; both are
 // listed in the mod's `errors`.

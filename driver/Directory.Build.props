@@ -1,0 +1,11 @@
+<Project>
+  <!-- The WDK and SDK come from NuGet (packages.config), restored into .\packages by build.ps1, so nothing
+       has to be installed system-wide. Keep the version here in sync with packages.config. -->
+  <PropertyGroup>
+    <KayboroKitVersion>10.0.28000.2526</KayboroKitVersion>
+    <KayboroPackages>$(MSBuildThisFileDirectory)packages\</KayboroPackages>
+  </PropertyGroup>
+  <Import Project="$(KayboroPackages)Microsoft.Windows.WDK.x64.$(KayboroKitVersion)\build\native\Microsoft.Windows.WDK.x64.props" Condition="Exists('$(KayboroPackages)Microsoft.Windows.WDK.x64.$(KayboroKitVersion)\build\native\Microsoft.Windows.WDK.x64.props') and '$(Platform)' == 'x64'" />
+  <Import Project="$(KayboroPackages)Microsoft.Windows.SDK.CPP.x64.$(KayboroKitVersion)\build\native\Microsoft.Windows.SDK.cpp.x64.props" Condition="Exists('$(KayboroPackages)Microsoft.Windows.SDK.CPP.x64.$(KayboroKitVersion)\build\native\Microsoft.Windows.SDK.cpp.x64.props') and '$(Platform)' == 'x64'" />
+  <Import Project="$(KayboroPackages)Microsoft.Windows.SDK.CPP.$(KayboroKitVersion)\build\native\Microsoft.Windows.SDK.cpp.props" Condition="Exists('$(KayboroPackages)Microsoft.Windows.SDK.CPP.$(KayboroKitVersion)\build\native\Microsoft.Windows.SDK.cpp.props')" />
+</Project>

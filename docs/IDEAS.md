@@ -11,7 +11,7 @@ Community features ranked by impact / effort. Top of the list ships first.
 | 5 | **Seasonal events** | High | Medium | Limited shells and fills for Halloween, winter, sakura season. Earned with coins, back next year. |
 | 6 | **Collections / set bonuses** | Medium | Low | Own every pixel TV, get a badge and a bonus colorway. Gives the shop a goal. |
 | 7 | **Daily quests** | Medium | Low | "Host a game 30 minutes", "try a new fill". Small coin bonuses, optional. |
-| 8 | **Dev-exclusive shells** | Medium | Medium | Shells themed on listed indie games, unlocked by playing that game in Shellcade. |
+| 8 | **Dev-exclusive shells** | Medium | Medium | Shells themed on listed indie games, unlocked by playing that game in Kayboro. |
 | 9 | **Shell pets** | Medium | Medium | A tiny pet on the shell that reacts to play: sleeps when idle, cheers on achievements, grows with levels. |
 | 10 | **Accessibility** | Medium | Low | Reduced motion everywhere, high-contrast UI, colorblind-safe rarity icons, scalable UI text. |
 | 11 | **Co-op shared stage** | Medium | High | Two players' games side by side in a shared scene; matching shells for duos. |

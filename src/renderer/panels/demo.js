@@ -36,9 +36,9 @@ function art(seed, w = 384, h = 216) {
 const pixel = await json('frames-pixel'), vector = await json('frames-vector');
 const cat = {
   frames: [
-    ...STARTERS.map(f => ({ id: f.id, name: f.name, kind: 'frame', style: 'vector', rarity: 'common', price: null, unlockLevel: null, file: `frames/${f.id}.svg`, starter: true, size: f.size, hole: f.hole, author: 'Shellcade' })),
+    ...STARTERS.map(f => ({ id: f.id, name: f.name, kind: 'frame', style: 'vector', rarity: 'common', price: null, unlockLevel: null, file: `frames/${f.id}.svg`, starter: true, size: f.size, hole: f.hole, author: 'Kayboro' })),
     ...(pixel.frames || []), ...(vector.frames || []),
-    { id: 'dlc-royal-cab', name: 'Royal Cabinet', kind: 'frame', style: 'vector', rarity: 'legendary', price: { usd: 2.99 }, dlc: { appid: null }, unlockLevel: null, file: 'frames/arcade.svg', size: { w: 800, h: 1000 }, hole: { x: .19, y: .2, w: .62, h: .375 }, author: 'Shellcade', desc: 'Gilded cabinet, Steam DLC.' },
+    { id: 'dlc-royal-cab', name: 'Royal Cabinet', kind: 'frame', style: 'vector', rarity: 'legendary', price: { usd: 2.99 }, dlc: { appid: null }, unlockLevel: null, file: 'frames/arcade.svg', size: { w: 800, h: 1000 }, hole: { x: .19, y: .2, w: .62, h: .375 }, author: 'Kayboro', desc: 'Gilded cabinet, Steam DLC.' },
     { id: 'mod-wood-bezel', name: 'Walnut Bezel', kind: 'frame', style: 'vector', rarity: 'common', price: null, unlockLevel: null, url: new URL('../frames/bezel.svg', import.meta.url).href, size: { w: 1000, h: 600 }, hole: { x: .02, y: .033, w: .96, h: .9 }, mod: { id: 'example-shell', name: 'Example Shell', author: 'Mira' } },
   ],
   finishes: (await json('finishes')).finishes || [],
@@ -48,8 +48,8 @@ const cat = {
   levels: (await json('levels')).levels || [],
   wallpapers: [
     ...((await json('wallpapers')).wallpapers || []),
-    { id: 'wp-petal-drift', kind: 'wallpaper', name: 'Petal Drift', media: { type: 'screensaver', fill: 'sakura-petals' }, credit: { artist: 'Shellcade' }, price: null },
-    { id: 'wp-dusk-hills', kind: 'wallpaper', name: 'Dusk Hills', media: { type: 'image', url: art(11, 960, 540) }, preview: art(11), credit: { artist: 'Shellcade' }, price: null },
+    { id: 'wp-petal-drift', kind: 'wallpaper', name: 'Petal Drift', media: { type: 'screensaver', fill: 'sakura-petals' }, credit: { artist: 'Kayboro' }, price: null },
+    { id: 'wp-dusk-hills', kind: 'wallpaper', name: 'Dusk Hills', media: { type: 'image', url: art(11, 960, 540) }, preview: art(11), credit: { artist: 'Kayboro' }, price: null },
     { id: 'mod-wp-neon', kind: 'wallpaper', name: 'Neon Alley', media: { type: 'image' }, url: art(5, 960, 540), previewUrl: art(5), mod: { id: 'example-shell', name: 'Example Shell', author: 'Mira' }, price: null },
   ],
   takedowns: { removed: [] },
@@ -68,11 +68,11 @@ let state = {
   inventory: [...STARTERS.map(f => f.id), 'none', 'default', 'starfield', ...(fresh ? [] : ['px-pocket', 'matte', 'vx-cozy-wood-tv', 'berry', 'px-crt', 'bubbles', 'gloss', 'px-pet-egg', 'mint'])],
   equipped: { finish: fresh ? 'none' : 'gloss', colorway: 'default', fill: 'starfield' },
   wallpaperPresets: fresh ? [] : [
-    { slot: 0, wallpaper: { source: 'shellcade', id: 'wp-nebula-drift' } },
+    { slot: 0, wallpaper: { source: 'kayboro', id: 'wp-nebula-drift' } },
     { slot: 1, wallpaper: { source: 'we', id: '2814' } },
     { slot: 2, wallpaper: null },
   ],
-  activeWallpaper: { stage: fresh ? null : { source: 'shellcade', id: 'wp-petal-drift' }, fill: null },
+  activeWallpaper: { stage: fresh ? null : { source: 'kayboro', id: 'wp-petal-drift' }, fill: null },
   stats: fresh ? { totalPlaySeconds: 0, achievements: 0, perApp: {} } : {
     totalPlaySeconds: 14 * HOUR + 22 * MIN, achievements: 23,
     perApp: {
@@ -129,7 +129,7 @@ window.shell = {
   getMods: async () => clone(mods), reloadMods: async () => clone(mods), openModsFolder: async () => true,
   submitDeveloper: async f => { const id = `s${submissions.length + 1}`; submissions.push({ ...f, id, submittedAt: Date.now() }); return { ok: true, id }; },
   listSubmissions: async () => clone(submissions),
-  exportPayoutSheet: async ({ revenueCents }) => `C:\\Users\\you\\Documents\\shellcade-payouts-${revenueCents}.csv`,
+  exportPayoutSheet: async ({ revenueCents }) => `C:\\Users\\you\\Documents\\kayboro-payouts-${revenueCents}.csv`,
   onState: cb => { subs.state.add(cb); return () => subs.state.delete(cb); },
   onUnlock: cb => { subs.unlock.add(cb); return () => subs.unlock.delete(cb); },
   onLevelUp: cb => { subs.levelUp.add(cb); return () => subs.levelUp.delete(cb); },
@@ -186,7 +186,7 @@ if (view === 'toasts' || view === 'gallery') await go(view === 'gallery' ? 'shop
 else await go(view);
 if (view === 'gallery') { current.showTab('wallpapers'); setTimeout(() => document.querySelector('[aria-label="Open the big gallery"]')?.click(), 400); }
 if (view === 'toasts') {
-  toaster.show({ title: 'Moonlit Arcade launched', body: 'Host it in Shellcade to earn XP and coins while you play.', kind: 'info', action: { label: 'Put it in a shell', onClick() {} } });
+  toaster.show({ title: 'Moonlit Arcade launched', body: 'Host it in Kayboro to earn XP and coins while you play.', kind: 'info', action: { label: 'Put it in a shell', onClick() {} } });
   setTimeout(() => toaster.achievement({ appid: 1001, game: 'Moonlit Arcade', apiName: 'ACH_FIRST', name: 'High Score Hero', desc: 'Beat the high score on every cabinet.', iconUrl: null, coins: 50, xp: 120 }), 150);
   setTimeout(() => toaster.levelUp({ level: 13, rewards: { coins: 35, items: ['px-crt', 'gloss'] } }), 300);
 }

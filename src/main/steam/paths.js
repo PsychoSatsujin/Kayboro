@@ -1,5 +1,5 @@
 'use strict';
-// Locates the Steam install. SHELLCADE_STEAM_ROOT overrides detection (tests, portable installs).
+// Locates the Steam install. KAYBORO_STEAM_ROOT overrides detection (tests, portable installs).
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -55,7 +55,7 @@ function candidates() {
 // A found root is kept for the app's lifetime; "not installed" is re-checked after 30 s.
 let cached, cachedAt = 0;
 function steamRoot() {
-  const env = process.env.SHELLCADE_STEAM_ROOT;
+  const env = process.env.KAYBORO_STEAM_ROOT;
   if (env) return path.resolve(env);
   if (cached === undefined || (cached === null && Date.now() - cachedAt > 30e3)) {
     cached = candidates().find(looksLikeSteam) || null;

@@ -1,6 +1,13 @@
 'use strict';
 // Steam libraries and the apps installed in them (steamapps/libraryfolders.vdf + appmanifest_*.acf).
+//
+// A library drive can hang (a failing or sleeping external disk, a dead network share). Touching it
+// synchronously would freeze the whole main process, and even an async fs call parks a libuv thread
+// for good. So probeLibraries() checks each listed library once, in a child process with a timeout,
+// and libraries() skips any library whose probe is pending or failed. Never-probed libraries (tests,
+// tools) are used as before.
 const fs = require('fs');
+const { execFile } = require('child_process');
 const path = require('path');
 const vdf = require('./vdf');
 const { steamRoot } = require('./paths');
@@ -30,7 +37,8 @@ const real = (p) => {
 // Comparable path: no \\?\ prefix, forward slashes, lower case, no trailing slash.
 const norm = (p) => String(p).replace(/^\\\\\?\\/, '').replace(/\\/g, '/').replace(/\/{2,}/g, '/').replace(/\/$/, '').toLowerCase();
 
-function libraries(root = steamRoot()) {
+// Every library Steam lists (root first), unchecked.
+function listed(root) {
   if (!root) return [];
   const lf = readText(path.join(root, 'steamapps', 'libraryfolders.vdf')) || readText(path.join(root, 'config', 'libraryfolders.vdf'));
   const found = [root];
@@ -39,8 +47,48 @@ function libraries(root = steamRoot()) {
     const p = typeof v === 'string' ? v : vdf.get(v, 'path');
     if (/^\d+$/.test(k) && typeof p === 'string' && p) found.push(p);
   }
+  return found;
+}
+
+const health = new Map(); // norm(library) -> true (answered) | false (hung or missing) | 'pending'
+const PROBE_MS = 4000;
+const CMD_SAFE = /^[^"%^&|<>!\r\n]+$/;
+
+// True when <lib>/steamapps answers within PROBE_MS. On Windows the check runs in cmd.exe, so a hung
+// drive stalls (and is killed in) the child, never this process.
+function probe(lib) {
+  const dir = path.join(lib, 'steamapps');
+  if (process.platform === 'win32' && CMD_SAFE.test(dir)) {
+    return new Promise((resolve) => {
+      execFile(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', `"if exist "${dir}\\" (exit 0) else (exit 3)"`],
+        { timeout: PROBE_MS, windowsHide: true, windowsVerbatimArguments: true }, (err) => resolve(!err));
+    });
+  }
+  const timeout = new Promise((resolve) => setTimeout(resolve, PROBE_MS, false));
+  return Promise.race([fs.promises.stat(dir).then((s) => s.isDirectory(), () => false), timeout]);
+}
+
+const probing = new Map(); // norm(root) -> the probe run in flight or done
+/** Probes every listed library once per session (concurrent callers share the run); resolves to libraries(). */
+function probeLibraries(root = steamRoot()) {
+  const key = norm(root || '');
+  if (!probing.has(key)) {
+    const libs = listed(root).filter((p) => !health.has(norm(p)));
+    for (const p of libs) health.set(norm(p), 'pending');
+    probing.set(key, Promise.all(libs.map(async (p) => {
+      const ok = await probe(p);
+      health.set(norm(p), ok);
+      if (!ok) console.warn(`[steam] library not responding, skipped: ${p}`);
+    })));
+  }
+  return probing.get(key).then(() => libraries(root));
+}
+
+function libraries(root = steamRoot()) {
   const seen = new Set();
-  return found.filter((p) => {
+  return listed(root).filter((p) => {
+    const h = health.get(norm(p));
+    if (h === false || h === 'pending') return false; // hung, missing or not checked yet: never touch it here
     const key = norm(real(p));
     if (seen.has(key) || !isDir(path.join(p, 'steamapps'))) return false;
     seen.add(key);
@@ -84,4 +132,4 @@ function appForExe(exePath, apps = installedApps()) {
   return apps.find((a) => exe.includes(`/steamapps/common/${norm(a.installdir)}/`)) || null;
 }
 
-module.exports = { libraries, installedApps, appForExe, normPath: norm };
+module.exports = { libraries, probeLibraries, installedApps, appForExe, normPath: norm };

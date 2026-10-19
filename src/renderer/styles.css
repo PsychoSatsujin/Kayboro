@@ -1,4 +1,4 @@
-/* Shellcade renderer styles. Tokens first; see DESIGN.md for the system. */
+/* Kayboro renderer styles. Tokens first; see DESIGN.md for the system. */
 @font-face { font-family: "Nunito"; src: url("assets/fonts/nunito-wght.woff2") format("woff2"); font-weight: 200 1000; font-display: swap; }
 @font-face { font-family: "Pixelify Sans"; src: url("assets/fonts/pixelify-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Pixelify Sans"; src: url("assets/fonts/pixelify-sans-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
@@ -49,6 +49,22 @@ button, input, select { font: inherit; color: inherit; }
 .h-e { left: 100%; top: 50%; cursor: ew-resize; }   .h-w { left: 0; top: 50%; cursor: ew-resize; }
 .h-nw { left: 0; top: 0; cursor: nwse-resize; }     .h-se { left: 100%; top: 100%; cursor: nwse-resize; }
 .h-ne { left: 100%; top: 0; cursor: nesw-resize; }  .h-sw { left: 0; top: 100%; cursor: nesw-resize; }
+/* With a shell: the shell's outline + square handles (resize the shell), the game's outline + round handles
+   (resize the game inside the opening). Only these two sets show; the plain screen ones are for bare screens. */
+.hbox { position: absolute; z-index: 3; display: none; pointer-events: none; }
+.hbox > .handle { pointer-events: auto; }
+.screen.sel.framed { outline: none; }
+.screen.sel.framed > .handle { display: none; }
+.screen.sel.framed > .hbox, .screen.sel.framed > .hbox > .handle { display: block; }
+.shell-box { outline: 1.5px solid color-mix(in srgb, var(--accent) 80%, transparent); outline-offset: 2px; }
+.screen.dragging > .shell-box { outline-style: dashed; }
+.pic-box { z-index: 4; outline: 1.5px dashed rgb(255 255 255 / .75); box-shadow: 0 0 0 1px rgb(0 0 0 / .35); }
+.pic-box > .handle { width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; background: var(--accent); border-color: #fff; }
+body.playing .hbox, body.popout .hbox { display: none !important; }
+/* Sliders (Fill clarity): label row above a full-width range in the accent colour. */
+.slider { display: grid; gap: 6px; }
+.slider[hidden] { display: none; }
+.slider input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); cursor: pointer; }
 #cursor { position: absolute; left: -2px; top: -1px; z-index: 100000; pointer-events: none; filter: drop-shadow(0 1px 1px #000); }
 .stage-empty { position: absolute; top: 50%; left: calc((100% - var(--sidebar-w)) / 2); transform: translate(-50%, -50%);
   display: grid; justify-items: center; gap: 12px; color: var(--muted); text-align: center; }
@@ -59,6 +75,22 @@ body.ui-hidden .stage-empty { left: 50%; }
 /* Play mode: display only (toasts stay so achievements show over the game). */
 body.playing #ui, body.playing #showUi, body.playing #hud, body.playing .handle, body.playing .stage-empty { display: none !important; }
 body.playing .screen { outline: none; cursor: none; }
+/* Pop-out window: only the console and the game. No background, chrome, outline, handles or focus ring. */
+html.popout, body.popout, body.popout #stage, body.popout #bg { background: transparent !important; }
+body.popout #ui, body.popout #showUi, body.popout #hud, body.popout #toasts, body.popout .stage-empty, body.popout .handle { display: none !important; }
+body.popout .screen, body.popout .screen.sel, body.popout .screen:focus, body.popout .screen:focus-visible { outline: none !important; box-shadow: none !important; cursor: grab; }
+body.popout .screen.dragging { cursor: grabbing; }
+body.popout[data-edge], body.popout[data-edge] * { cursor: var(--edge-cursor) !important; }
+body.popout .screen > .media { cursor: pointer; }
+body.popout.playing .screen, body.popout.playing .screen > .media { cursor: none; }
+.fx-switches { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.screen > .glass { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: no-repeat 0 0 / 100% 100%; }
+.screen > .glass[hidden], .screen > .particles[hidden] { display: none; }
+.screen > .particles { position: absolute; z-index: 3; pointer-events: none; }
+#popoutHint { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 300000; max-width: calc(100% - 24px); padding: 6px 12px;
+  border-radius: 999px; background: color-mix(in srgb, var(--panel) 90%, transparent); color: var(--text); font-size: 12px; font-weight: 700;
+  pointer-events: none; text-align: center; }
+#popoutHint[hidden] { display: none; }
 
 /* ---- HUD ---- */
 #hud { position: fixed; top: 14px; left: 14px; z-index: 200000; display: flex; align-items: center; gap: 12px; max-width: calc(100vw - var(--sidebar-w) - 28px);
@@ -85,7 +117,7 @@ body.ui-hidden #hud { opacity: 0; transform: translateY(-8px); visibility: hidde
   box-shadow: -18px 0 40px -24px rgb(0 0 0 / .8); transition: transform var(--t-slow) var(--ease), visibility 0s; }
 body.ui-hidden #ui { transform: translateX(100%); visibility: hidden; transition: transform var(--t-slow) var(--ease), visibility 0s linear var(--t-slow); }
 .ui-head { display: flex; align-items: center; gap: 6px; padding: 10px 10px 0 12px; border-bottom: 1px solid var(--line); }
-.tabs { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; }
+.tabs { flex: 1; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; }
 .tabs [role=tab] { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 4px 10px; border: 0; border-radius: var(--r-sm) var(--r-sm) 0 0;
   background: none; color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer; transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease); }
 .tabs [role=tab] .i { width: 18px; height: 18px; }
@@ -119,6 +151,16 @@ summary:focus-visible { outline-offset: -2px; border-radius: var(--r-sm); }
 .row { display: flex; align-items: center; gap: 8px; }
 .row > input, .row > select { flex: 1; min-width: 0; }
 .row.end { justify-content: flex-end; }
+.row.wrap { flex-wrap: wrap; }
+.row.wrap > .icon-btn { flex: none; }
+/* Drag the panel's left edge to resize it (ui.js keeps the width between --sidebar-min and --sidebar-max). */
+.ui-resize { position: absolute; top: 0; bottom: 0; left: -4px; width: 8px; z-index: 2; cursor: ew-resize; touch-action: none; }
+.ui-resize::after { content: ''; position: absolute; top: 50%; left: 3px; width: 2px; height: 40px; margin-top: -20px; border-radius: 2px;
+  background: var(--line-2); opacity: 0; transition: opacity var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease); }
+.ui-resize:hover::after, .ui-resize:focus-visible::after, body.resizing-ui .ui-resize::after { opacity: 1; background: var(--accent-2); }
+.ui-resize:focus-visible { outline: none; }
+body.resizing-ui, body.resizing-ui * { cursor: ew-resize !important; user-select: none; }
+body.resizing-ui #ui { transition: none; }
 .grow { flex: 1; min-width: 0; }
 .label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 4px; }
 .label { font-size: 12px; font-weight: 800; color: var(--text); }

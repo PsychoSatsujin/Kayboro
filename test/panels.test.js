@@ -68,7 +68,7 @@ test('formatting helpers', () => {
   assert.equal(L.parseUsd('7'), 700);
   assert.equal(L.parseUsd('1.234'), null);
   assert.equal(L.parseUsd('-3'), null);
-  assert.deepEqual(L.splitRevenue(999), { devs: 699, shellcade: 300 });
+  assert.deepEqual(L.splitRevenue(999), { devs: 699, kayboro: 300 });
   assert.equal(L.levelProgress({ xpIntoLevel: 30, xpForNext: 60 }), 0.5);
   assert.equal(L.levelProgress({ xpForNext: 0 }), 1);
   assert.equal(L.initials('Sample Studio (example listing)'), 'SS');
@@ -96,12 +96,12 @@ test('wallpapers: four sources in one gallery, references, presets', () => {
     resolve,
   });
   assert.deepEqual(g.map(w => `${w.source}:${w.type}:${w.usable}`),
-    ['shellcade:screensaver:true', 'shellcade:gif:true', 'mod:video:true', 'we:video:true', 'we:scene:false', 'file:image:true']);
+    ['kayboro:screensaver:true', 'kayboro:gif:true', 'mod:video:true', 'we:video:true', 'we:scene:false', 'file:image:true']);
   assert.equal(g[1].url, 'file:///app/wallpapers/hills.gif');
   assert.equal(g[1].preview, 'file:///app/wallpapers/hills-thumb.png');
   assert.equal(g[0].fill, 'aurora');
   assert.equal(g[5].name, 'My Cat.png');
-  assert.deepEqual(L.countBySource(g), { all: 6, shellcade: 2, mod: 1, we: 2, file: 1 });
+  assert.deepEqual(L.countBySource(g), { all: 6, kayboro: 2, mod: 1, we: 2, file: 1 });
   assert.deepEqual(L.filterGallery(g, 'we').map(w => w.id), ['42', '43']);
   assert.deepEqual(L.filterGallery(g, 'all', 'ra').map(w => w.name), ['Aurora', 'Rain']);
 

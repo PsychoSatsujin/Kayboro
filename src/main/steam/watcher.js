@@ -1,5 +1,5 @@
 'use strict';
-// Emits 'unlock' for Steam achievements the hosted game unlocks during a Shellcade session, by watching
+// Emits 'unlock' for Steam achievements the hosted game unlocks during a Kayboro session, by watching
 // Steam's local stats cache. Unlocks already there at start, or timed before the session, are ignored.
 const fs = require('fs');
 const { EventEmitter } = require('events');

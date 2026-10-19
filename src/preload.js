@@ -3,7 +3,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 const INVOKE = ['listSources', 'detectSteamGame', 'getDisplays', 'moveWindowToDisplay', 'startPlay', 'stopPlay',
-  'pickFile', 'listScenes', 'loadScene', 'saveScene', 'deleteScene', 'setFullscreen'];
+  'pickFile', 'listScenes', 'loadScene', 'saveScene', 'deleteScene', 'setFullscreen',
+  'popOut', 'popoutUpdate', 'popoutClose', 'popoutPlay', 'popoutInfo', 'popoutHit', 'popoutDrag', 'popoutResize', 'popoutResizeDrag', 'popoutMenu', 'popoutFrame',
+  'virtualScreenStatus', 'hideGame', 'showGame', 'installScreenDriver', 'kayboBrowse', 'kayboUse', 'kayboSave', 'kayboOpen'];
 
 const on = (ch) => (cb) => {
   const f = (_e, data) => cb(data);
@@ -16,6 +18,7 @@ contextBridge.exposeInMainWorld('ror', {
   onCursor: on('cursor'),
   onPlayState: on('playState'),
   onHotkey: on('hotkey'),
+  onPopout: on('popout'),
 });
 
 contextBridge.exposeInMainWorld('shell', require('./main/economy/preload-api.js'));

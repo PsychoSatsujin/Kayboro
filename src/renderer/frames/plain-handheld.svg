@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 820" width="600" height="820" data-frame="plain-handheld">
+<defs><clipPath id="shell-cut"><path clip-rule="evenodd" d="M0 0H600V820H0ZM72 60H528A12 12 0 0 1 540 72V408A12 12 0 0 1 528 420H72A12 12 0 0 1 60 408V72A12 12 0 0 1 72 60Z"/></clipPath>
+<!--
+  Plain Handheld: a plain Kayboro shell to use as is or to repaint.
+  viewBox: 600 x 820 frame units.
+  Screen opening: x=60 y=60 w=480 h=360 (4:3), corner radius 12.
+  The clip path above is the whole canvas minus the opening (even-odd). All the artwork below is
+  clipped by it, so the opening stays fully transparent and the game shows through it.
+-->
+</defs>
+<g clip-path="url(#shell-cut)">
+<!-- body: 600x820, corner radius 72 -->
+<rect x="0" y="0" width="600" height="820" rx="72" fill="#d7d4cd"/>
+<!-- lip: the opening grown by 8 on every side; the cut removes its middle, leaving a ring 8 wide -->
+<rect x="52" y="52" width="496" height="376" rx="20" fill="#3a3d44"/>
+<!-- d-pad: centre 170,620, two crossed 150x50 bars -->
+<g fill="#34373d">
+  <rect x="95" y="595" width="150" height="50" rx="10"/>
+  <rect x="145" y="545" width="50" height="150" rx="10"/>
+</g>
+<!-- buttons: radius 34 -->
+<g fill="#b25670">
+  <circle cx="390" cy="640" r="34"/>
+  <circle cx="470" cy="600" r="34"/>
+</g>
+</g>
+</svg>

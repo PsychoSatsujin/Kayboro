@@ -50,7 +50,7 @@ export default {
     cv.shade(tube, T, { top: [0, 1], left: [0], bottom: [4], right: [3], fill: 2 });
     inset(cv, ...HOLE, HR, { rim: INK, top: T[1], bottom: T[3], right: T[3] }, 1);
     cv.px([[26, 86], [26, 85], [27, 84], [27, 83], [28, 82], [29, 82], [30, 81]], T[5]).px([[33, 81], [34, 81]], T[4]); // glint
-    cv.text('SHELLCADE', 108 - (cv.textWidth('SHELLCADE') >> 1), 211, C[1]);
+    cv.text('KAYBORO', 108 - (cv.textWidth('KAYBORO') >> 1), 211, C[1]);
     sticker(cv, 177, 71, SHAPES.heart, ['#7a1446', '#c22a6b', '#ff5c9a', '#ff9cc4', '#ffd8e8']);
     led(cv, 186, 211, ['#5c0a0a', '#e2352f', '#ff8a6a', '#ffe8d8'], { d: 3 });
 

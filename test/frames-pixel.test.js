@@ -1,6 +1,6 @@
 // Pixel-art frames: src/catalog/frames-pixel.json must agree with the SVGs that
 // tools/pixelart/build.mjs writes (viewBox, hole geometry, transparency of the opening).
-const { test } = require('node:test');
+const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -34,18 +34,29 @@ function raster(svg, W, H) {
   return { any, solid };
 }
 
-test('pixel catalog: the eight contract frames, well formed', () => {
-  assert.deepEqual(frames.map((f) => f.id), Object.keys(ASPECT));
+const COLLECTIONS = ['pocket-pals', 'coin-op', 'blue-cel', 'wild-pixels', 'world-tour', 'dreamscapes', 'fan-favorites'];
+let IDS;
+before(async () => { ({ IDS } = await import('../tools/pixelart/build.mjs')); });
+
+test('pixel catalog: every built frame in build order, the eight originals first, well formed', () => {
+  assert.deepEqual(frames.map((f) => f.id), IDS);
+  assert.deepEqual(IDS.slice(0, 8), Object.keys(ASPECT));
   const rarity = {};
   for (const f of frames) {
     assert.equal(f.kind, 'frame');
     assert.equal(f.style, 'pixel');
-    assert.equal(f.author, 'Shellcade');
-    assert.equal(f.price, null);
+    assert.equal(f.author, 'Kayboro');
     assert.equal(f.unlockLevel, null);
+    assert.ok(f.price === null || (Number.isInteger(f.price.coins) && f.price.coins > 0), `${f.id}.price`);
+    if (ASPECT[f.id]) assert.equal(f.price, null, `${f.id}: originals are level rewards`);
+    else {
+      assert.ok(COLLECTIONS.includes(f.collection), `${f.id}.collection`);
+      assert.ok(['CC-BY-4.0', 'fan-art'].includes(f.license), `${f.id}.license`);
+      assert.ok(typeof f.desc === 'string' && f.desc && !/—/.test(f.desc), `${f.id}.desc`);
+    }
     assert.equal(f.file, `frames/pixel/${f.id}.svg`);
     assert.ok(typeof f.name === 'string' && f.name && typeof f.theme === 'string' && Array.isArray(f.tags));
-    rarity[f.rarity] = (rarity[f.rarity] || 0) + 1;
+    if (ASPECT[f.id]) rarity[f.rarity] = (rarity[f.rarity] || 0) + 1;
   }
   assert.deepEqual(rarity, { common: 3, rare: 3, epic: 2 });
   assert.equal(frames.find((f) => f.id === 'px-pocket').translucent, true);
@@ -63,7 +74,7 @@ for (const f of frames) {
 
     const hx = int(f.hole.x * W, 'hole.x'), hy = int(f.hole.y * H, 'hole.y');
     const hw = int(f.hole.w * W, 'hole.w'), hh = int(f.hole.h * H, 'hole.h');
-    assert.ok(Math.abs(f.aspect - hw / hh) < 1e-9 && Math.abs(f.aspect - ASPECT[f.id]) < 1e-9, `aspect ${f.aspect}`);
+    assert.ok(Math.abs(f.aspect - hw / hh) < 1e-9 && (!ASPECT[f.id] || Math.abs(f.aspect - ASPECT[f.id]) < 1e-9), `aspect ${f.aspect}`);
     const r = int(f.holeRadius * hw, 'holeRadius');
     assert.ok(r >= 0 && r < Math.min(hw, hh) / 4, `radius ${r}`);
     assert.ok(hx >= 1 && hy >= 1 && hx + hw < W && hy + hh < H, 'hole is enclosed by the frame');

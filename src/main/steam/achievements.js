@@ -36,7 +36,7 @@ const toAccountId = (steamId64) => {
 
 function currentAccountId(root = steamRoot()) {
   if (!root) return null;
-  if (process.platform === 'win32' && !process.env.SHELLCADE_STEAM_ROOT) {
+  if (process.platform === 'win32' && !process.env.KAYBORO_STEAM_ROOT) {
     const id = regQuery('HKCU\\Software\\Valve\\Steam\\ActiveProcess', 'ActiveUser');
     if (id > 0) return id;
   }

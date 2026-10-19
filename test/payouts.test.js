@@ -10,7 +10,7 @@ const { spawnSync } = require('node:child_process');
 const P = require('../src/main/economy/payouts');
 const { Submissions, validateSubmission } = require('../src/main/economy/submissions');
 
-const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'shellcade-pay-'));
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'kayboro-pay-'));
 after(() => fs.rmSync(TMP, { recursive: true, force: true }));
 
 const FORM = { name: 'Tiny Moth', email: 'hi@tinymoth.games', games: [{ name: 'Moth Quest', appid: '1234560' }, { name: '', appid: '' }],
@@ -65,21 +65,21 @@ test('devRows: listed developers (no samples), submissions merge into the dev wi
   assert.deepEqual([rows[2].playMinutes, rows[2].points], [0, 0]);
 });
 
-test('buildSheet: 70% split by points with largest-remainder cents, 30% to Shellcade', () => {
+test('buildSheet: 70% split by points with largest-remainder cents, 30% to Kayboro', () => {
   const rows = [{ id: 'a', name: 'A', points: 1 }, { id: 'b', name: 'B', points: 1 }, { id: 'c', name: 'C', points: 1 }].map((r) => ({ ...r, appids: [], playMinutes: r.points }));
   const s = P.buildSheet(rows, 100);
   assert.deepEqual(s.rows.map((r) => r.cents), [24, 23, 23]); // 70 / 3: the first of equal remainders gets the extra cent
-  assert.deepEqual([s.poolCents, s.shellcadeCents, s.unallocatedCents], [70, 30, 0]);
+  assert.deepEqual([s.poolCents, s.kayboroCents, s.unallocatedCents], [70, 30, 0]);
   assert.ok(Math.abs(s.rows[0].share - 33.333) < 0.01);
   const odd = P.buildSheet(rows, 999);
-  assert.equal(odd.rows.reduce((t, r) => t + r.cents, 0) + odd.shellcadeCents, 999, 'every cent is accounted for');
+  assert.equal(odd.rows.reduce((t, r) => t + r.cents, 0) + odd.kayboroCents, 999, 'every cent is accounted for');
   const none = P.buildSheet(rows.map((r) => ({ ...r, points: 0 })), 1000);
-  assert.deepEqual([none.unallocatedCents, none.shellcadeCents], [700, 300], 'nobody played: the pool stays unallocated');
+  assert.deepEqual([none.unallocatedCents, none.kayboroCents], [700, 300], 'nobody played: the pool stays unallocated');
   assert.throws(() => P.buildSheet(rows, -1), RangeError);
   assert.throws(() => P.buildSheet(rows, 1.5), RangeError);
 });
 
-test('toCsv: BOM, CRLF, quoted text, formula-safe cells, plain numbers, Shellcade and total rows', () => {
+test('toCsv: BOM, CRLF, quoted text, formula-safe cells, plain numbers, Kayboro and total rows', () => {
   const rows = P.devRows({ developers: DEVS, stats: STATS });
   const csv = P.toCsv(P.buildSheet(rows, 123456));
   assert.ok(csv.startsWith('﻿ID,Name,Email,Ko-fi,PayPal,Patreon,Steam appids,Play minutes,Points,Share %,Payout (USD)\r\n'));
@@ -89,7 +89,7 @@ test('toCsv: BOM, CRLF, quoted text, formula-safe cells, plain numbers, Shellcad
   // moth 59+10 = 69 points, owl 10: pool floor(123456 * 0.7) = 86419 -> 75480.09, 10939.11
   assert.equal(lines[1], 'moth,Tiny Moth,,https://ko-fi.com/tinymoth,,,1234560,59,69,87.34,754.80');
   assert.equal(lines[2], `owl,"'=Owl ""Games"", Inc",,,,https://www.patreon.com/owl,620 621,10,10,12.66,109.39`);
-  assert.equal(lines[3], '_shellcade,Shellcade (30%),,,,,,,,,370.37');
+  assert.equal(lines[3], '_kayboro,Kayboro (30%),,,,,,,,,370.37');
   assert.equal(lines[4], '_total,Total,,,,,,69,79,100.00,1234.56');
   assert.ok(!/(^|,)[=+@-]/.test(lines.join('\n').replace(/"'=/g, '')), 'no cell starts like a formula');
 });
@@ -98,7 +98,7 @@ test('readUsage + mergeRows: CSV and JSON from several installs sum per develope
   const rows = P.devRows({ developers: DEVS, stats: STATS });
   const csv = P.toCsv(P.buildSheet(rows, 500));
   const back = P.readUsage(csv, 'a.csv');
-  assert.deepEqual(back, rows, 'CSV round-trips (Shellcade/total rows skipped, apostrophes removed)');
+  assert.deepEqual(back, rows, 'CSV round-trips (Kayboro/total rows skipped, apostrophes removed)');
   const json = P.toJson([{ id: 'owl', name: 'Owl', email: 'owl@x.io', appids: [620], playMinutes: 30, points: 40 }, { name: 'Solo', playMinutes: 5, points: 5 }]);
   const merged = P.mergeRows([back, P.readUsage(json, 'b.json')]);
   assert.deepEqual(merged.map((r) => [r.id, r.playMinutes, r.points]), [['moth', 59, 69], ['owl', 40, 50], ['', 5, 5]]);
@@ -117,7 +117,7 @@ test('merge-sheets.mjs: merges files into one 70/30 sheet', () => {
   // moth 100 points, owl 10 of a 70035-cent pool: 63668.18 -> 63668, 6366.81 -> 6367
   assert.equal(lines[1], 'moth,Tiny Moth,,https://ko-fi.com/tinymoth,,,1234560,90,100,90.91,636.68');
   assert.match(lines[2], /,10,10,9\.09,63\.67$/);
-  assert.equal(lines[3], '_shellcade,Shellcade (30%),,,,,,,,,300.15');
+  assert.equal(lines[3], '_kayboro,Kayboro (30%),,,,,,,,,300.15');
   assert.equal(lines[4], '_total,Total,,,,,,100,110,100.00,1000.50');
   const bad = spawnSync(process.execPath, [tool, '--revenue', 'lots', a], { encoding: 'utf8' });
   assert.equal(bad.status, 1);

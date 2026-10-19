@@ -1,27 +1,32 @@
 // App state + actions. Wires the Stage (rendering/mouse), the sidebar UI, the economy (window.shell),
 // keyboard and main-process events. Panels and FX are optional modules: if one fails to load the app
 // still runs with a built-in fallback.
+import './legacy-storage.js'; // first: copies pre-rename settings before any module reads them
 import { Stage } from './stage.js';
 import { initUI } from './ui.js';
-import { parseAspect, scaleRect, frameOuterRect } from './layout.js';
+import { parseAspect, scaleRect, frameOuterRect, clampZoom, clampPan, isZoomed } from './layout.js';
 import { frameById, setCatalogFrames, STARTERS } from './frames/frames.js';
 import { buildGallery, resolveRef, normRef } from './panels/logic.js';
 
 const ror = window.ror || makeRorStub();
 const shell = window.shell || makeShellStub();
 const uid = () => Math.random().toString(36).slice(2, 10);
-const LAST_KEY = 'shellcade.lastScene', OLD_KEY = 'ror.lastScene';
+const LAST_KEY = 'kayboro.lastScene', OLD_KEY = 'ror.lastScene', FX_KEY = 'kayboro.fx', DRIVER_NOTICE_KEY = 'kayboro.driverNoticeSeen';
 const LOOK = ['finish', 'colorway', 'fill'];
+const POP = new URLSearchParams(location.search).get('popout'); // this window is a pop-out of that screen
+const sent = new Map(); // screen id -> last screen JSON relayed to its pop-out
 let stage, ui, saveTimer;
 
 const optional = (path, css) => import(path).then(m => { if (css) addStylesheet(css); return m; })
-  .catch(err => { console.warn(`[shellcade] ${path} unavailable: ${err?.message || err}`); return null; });
+  .catch(err => { console.warn(`[kayboro] ${path} unavailable: ${err?.message || err}`); return null; });
 function addStylesheet(href) {
   if (!document.querySelector(`link[href="${href}"]`)) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href }));
 }
 
 const app = {
-  ror, shell, scene: null, playing: false, playId: null, fullscreen: false, uiHidden: false,
+  ror, shell, scene: null, playing: false, playId: null, popout: null,
+  fxPrefs: readFxPrefs(), // { particles, glass, depth }: shell effects on or off, shared with pop-out windows
+  vs: { checked: false, available: false, backend: null, active: [], canInstall: false, busy: false }, // invisible screens (main/vdd) fullscreen: false, uiHidden: false,
   state: null, catalog: emptyCatalog(), wallpapers: [], fx: null, mods: {}, hosted: null, // hosted = { id, hwnd } of the session screen
   preview: null, // { entry, target } while a gallery tile is hovered
 
@@ -61,18 +66,20 @@ const app = {
 
   // ---- Scene ----
   changed() {
+    if (this.popout) return stage.render(); // a pop-out shows its one screen; the main window owns the scene
     stage.render(); ui.render();
+    this.relayPopouts();
     this.syncSession();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => { try { localStorage.setItem(LAST_KEY, JSON.stringify(this.scene)); } catch {} }, 400);
   },
   // toast('text') or toast({ title, body, action: { label, onClick }, kind }).
-  // Every toast is also announced as a 'shellcade:toast' DOM event ({ text, kind }) for tests and tooling.
+  // Every toast is also announced as a 'kayboro:toast' DOM event ({ text, kind }) for tests and tooling.
   toast(msg, via = 'show') {
     const t = typeof msg === 'string' ? { title: msg } : msg || {};
     const text = via === 'achievement' ? `Achievement unlocked: ${t.name || t.apiName} +${t.coins} coins` : via === 'levelUp' ? `Level ${t.level}!` : [t.title, t.body].filter(Boolean).join(' ');
-    document.dispatchEvent(new CustomEvent('shellcade:toast', { detail: { text, kind: via === 'show' ? t.kind || 'info' : via } }));
-    try { ui?.toaster[via](t); } catch (err) { console.warn('[shellcade] toast failed:', err); }
+    document.dispatchEvent(new CustomEvent('kayboro:toast', { detail: { text, kind: via === 'show' ? t.kind || 'info' : via } }));
+    try { ui?.toaster[via](t); } catch (err) { console.warn('[kayboro] toast failed:', err); }
   },
   select(id) { if (this.scene.selectedId !== id) { this.scene.selectedId = id; this.changed(); } },
   update(fn, id = this.scene.selectedId) { const s = this.get(id); if (s) { fn(s); this.changed(); } return s; },
@@ -112,8 +119,14 @@ const app = {
     if (s?.aspect === 'source' && !this.frameOf(s)) { this.applyAspect(s); this.changed(); }
   },
   setAspect(a) { this.update(s => { s.aspect = a; this.applyAspect(s); }); },
-  setFit(fit) { this.update(s => { s.fit = fit; }); },
-  toggleFit(id) { this.update(s => { s.fit = s.fit === 'contain' ? 'cover' : 'contain'; }, id); },
+  // Picking a fit puts the game back to filling the opening (it drops the game's own size inside a shell).
+  setFit(fit) { this.update(s => { s.fit = fit; Object.assign(s, NO_ZOOM()); }); },
+  toggleFit(id) { this.update(s => { s.fit = s.fit === 'contain' ? 'cover' : 'contain'; Object.assign(s, NO_ZOOM()); }, id); },
+  resetGameSize(id) { this.update(s => Object.assign(s, NO_ZOOM()), id); },
+  // How much a see-through shell's face stops covering its fill (0 = normal look, 1 = clearest).
+  setFillClarity(v) { this.update(s => { s.fillClarity = clamp01(v); }); },
+  fillShown(s = this.sel()) { return !!s && !!stage?.views.get(s.id)?.fillShown; },
+  gameZoomed(s = this.sel()) { return !!s && !!this.frameOf(s) && isZoomed(s); },
   // Picking a frame snaps the screen to the frame opening's native aspect and keeps the whole shell on the stage.
   setFrame(frameId) { this.update(s => { Object.assign(s, { frame: frameId, customFrame: null, aspect: 'source' }); this.applyAspect(s); if (this.frameOf(s)) this.fitShell(s); }); },
   setCustomFrame(cf) { this.update(s => { Object.assign(s, { frame: null, customFrame: cf, aspect: 'source' }); this.applyAspect(s); this.fitShell(s); }); },
@@ -227,7 +240,7 @@ const app = {
   },
   loadScene(obj) {
     const sc = normalizeScene(obj);
-    if (sc) { this.scene = sc; this.changed(); }
+    if (sc) { this.scene = sc; this.changed(); this.reopenPopouts(); }
     return !!sc;
   },
 
@@ -256,6 +269,100 @@ const app = {
     this.showTab('stage');
   },
 
+  // ---- Pop-outs: a screen in its own transparent window, just the console and the game ----
+  // The main window keeps the screen in its scene (hidden on the stage) and relays every change.
+  async popOut(id = this.scene.selectedId) {
+    const s = this.get(id), f = s && this.frameOf(s);
+    if (!s) return;
+    const o = frameOuterRect(s.rect, f?.hole || { x: 0, y: 0, w: 1, h: 1 });
+    s.popout = { pinned: true };
+    this.changed();
+    const side = !this.uiHidden && document.getElementById('ui')?.getBoundingClientRect();
+    const avoid = side && side.width > 0 ? { x: side.left, y: side.top, w: side.width, h: side.height } : null;
+    if (!(await ror.popOut(s.id, plain(s), { x: o.x, y: o.y, w: o.w, h: o.h }, null, avoid).catch(() => false))) {
+      delete s.popout;
+      this.changed();
+      this.toast(ror.stub ? 'Pop-out needs the Kayboro desktop app.' : 'Could not pop out this screen.');
+    }
+  },
+  dock(id = this.scene.selectedId) { if (this.get(id)?.popout) ror.popoutClose(id).catch(() => {}); },
+  relayPopouts() {
+    const ids = new Set();
+    for (const s of this.scene.screens) {
+      if (!s.popout) continue;
+      ids.add(s.id);
+      const json = JSON.stringify(plain(s));
+      if (sent.get(s.id) !== json) { sent.set(s.id, json); ror.popoutUpdate?.(s.id, plain(s)).catch(() => {}); }
+    }
+    for (const id of sent.keys()) if (!ids.has(id)) { sent.delete(id); ror.popoutClose?.(id).catch(() => {}); }
+  },
+  // Reopens the pop-outs a loaded scene remembers, where they were left.
+  reopenPopouts() {
+    for (const s of this.scene.screens) {
+      if (!s.popout) continue;
+      sent.set(s.id, JSON.stringify(plain(s)));
+      ror.popOut(s.id, plain(s), null, s.popout).then(ok => { if (!ok) { delete s.popout; sent.delete(s.id); this.changed(); } }).catch(() => {});
+    }
+  },
+  onPopout(ev) {
+    const s = ev && this.get(ev.id);
+    if (!s) return;
+    if (ev.type === 'closed') { delete s.popout; sent.delete(s.id); this.changed(); }
+    else if (ev.type === 'bounds' && s.popout) { s.popout = { bounds: ev.bounds, pinned: !!ev.pinned }; this.changed(); }
+  },
+
+  setFxPref(key, on) {
+    this.fxPrefs = { ...this.fxPrefs, [key]: !!on };
+    try { localStorage.setItem(FX_KEY, JSON.stringify(this.fxPrefs)); } catch {} // pop-outs follow via the storage event
+    stage.render(); ui.render();
+  },
+
+  // ---- Invisible screens: the game runs on a virtual monitor nobody sees, Kayboro shows it ----
+  async refreshVirtualScreens() {
+    const s = await ror.virtualScreenStatus?.().catch(() => null);
+    this.vs = { ...this.vs, checked: true, available: !!s?.available, backend: s?.backend || null, active: s?.active || [], canInstall: !!s?.canInstall };
+    ui?.render();
+  },
+  // Installs the driver that came with Kayboro; Windows asks the player for administrator approval.
+  async installScreenDriver() {
+    if (this.vs.busy) return;
+    this.vs.busy = true; ui.render();
+    try {
+      const r = await ror.installScreenDriver?.().catch(err => ({ ok: false, error: err.message }));
+      if (r?.ok) this.toast({ title: 'Kayboro Virtual Screen installed', body: r.restart ? 'Restart Windows to finish, then Hide Game Window is ready.' : 'Hide Game Window is ready.', kind: 'ok' });
+      else this.toast({ title: 'The driver was not installed.', body: r?.error || 'Try again from the Displays section.' });
+    } finally {
+      this.vs.busy = false;
+      await this.refreshVirtualScreens();
+    }
+  },
+  // One-time notice the first time Kayboro finds its driver installed (Steam installs it during first-time setup).
+  driverNotice() {
+    try { if (localStorage.getItem(DRIVER_NOTICE_KEY)) return; localStorage.setItem(DRIVER_NOTICE_KEY, '1'); } catch { return; }
+    const dlg = document.getElementById('driverNotice');
+    if (dlg && !dlg.open && !this.popout) dlg.showModal();
+  },
+  isHidden(s) { return !!s?.hwnd && this.vs.active.some(a => String(a.hwnd) === String(s.hwnd)); },
+  async toggleHidden(s = this.sel()) {
+    if (!s || this.vs.busy) return;
+    const hwnd = s.hwnd || (await ror.detectSteamGame().catch(() => null))?.hwnd;
+    if (!hwnd) return this.toast({ title: 'Pick the game window under Sources first.', body: 'Hiding works with a game window, not a whole monitor.' });
+    this.vs.busy = true; ui.render();
+    try {
+      if (this.isHidden(s)) {
+        await ror.showGame(hwnd);
+        this.toast({ title: 'Game window is back', body: 'It is where it was before you hid it.', kind: 'ok' });
+      } else {
+        const r = await ror.hideGame(hwnd, this.frameOf(s)?.aspect || stage.views.get(s.id)?.aspect || 16 / 9);
+        if (!r || r.error) return this.toast({ title: 'Could not hide the game window.', body: r?.error || 'Check the Displays section for the virtual screen driver.' });
+        this.toast({ title: 'Game window hidden', body: 'It runs on an invisible screen now. Press Play to control it.', kind: 'ok' });
+      }
+    } finally {
+      this.vs.busy = false;
+      await this.refreshVirtualScreens();
+    }
+  },
+
   toggleUI(force) {
     this.uiHidden = force ?? !this.uiHidden;
     document.body.classList.toggle('ui-hidden', this.uiHidden);
@@ -276,16 +383,28 @@ const app = {
     // Monitor sources (e.g. a virtual display) have no hwnd: drive the latest Steam game instead.
     const hwnd = s && (s.hwnd || (await ror.detectSteamGame().catch(() => null))?.hwnd);
     if (!hwnd) return this.toast({ title: 'Select a screen showing a game window to play.', body: 'Pick the game under Sources first.' });
+    if (s.popout) return void ror.popoutPlay(s.id).catch(() => false); // the pop-out window starts it (it knows where its picture is)
     this.playId = s.id;
-    if (await ror.startPlay(hwnd).catch(() => false)) this.setPlaying(true);
-    else this.toast(ror.stub ? 'Play mode needs the Shellcade desktop app.' : 'Could not start play mode.');
+    if (await ror.startPlay(hwnd, null, stage.playRect(s)).catch(() => false)) this.setPlaying(true);
+    else this.toast(ror.stub ? 'Play mode needs the Kayboro desktop app.' : 'Could not start play mode.');
   },
 };
+
+function readFxPrefs() {
+  try { const p = JSON.parse(localStorage.getItem(FX_KEY)); if (p && typeof p === 'object') return { particles: p.particles !== false, glass: p.glass !== false, depth: p.depth !== false }; } catch {}
+  return { particles: true, glass: true, depth: true };
+}
+
+// A screen as plain data for the pop-out window (no live objects, no saved pop-out bounds).
+function plain(s) { const { popout, ...rest } = s; return JSON.parse(JSON.stringify(rest)); }
+
+const NO_ZOOM = () => ({ zoom: 1, pan: { x: 0, y: 0 } }); // the game fills its shell's opening
+const clamp01 = v => Math.min(1, Math.max(0, Number(v) || 0));
 
 function blankScreen() {
   const eq = app.equipped();
   return { id: uid(), sourceId: null, sourceName: '', hwnd: null, exePath: null, rect: { x: 80, y: 80, w: 480, h: 270 },
-    aspect: 'source', fit: 'contain', frame: null, customFrame: null, z: 1, visible: true,
+    aspect: 'source', fit: 'contain', ...NO_ZOOM(), fillClarity: 0, frame: null, customFrame: null, z: 1, visible: true,
     finish: eq.finish ?? 'none', colorway: eq.colorway ?? 'default', fill: app.state?.activeWallpaper?.fill || eq.fill || null };
 }
 
@@ -315,7 +434,8 @@ function normalizeScene(sc) {
   if (!sc || typeof sc !== 'object' || !Array.isArray(sc.screens)) return null;
   const screens = sc.screens.filter(s => s && s.rect && [s.rect.x, s.rect.y, s.rect.w, s.rect.h].every(Number.isFinite))
     .map((s, i) => ({ ...blankScreen(), ...s, id: String(s.id || uid()), z: Number.isFinite(s.z) ? s.z : i + 1 }))
-    .map(s => (s.fill && typeof s.fill === 'object' ? { ...s, fill: normRef(s.fill) } : s));
+    .map(s => (s.fill && typeof s.fill === 'object' ? { ...s, fill: normRef(s.fill) } : s))
+    .map(s => ({ ...s, zoom: clampZoom(s.zoom), pan: { x: clampPan(s.pan?.x), y: clampPan(s.pan?.y) }, fillClarity: clamp01(s.fillClarity) }));
   const background = { ...defaultBackground(), ...sc.background };
   background.ref = normRef(background.ref);
   if (background.type === 'wallpaper' && !background.ref) background.type = 'color'; // old backdrop-slot scenes
@@ -336,6 +456,7 @@ function makeRorStub() {
   return {
     stub: true, listSources: empty, detectSteamGame: none, getDisplays: empty,
     moveWindowToDisplay: no, startPlay: no, stopPlay: no, onCursor: off, onPlayState: off, onHotkey: off,
+    popOut: no, popoutUpdate: no, popoutClose: no, popoutPlay: no, onPopout: off, virtualScreenStatus: none, hideGame: none, showGame: no, installScreenDriver: none,
     pickFile: kind => new Promise(res => {
       const i = Object.assign(document.createElement('input'), { type: 'file', accept: accept[kind] || '' });
       i.onchange = () => res(i.files[0] ? URL.createObjectURL(i.files[0]) : null);
@@ -357,7 +478,7 @@ function makeRorStub() {
 function makeShellStub() {
   const catalog = {
     ...emptyCatalog(),
-    frames: STARTERS.map(f => ({ ...f, kind: 'frame', file: `frames/${f.id}.svg`, price: null, unlockLevel: null, author: 'Shellcade', tags: ['starter'] })),
+    frames: STARTERS.map(f => ({ ...f, kind: 'frame', file: `frames/${f.id}.svg`, price: null, unlockLevel: null, author: 'Kayboro', tags: ['starter'] })),
     finishes: [{ id: 'none', name: 'Factory', kind: 'finish', rarity: 'common', price: null, swatch: ['#3a3550', '#2a263a'] }],
     colorways: [{ id: 'default', name: 'Original', kind: 'colorway', rarity: 'common', price: null, swatch: ['#6b6680', '#2c2740'], filter: 'none' }],
     levels: [{ level: 1, xpRequired: 0, rewards: { coins: 0, items: [] } }],
@@ -397,10 +518,10 @@ function onKey(e) {
 
 // ---- Boot ----
 const [fx, panels, st, cat] = await Promise.all([
-  Promise.all([optional('./fx/finishes.js'), optional('./fx/colorways.js'), optional('./fx/screensavers.js')])
-    .then(([f, c, s]) => ({ ...f, ...c, ...s })),
-  Promise.all(['shop', 'profile', 'devs', 'toasts', 'hud'].map(n => optional(`./panels/${n}.js`, 'panels/panels.css')))
-    .then(([shop, profile, devs, toasts, hud]) => ({ shop: shop?.mountShop, profile: profile?.mountProfile, devs: devs?.mountDevs,
+  Promise.all([optional('./fx/finishes.js'), optional('./fx/colorways.js'), optional('./fx/screensavers.js'), optional('./fx/particles.js'), optional('./fx/glass.js')])
+    .then(([f, c, s, p, g]) => ({ ...f, ...c, ...s, createParticles: p?.createParticles, glassSvg: g?.glassSvg })),
+  Promise.all(['shop', 'profile', 'devs', 'toasts', 'hud', 'kaybo'].map(n => optional(`./panels/${n}.js`, 'panels/panels.css')))
+    .then(([shop, profile, devs, toasts, hud, kaybo]) => ({ shop: shop?.mountShop, profile: profile?.mountProfile, devs: devs?.mountDevs, kaybo: kaybo?.mountKaybo,
       toaster: toasts?.createToaster, hud: hud?.mountHud })),
   shell.getState().catch(() => null),
   shell.listCatalog().catch(() => null),
@@ -411,28 +532,37 @@ app.state = st && typeof st === 'object' ? st : await makeShellStub().getState()
 if (cat && typeof cat === 'object') app.catalog = { ...emptyCatalog(), ...cat };
 setCatalogFrames(app.catalog.frames);
 
-let restored = null;
-try { restored = normalizeScene(JSON.parse(localStorage.getItem(LAST_KEY) || localStorage.getItem(OLD_KEY))); } catch {}
-app.scene = restored || defaultScene();
-stage = new Stage(app, document.getElementById('stage'));
-ui = initUI(app);
-app.changed();
-app.refreshWallpapers(); // the user's own Wallpaper Engine folder, for the gallery and saved references
-addEventListener('keydown', onKey);
-let fitTimer = 0;
-addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => app.keepOnStage(), 150); });
-ror.onHotkey(name => { if (name === 'toggle-play') app.togglePlay(); else if (name === 'toggle-ui') app.toggleUI(); });
-ror.onPlayState(p => { if (p) app.setPlaying(p.playing); });
-ror.onCursor(c => { if (app.playing && c) stage.showCursor(app.get(app.playId), c.u, c.v, c.inside); });
-shell.onState(s => app.setState(s));
-shell.onCatalog?.(c => app.refreshCatalog(c));
-shell.onUnlock(e => app.toast(e, 'achievement'));
-shell.onLevelUp(e => app.toast(e, 'levelUp'));
-shell.onGameLaunched(ev => app.toast({
-  title: `${ev.name} launched`, body: 'Host it in Shellcade to earn XP and coins while you play.', kind: 'info',
-  action: { label: 'Put it in a shell', onClick: () => app.adoptGame(ev) },
-}));
-// First run: show the most recently started Steam game if nothing is captured yet.
-if (!app.scene.screens.some(s => s.sourceId)) {
-  ror.detectSteamGame().then(g => { if (g) { app.assignSource(g); app.toast(`Showing ${g.name}`); } }).catch(() => {});
+if (POP) {
+  ui = { render() {}, stateChanged() {}, catalogChanged() {}, showTab() {}, saveScene() {}, toaster: {} };
+  stage = await (await import('./popout.js')).bootPopout(app, POP, Stage);
+  shell.onState(st2 => app.setState(st2));
+  shell.onCatalog?.(c => app.refreshCatalog(c));
+} else {
+  let restored = null;
+  try { restored = normalizeScene(JSON.parse(localStorage.getItem(LAST_KEY) || localStorage.getItem(OLD_KEY))); } catch {}
+  app.scene = restored || defaultScene();
+  stage = new Stage(app, document.getElementById('stage'));
+  ui = initUI(app);
+  app.reopenPopouts();
+  app.changed();
+  app.refreshWallpapers(); // the user's own Wallpaper Engine folder, for the gallery and saved references
+  ror.onPopout(ev => app.onPopout(ev));
+  addEventListener('keydown', onKey);
+  let fitTimer = 0;
+  addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => app.keepOnStage(), 150); });
+  ror.onHotkey(name => { if (name === 'toggle-play') app.togglePlay(); else if (name === 'toggle-ui') app.toggleUI(); });
+  ror.onPlayState(p => { if (p) app.setPlaying(p.playing); });
+  ror.onCursor(c => { if (app.playing && c) stage.showCursor(app.get(app.playId), c.u, c.v, c.inside); });
+  shell.onState(s => app.setState(s));
+  shell.onCatalog?.(c => app.refreshCatalog(c));
+  shell.onUnlock(e => app.toast(e, 'achievement'));
+  shell.onLevelUp(e => app.toast(e, 'levelUp'));
+  shell.onGameLaunched(ev => app.toast({
+    title: `${ev.name} launched`, body: 'Host it in Kayboro to earn XP and coins while you play.', kind: 'info',
+    action: { label: 'Put it in a shell', onClick: () => app.adoptGame(ev) },
+  }));
+  // First run: show the most recently started Steam game if nothing is captured yet.
+  if (!app.scene.screens.some(s => s.sourceId)) {
+    ror.detectSteamGame().then(g => { if (g) { app.assignSource(g); app.toast(`Showing ${g.name}`); } }).catch(() => {});
+  }
 }

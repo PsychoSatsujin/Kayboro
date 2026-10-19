@@ -7,7 +7,7 @@ import { findHole, parseAspect } from './layout.js';
 const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
 const ASPECTS = ['source', 'free', '16:9', '4:3', '21:9', '32:9', '1:1', '3:2'];
-const TABS = ['stage', 'shop', 'profile', 'devs'];
+const TABS = ['stage', 'kaybo', 'shop', 'profile', 'devs'];
 const RARITY_ORDER = { common: 0, rare: 1, epic: 2, legendary: 3 };
 const fmt = new Intl.NumberFormat();
 
@@ -45,7 +45,7 @@ export function initUI(app) {
     if (name === 'stage' || mounted[name]) return;
     const el = $(`panel-${name}`), fn = app.mods[name];
     try { mounted[name] = fn ? fn(el, ctx) : fallbackPanel(el, name, app); }
-    catch (err) { console.warn(`[shellcade] ${name} panel failed:`, err); mounted[name] = fallbackPanel(el, name, app); }
+    catch (err) { console.warn(`[kayboro] ${name} panel failed:`, err); mounted[name] = fallbackPanel(el, name, app); }
     try { mounted[name]?.update?.(app.state); } catch {}
   }
   function showTab(name, focus = false) {
@@ -60,7 +60,7 @@ export function initUI(app) {
     mountPanel(name);
     if (focus) $(`tab-${name}`).focus();
     if (app.uiHidden) app.toggleUI(false);
-    try { localStorage.setItem('shellcade.tab', name); } catch {}
+    try { localStorage.setItem('kayboro.tab', name); } catch {}
   }
   for (const t of TABS) on(`tab-${t}`, () => showTab(t));
   $('tabs').addEventListener('keydown', e => {
@@ -73,7 +73,7 @@ export function initUI(app) {
   document.addEventListener('click', e => { const g = e.target.closest?.('[data-goto]'); if (g) showTab(g.dataset.goto); });
 
   // Stage sections remember whether they are open.
-  const SEC_KEY = 'shellcade.sections', secs = [...$('panel-stage').querySelectorAll('details')];
+  const SEC_KEY = 'kayboro.sections', secs = [...$('panel-stage').querySelectorAll('details')];
   try { const o = JSON.parse(localStorage.getItem(SEC_KEY)) || {}; for (const d of secs) if (typeof o[secName(d)] === 'boolean') d.open = o[secName(d)]; } catch {}
   for (const d of secs) d.addEventListener('toggle', () => {
     try { localStorage.setItem(SEC_KEY, JSON.stringify(Object.fromEntries(secs.map(x => [secName(x), x.open])))); } catch {}
@@ -82,7 +82,7 @@ export function initUI(app) {
   // ---- HUD ----
   let hud;
   try { hud = app.mods.hud ? app.mods.hud($('hudMount'), ctx) : miniHud($('hudMount')); }
-  catch (err) { console.warn('[shellcade] HUD failed:', err); hud = miniHud($('hudMount')); }
+  catch (err) { console.warn('[kayboro] HUD failed:', err); hud = miniHud($('hudMount')); }
 
   // ---- Sources ----
   async function refreshSources() {
@@ -95,7 +95,7 @@ export function initUI(app) {
       'aria-label': `${src.name} (${src.kind === 'screen' ? 'monitor' : src.isSteamGame ? 'Steam game' : 'window'})`, onclick: e => app.assignSource(src, e.shiftKey) },
       h('span', { className: 'thumb' }, h('img', { src: src.thumbnail || '', alt: '', width: 160, height: 90, decoding: 'async' })),
       h('span', { className: 'name' }, icon(src.kind === 'screen' ? 'monitor' : src.isSteamGame ? 'steam' : 'window'), h('span', { textContent: src.name })))));
-    if (!list.length) $('sources').replaceChildren(h('p', { className: 'empty', textContent: ror.stub ? 'Desktop capture needs the Shellcade desktop app.' : 'No windows or monitors found. Open your game, then refresh.' }));
+    if (!list.length) $('sources').replaceChildren(h('p', { className: 'empty', textContent: ror.stub ? 'Desktop capture needs the Kayboro desktop app.' : 'No windows or monitors found. Open your game, then refresh.' }));
   }
   on('srcRefresh', refreshSources);
   on('srcSteam', async () => {
@@ -105,13 +105,61 @@ export function initUI(app) {
     app.toast(`Showing ${g.name}`);
   });
 
+  // ---- Panel width: drag the left edge (or arrow keys on it); remembered; double-click resets ----
+  const W_KEY = 'kayboro.sidebarW', W_MIN = 300, W_DEF = 348, wMax = () => Math.max(W_MIN, Math.min(640, Math.round(innerWidth * 0.6)));
+  const setW = (w, save = true) => {
+    const v = Math.round(Math.min(wMax(), Math.max(W_MIN, w)));
+    document.documentElement.style.setProperty('--sidebar-w', `${v}px`);
+    $('uiResize').setAttribute('aria-valuenow', String(v));
+    if (save) { try { localStorage.setItem(W_KEY, String(v)); } catch {} }
+    return v;
+  };
+  try { const w = Number(localStorage.getItem(W_KEY)); if (w) setW(w, false); } catch {}
+  $('uiResize').addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const grip = e.currentTarget, x0 = e.clientX, w0 = $('ui').offsetWidth;
+    grip.setPointerCapture(e.pointerId);
+    document.body.classList.add('resizing-ui');
+    const move = ev => setW(w0 + (x0 - ev.clientX), false);
+    const up = ev => {
+      grip.removeEventListener('pointermove', move); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up);
+      document.body.classList.remove('resizing-ui');
+      setW(w0 + (x0 - ev.clientX));
+      app.keepOnStage();
+    };
+    grip.addEventListener('pointermove', move); grip.addEventListener('pointerup', up); grip.addEventListener('pointercancel', up);
+  });
+  $('uiResize').addEventListener('dblclick', () => { setW(W_DEF); app.keepOnStage(); });
+  $('uiResize').addEventListener('keydown', e => {
+    const d = { ArrowLeft: 16, ArrowRight: -16 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    setW($('ui').offsetWidth + (e.shiftKey ? d * 4 : d));
+    app.keepOnStage();
+  });
+  addEventListener('resize', () => { const w = $('ui').offsetWidth; if (w > wMax()) setW(w, false); });
+
   // ---- Screens ----
   on('scrAdd', () => app.addScreen());
   on('stageAdd', () => app.addScreen());
   on('scrRemove', () => app.removeScreen());
   on('scrClear', () => app.clearSource());
+  on('scrPop', () => (app.sel()?.popout ? app.dock() : app.popOut()));
+  on('scrHide', () => app.toggleHidden());
   function renderScreens() {
     const { screens, selectedId } = app.scene;
+    const hid = app.isHidden(app.sel()), hideBtn = $('scrHide');
+    hideBtn.querySelector('span').textContent = hid ? 'Show Game Window' : 'Hide Game Window';
+    hideBtn.querySelector('use').setAttribute('href', hid ? '#i-eye' : '#i-eye-off');
+    hideBtn.disabled = !app.sel() || app.vs.busy;
+    $('scrHideHint').textContent = !app.vs.available && app.vs.checked
+      ? 'Hiding the game needs the Kayboro Virtual Screen driver. See Displays.'
+      : hid ? 'The game runs on an invisible screen. Show it to put it back where it was.'
+      : 'Moves the game to an invisible screen. It keeps running at full speed, and Kayboro is the only place it shows.';
+    const pop = $('scrPop'), out = !!app.sel()?.popout;
+    pop.querySelector('span').textContent = out ? 'Dock Back' : 'Pop Out';
+    pop.title = out ? 'Bring this console back into the Kayboro window' : 'Put this console in its own window you can place anywhere';
     $('screenList').replaceChildren(...[...screens].sort((a, b) => b.z - a.z).map(s => {
       const vis = s.visible !== false;
       return h('li', { className: s.id === selectedId ? 'on' : '' },
@@ -119,7 +167,8 @@ export function initUI(app) {
           onclick: () => app.update(x => { x.visible = !vis; }, s.id) }, icon(vis ? 'eye' : 'eye-off')),
         h('button', { type: 'button', className: 'pick', 'aria-current': s.id === selectedId ? 'true' : null, onclick: () => app.select(s.id) },
           h('span', { textContent: s.sourceName || 'Empty screen' }),
-          s.hwnd && app.hosted?.id === s.id ? h('em', { className: 'tag', textContent: 'Hosting' }) : null));
+          s.hwnd && app.hosted?.id === s.id ? h('em', { className: 'tag', textContent: 'Hosting' }) : null,
+          s.popout ? h('em', { className: 'tag', textContent: 'Popped Out' }) : null));
     }));
     if (!screens.length) $('screenList').replaceChildren(h('li', { className: 'empty-row', textContent: 'No screens. Add one to start.' }));
   }
@@ -134,6 +183,8 @@ export function initUI(app) {
   });
   $('aspectCustom').addEventListener('keydown', e => { if (e.key === 'Enter') $('aspectApply').click(); });
   on('fit', e => { if (e.target.name === 'fit') app.setFit(e.target.value); }, 'change');
+  on('gameReset', () => app.resetGameSize());
+  on('fillClarity', e => app.setFillClarity(e.target.value / 100), 'input');
 
   // ---- Shell: frame picker + finish / colorway / fill ----
   const ownsFrame = f => f.starter || app.owns(f.id);
@@ -170,7 +221,11 @@ export function initUI(app) {
   }
   on('frameCustom', async () => {
     const url = await ror.pickFile('frame').catch(() => null);
-    if (!url) return;
+    if (url) await customFrameFrom(url);
+  });
+  // Any image as the selected screen's shell: its transparent screen opening is found automatically,
+  // otherwise the user sets the edges by hand. Also used by the Kaybo panel.
+  async function customFrameFrom(url) {
     let img;
     try { img = await loadImage(url); } catch { return app.toast({ title: 'Could not load that image.', body: 'Use a PNG, WebP or SVG with a transparent screen opening.' }); }
     const W = img.naturalWidth || 1000, H = img.naturalHeight || 1000;
@@ -184,7 +239,8 @@ export function initUI(app) {
     } catch { /* unreadable pixels: fall back to manual insets */ }
     hole = hole || await askInsets();
     if (hole) app.setCustomFrame({ url, hole, aspect: (hole.w * W) / (hole.h * H) });
-  });
+  }
+  app.customFrameFrom = customFrameFrom;
   function askInsets() {
     const dlg = $('insets');
     return new Promise(res => {
@@ -259,12 +315,28 @@ export function initUI(app) {
   }
 
   // ---- Displays ----
+  async function refreshVirtualScreen() {
+    await app.refreshVirtualScreens();
+    const v = app.vs, btn = $('vsInstall');
+    btn.hidden = !v.canInstall || v.backend === 'kayboro';
+    btn.disabled = v.busy;
+    btn.querySelector('span').textContent = v.backend === 'parsec' ? 'Install Kayboro Driver' : 'Install Virtual Screen Driver';
+    btn.title = 'Windows asks for administrator approval. EULA.txt explains what the driver does.';
+    if (v.backend === 'kayboro') app.driverNotice();
+    $('vsStatus').textContent = v.backend === 'kayboro' ? 'Kayboro Virtual Screen driver ready: Hide Game Window makes an invisible screen sized for your shell.'
+      : v.backend === 'parsec' ? 'Using the Parsec virtual display driver for invisible screens until the Kayboro driver is installed.'
+      : 'No virtual screen driver found. Install the Kayboro Virtual Screen driver (it comes with the Steam version) to hide game windows.';
+    renderScreens();
+  }
+  refreshVirtualScreen();
+  on('vsInstall', async () => { await app.installScreenDriver(); refreshVirtualScreen(); });
+
   async function refreshDisplays() {
     const ds = await ror.getDisplays().catch(() => []);
     $('displays').replaceChildren(...ds.map(d => h('option', { value: d.id,
       textContent: `${d.label || 'Display'} · ${d.bounds.width}×${d.bounds.height}${d.primary ? ' (primary)' : ''}` })));
   }
-  on('dispRefresh', refreshDisplays);
+  on('dispRefresh', () => { refreshDisplays(); refreshVirtualScreen(); });
   on('dispMove', async () => {
     const s = app.sel(), id = $('displays').value;
     if (!s?.hwnd) return app.toast({ title: 'Select a screen showing a game window.', body: 'Monitor sources cannot be moved.' });
@@ -302,6 +374,9 @@ export function initUI(app) {
   // ---- Play, fullscreen, panel ----
   on('play', () => app.togglePlay());
   on('fullscreen', e => app.setFullscreen(e.target.checked), 'change');
+  on('fxParticles', e => app.setFxPref('particles', e.target.checked), 'change');
+  on('fxGlass', e => app.setFxPref('glass', e.target.checked), 'change');
+  on('fxDepth', e => app.setFxPref('depth', e.target.checked), 'change');
   on('hideUi', () => app.toggleUI(true));
   on('showUi', () => app.toggleUI(false));
 
@@ -315,6 +390,11 @@ export function initUI(app) {
     const custom = s && !ASPECTS.includes(s.aspect) ? s.aspect : '';
     if (document.activeElement !== $('aspectCustom')) $('aspectCustom').value = custom;
     setRadio('fit', s?.fit || 'contain');
+    $('gameReset').hidden = !app.gameZoomed(s);
+    const fc = Math.round((s?.fillClarity || 0) * 100);
+    $('fillClarityRow').hidden = !app.fillShown(s);
+    if (document.activeElement !== $('fillClarity')) $('fillClarity').value = fc;
+    $('fillClarityVal').textContent = `${fc}%`;
     for (const b of frameBtns) press(b, !!s && !s.customFrame && (s.frame ?? '') === b.dataset.id);
     for (const slot of Object.keys(LOOKS)) {
       const cur = s ? s[slot] : eq[slot];
@@ -331,6 +411,9 @@ export function initUI(app) {
     $('play').querySelector('use').setAttribute('href', app.playing ? '#i-stop' : '#i-play');
     $('play').classList.toggle('stop', app.playing);
     $('fullscreen').checked = app.fullscreen;
+    $('fxParticles').checked = app.fxPrefs.particles !== false;
+    $('fxGlass').checked = app.fxPrefs.glass !== false;
+    $('fxDepth').checked = app.fxPrefs.depth !== false;
     document.querySelectorAll('[data-needs-sel]').forEach(e => { e.disabled = !s; });
     $('selName').textContent = s ? s.sourceName || 'Empty screen' : 'Nothing. Click a screen on the stage.';
     $('selName').classList.toggle('none', !s);
@@ -350,7 +433,7 @@ export function initUI(app) {
 
   stateChanged();
   let tab = 'stage';
-  try { tab = localStorage.getItem('shellcade.tab') || 'stage'; } catch {}
+  try { tab = localStorage.getItem('kayboro.tab') || 'stage'; } catch {}
   showTab(tab);
   refreshSources(); refreshDisplays(); refreshScenes();
   return { render, stateChanged, catalogChanged, saveScene, refreshSources, showTab, toaster };
@@ -397,7 +480,7 @@ function makeToaster(app) {
           levelUp: e => (t.levelUp ? t.levelUp(e) : t.show({ title: `Level ${e.level}!`, kind: 'level' })),
         };
       }
-    } catch (err) { console.warn('[shellcade] toaster failed:', err); }
+    } catch (err) { console.warn('[kayboro] toaster failed:', err); }
   }
   const show = ({ title = '', body = '', action = null, kind = 'info' } = {}) => {
     const el = h('div', { className: `toast ${kind}`, role: 'status' },

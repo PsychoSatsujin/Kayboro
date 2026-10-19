@@ -1,20 +1,136 @@
 {
-  "name": "shellcade",
-  "productName": "Shellcade",
-  "version": "0.2.0",
+  "name": "kayboro",
+  "productName": "Kayboro",
+  "version": "0.3.0",
   "private": true,
-  "description": "Put your games in a shell: play inside decorative frames, earn coins for time spent, unlock cosmetic shells, finishes and wallpaper presets.",
+  "description": "Kayboro puts your games in a shell: play inside decorative frames, earn coins for time spent, unlock cosmetic shells, finishes and wallpaper presets.",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
     "test": "node --test \"test/*.test.js\"",
     "smoke": "electron test/e2e/smoke.js",
-    "integrity": "node tools/integrity/build-manifest.mjs"
+    "integrity": "node tools/integrity/build-manifest.mjs",
+    "dist": "node tools/build/dist.mjs --win dir portable nsis",
+    "dist:dir": "node tools/build/dist.mjs --win dir",
+    "dist:steam": "node tools/build/dist.mjs --win dir --steam",
+    "dist:linux": "node tools/build/dist.mjs --linux dir",
+    "selftest": "electron . --self-test"
   },
   "dependencies": {
     "koffi": "^2.9.0"
   },
   "devDependencies": {
-    "electron": "^44.0.0"
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "optionalDependencies": {
+    "steamworks.js": "^0.4.0"
+  },
+  "build": {
+    "appId": "com.kayboro.app",
+    "productName": "Kayboro",
+    "copyright": "Kayboro. Shells and wallpapers: see LICENSE-CONTENT.md",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "!node_modules/koffi/{src,vendor,doc}/**",
+      "!node_modules/koffi/build/koffi/*/koffi.{lib,exp}",
+      "!node_modules/koffi/CHANGELOG.md",
+      "!node_modules/steamworks.js/dist/*/*.lib",
+      "!node_modules/steamworks.js/*.d.ts",
+      "!node_modules/@types/**"
+    ],
+    "extraFiles": [
+      {
+        "from": "EULA.txt",
+        "to": "EULA.txt"
+      },
+      {
+        "from": "LICENSE-CONTENT.md",
+        "to": "LICENSE-CONTENT.md"
+      },
+      {
+        "from": "src/renderer/assets/fonts/OFL.txt",
+        "to": "licenses/OFL-fonts.txt"
+      },
+      {
+        "from": "src/renderer/assets/TABLER-ICONS-LICENSE.txt",
+        "to": "licenses/TABLER-ICONS-LICENSE.txt"
+      },
+      {
+        "from": "node_modules/koffi/LICENSE.txt",
+        "to": "licenses/koffi-LICENSE.txt"
+      },
+      {
+        "from": "node_modules/steamworks.js/LICENSE",
+        "to": "licenses/steamworks.js-LICENSE.txt"
+      },
+      {
+        "from": "build/driver",
+        "to": "driver"
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/koffi/**",
+      "**/node_modules/steamworks.js/**"
+    ],
+    "afterPack": "tools/build/hooks.cjs",
+    "npmRebuild": false,
+    "nodeGypRebuild": false,
+    "compression": "normal",
+    "publish": null,
+    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "verifyUpdateCodeSignature": false,
+      "signAndEditExecutable": true
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName}-${version}-setup.exe",
+      "shortcutName": "Kayboro",
+      "deleteAppDataOnUninstall": false,
+      "license": "EULA.txt"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Utility"
+    }
   }
 }

@@ -1,6 +1,6 @@
 'use strict';
-// Creator revenue split (pure). 70% of Shellcade's net revenue goes to listed indie developers,
-// weighted by the play their games get inside Shellcade; 30% stays with Shellcade. payouts.js turns
+// Creator revenue split (pure). 70% of Kayboro's net revenue goes to listed indie developers,
+// weighted by the play their games get inside Kayboro; 30% stays with Kayboro. payouts.js turns
 // it into the payout sheet (Devs tab > Export payout sheet, tools/payouts/merge-sheets.mjs).
 
 const BP = 10000n; // creatorShare is applied in basis points so the pool is exact integer math

@@ -86,7 +86,7 @@ export function sticker(cv, x, y, rows, R, { border = '#f6f0ff' } = {}) {
 }
 
 /**
- * Shellcade mascot: a kawaii scallop shell (hinge at bottom center bx, by; fan radius r) with ridges
+ * Kayboro mascot: a kawaii scallop shell (hinge at bottom center bx, by; fan radius r) with ridges
  * fanning out and a scalloped rim. R = ramp dark -> light (>= 5). Returns its mask (no outline).
  */
 export function scallop(cv, bx, by, r, R, { face = true } = {}) {

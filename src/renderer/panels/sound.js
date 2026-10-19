@@ -1,6 +1,6 @@
 // Tiny WebAudio synth blips (no audio files): coin, spend, unlock, level-up, tap, error.
 // Muting is remembered in localStorage; the AudioContext is created on the first sound.
-const KEY = 'shellcade.muted';
+const KEY = 'kayboro.muted';
 const subs = new Set();
 let ac = null, out = null, muted = false, lastAt = {};
 try { muted = localStorage.getItem(KEY) === '1'; } catch {}

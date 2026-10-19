@@ -8,7 +8,7 @@ const os = require('os');
 const path = require('path');
 
 const args = process.argv.slice(process.argv.findIndex(a => path.resolve(a) === __filename) + 1);
-const outDir = path.resolve(args[0] || path.join(os.tmpdir(), 'shellcade-fx-shots'));
+const outDir = path.resolve(args[0] || path.join(os.tmpdir(), 'kayboro-fx-shots'));
 const views = args.length > 1 ? args.slice(1) : ['finishes', 'colorways', 'fills', 'savers', 'combos'];
 app.disableHardwareAcceleration();
 if (process.env.FX_REDUCED) app.commandLine.appendSwitch('force-prefers-reduced-motion');

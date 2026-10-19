@@ -2,3 +2,8 @@ node_modules/
 dist/
 test/e2e/out/
 src/integrity.json
+.preview/
+.sandbox/
+test/local/out/
+steam/out/
+build/driver/

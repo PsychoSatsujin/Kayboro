@@ -7,7 +7,7 @@
 // alpha 0 everywhere inside the hole (minus the rounded corners), alpha 255 on the ring around it, and
 // the transparent region flood-filled from the hole's center must span exactly the JSON hole. It also writes
 // <DIR>/<id>.png (3x: checkerboard | stage with a fake game, and a "clear shell + fill" panel for
-// translucent frames) and <DIR>/sheet.png. Default DIR: <tmp>/shellcade-pixelart. Exit 1 on any failure.
+// translucent frames) and <DIR>/sheet.png. Default DIR: <tmp>/kayboro-pixelart. Exit 1 on any failure.
 const { app, BrowserWindow } = require('electron');
 const fs = require('fs');
 const os = require('os');
@@ -15,7 +15,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const argv = process.argv.slice(process.argv.findIndex((a) => a.endsWith('render.cjs')) + 1);
-const OUT = (argv.find((a) => a.startsWith('--out=')) || '').slice(6) || path.join(os.tmpdir(), 'shellcade-pixelart');
+const OUT = (argv.find((a) => a.startsWith('--out=')) || '').slice(6) || path.join(os.tmpdir(), 'kayboro-pixelart');
 const ONLY = argv.filter((a) => !a.startsWith('--'));
 
 app.commandLine.appendSwitch('force-device-scale-factor', '1');

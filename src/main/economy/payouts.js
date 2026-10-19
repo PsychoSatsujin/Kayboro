@@ -1,6 +1,6 @@
 'use strict';
 // Payout sheet (pure). One row per listed developer or form submission with the play their games got
-// in Shellcade, the 70/30 split of a revenue amount (largest-remainder cents, see revenue.js) and an
+// in Kayboro, the 70/30 split of a revenue amount (largest-remainder cents, see revenue.js) and an
 // Excel-ready CSV (UTF-8 BOM, CRLF, plain numbers). tools/payouts/merge-sheets.mjs reuses it to merge
 // the sheets of many installs.
 const { computePayouts, points } = require('./revenue');
@@ -61,8 +61,8 @@ function mergeRows(lists) {
 
 const dollars = (c) => `${Math.floor(c / 100)}.${String(c % 100).padStart(2, '0')}`;
 
-// Splits revenueCents: 70% to the rows by points, the rest to Shellcade. Returns the developer rows
-// with share/cents, plus the Shellcade, unallocated (nobody played) and total amounts.
+// Splits revenueCents: 70% to the rows by points, the rest to Kayboro. Returns the developer rows
+// with share/cents, plus the Kayboro, unallocated (nobody played) and total amounts.
 function buildSheet(rows, revenueCents) {
   if (!Number.isSafeInteger(revenueCents) || revenueCents < 0) throw new RangeError('revenueCents must be a non-negative integer');
   const pay = computePayouts({ netRevenueCents: revenueCents, creatorShare: DEV_SHARE, devs: rows.map((r) => ({ devId: keyOf(r), points: r.points })) });
@@ -71,7 +71,7 @@ function buildSheet(rows, revenueCents) {
   const devs = rows.map((r) => ({ ...r, share: totalPoints ? (r.points / totalPoints) * 100 : 0, cents: cents.get(keyOf(r)) || 0 }));
   const pool = Number((BigInt(revenueCents) * BigInt(Math.round(DEV_SHARE * 100))) / 100n);
   const paid = devs.reduce((s, r) => s + r.cents, 0);
-  return { rows: devs, revenueCents, poolCents: pool, shellcadeCents: revenueCents - pool, unallocatedCents: pool - paid, totalPoints,
+  return { rows: devs, revenueCents, poolCents: pool, kayboroCents: revenueCents - pool, unallocatedCents: pool - paid, totalPoints,
     playMinutes: rows.reduce((s, r) => s + r.playMinutes, 0) };
 }
 
@@ -87,14 +87,14 @@ function toCsv(sheet) {
   const special = (id, name, cents, extra = {}) => line({ id, name, payout: dollars(cents), ...extra });
   const out = [COLUMNS.map(([, label]) => label).join(',')];
   for (const r of sheet.rows) out.push(line({ ...r, appids: r.appids.join(' '), share: r.share.toFixed(2), payout: dollars(r.cents) }));
-  out.push(special('_shellcade', `Shellcade (${Math.round((1 - DEV_SHARE) * 100)}%)`, sheet.shellcadeCents));
+  out.push(special('_kayboro', `Kayboro (${Math.round((1 - DEV_SHARE) * 100)}%)`, sheet.kayboroCents));
   if (sheet.unallocatedCents) out.push(special('_unallocated', 'Unallocated (no play this period)', sheet.unallocatedCents));
   out.push(special('_total', 'Total', sheet.revenueCents, { playMinutes: sheet.playMinutes, points: sheet.totalPoints, share: sheet.totalPoints ? '100.00' : '0.00' }));
   return '﻿' + out.join('\r\n') + '\r\n';
 }
 
 // Usage file for merging: the rows without the money columns.
-const toJson = (rows, extra = {}) => JSON.stringify({ v: 1, kind: 'shellcade-usage', ...extra, rows: rows.map(row) }, null, 2);
+const toJson = (rows, extra = {}) => JSON.stringify({ v: 1, kind: 'kayboro-usage', ...extra, rows: rows.map(row) }, null, 2);
 
 function parseCsv(text) {
   const s = String(text).replace(/^﻿/, '');
@@ -114,7 +114,7 @@ function parseCsv(text) {
   return rows.filter((r) => r.some((x) => x !== ''));
 }
 
-// Developer rows of a sheet CSV (Shellcade/total rows skipped) or of a usage JSON ({rows} or [rows]).
+// Developer rows of a sheet CSV (Kayboro/total rows skipped) or of a usage JSON ({rows} or [rows]).
 function readUsage(text, name = '') {
   if (/\.json$/i.test(name) || /^\s*[[{]/.test(String(text).replace(/^﻿/, ''))) {
     const d = JSON.parse(String(text).replace(/^﻿/, ''));

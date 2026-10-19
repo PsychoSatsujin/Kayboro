@@ -5,10 +5,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'shellcade-steam-'));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kayboro-steam-'));
 const ROOT = path.join(tmp, 'Steam');
 const LIB2 = path.join(tmp, 'Library2');
-process.env.SHELLCADE_STEAM_ROOT = ROOT;
+process.env.KAYBORO_STEAM_ROOT = ROOT;
 after(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
 const vdf = require('../src/main/steam/vdf');

@@ -8,6 +8,7 @@ import { play } from './sound.js';
 import { frameById } from '../frames/frames.js';
 
 const TABS = [
+  { id: 'weekly', label: 'Weekly', icon: 'sparkles' },
   { id: 'frames', label: 'Frames', icon: 'tv', noun: ['frame', 'frames'] },
   { id: 'finishes', label: 'Finishes', icon: 'sparkles', noun: ['finish', 'finishes'] },
   { id: 'colorways', label: 'Colors', icon: 'palette', noun: ['colorway', 'colorways'] },
@@ -15,10 +16,10 @@ const TABS = [
   { id: 'wallpapers', label: 'Wallpapers', icon: 'wallpaper' },
 ];
 const KIND_LABEL = { frame: 'Frame', finish: 'Finish', colorway: 'Colorway', fill: 'Shell fill' };
-const SOURCES = [['all', 'All'], ['shellcade', 'Shellcade'], ['mod', 'Mods'], ['we', 'Wallpaper Engine'], ['file', 'Files']];
-const SOURCE_LABEL = { shellcade: 'Shellcade', mod: 'Mod', we: 'Wallpaper Engine', file: 'File' };
+const SOURCES = [['all', 'All'], ['kayboro', 'Kayboro'], ['mod', 'Mods'], ['we', 'Wallpaper Engine'], ['file', 'Files']];
+const SOURCE_LABEL = { kayboro: 'Kayboro', mod: 'Mod', we: 'Wallpaper Engine', file: 'File' };
 const TYPE_LABEL = { video: 'Video', image: 'Image', gif: 'GIF', screensaver: 'Animated', scene: 'Scene', web: 'Web' };
-const PREFS_KEY = 'shellcade.shop', RECENT_KEY = 'shellcade.recentWallpapers';
+const PREFS_KEY = 'kayboro.shop', RECENT_KEY = 'kayboro.recentWallpapers';
 const load = (k, d) => { try { return { ...d, ...JSON.parse(localStorage.getItem(k)) }; } catch { return d; } };
 const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 
@@ -51,7 +52,7 @@ export function mountShop(el, ctx = {}) {
   const body = h('div', { className: 'sc-shop-body', id: 'sc-shop-body', role: 'region', 'aria-live': 'off' });
   el.replaceChildren(h('div', { className: 'sc-panel sc-shop' },
     h('header', { className: 'sc-ph' },
-      h('div', {}, h('h2', { textContent: 'Shop' }), h('p', { textContent: 'You earn 1 coin every minute in Shellcade.' })), wallet),
+      h('div', {}, h('h2', { textContent: 'Shop' }), h('p', { textContent: 'You earn 1 coin every minute in Kayboro.' })), wallet),
     tabList, body));
 
   const items = () => {
@@ -60,7 +61,7 @@ export function mountShop(el, ctx = {}) {
   };
 
   function setTab(id) {
-    prefs.tab = TABS.some(t => t.id === id) ? id : 'frames';
+    prefs.tab = TABS.some(t => t.id === id) ? id : 'weekly';
     save(PREFS_KEY, prefs);
     sig = '';
     render();
@@ -168,7 +169,7 @@ export function mountShop(el, ctx = {}) {
       case 'buy': return [btn('buy', [coinIcon('sc-coin'), fmt.format(it.price.coins)], () => confirmBuy(it, c), { 'aria-label': `Buy ${it.name} for ${fmt.format(it.price.coins)} coins` })];
       case 'short': return [btn('short', [coinIcon('sc-coin'), fmt.format(it.price.coins)], e => {
         replay(e.currentTarget, 'sc-shake'); play('error');
-        toast({ title: `${fmt.format(coinsShort(it, st))} more coins for ${it.name}`, body: 'You earn 1 coin every minute in Shellcade.', kind: 'coin' });
+        toast({ title: `${fmt.format(coinsShort(it, st))} more coins for ${it.name}`, body: 'You earn 1 coin every minute in Kayboro.', kind: 'coin' });
       }, { 'aria-label': `${it.name} costs ${fmt.format(it.price.coins)} coins, you need ${fmt.format(coinsShort(it, st))} more` }),
       h('small', { className: 'sc-need', textContent: `Need ${fmt.format(coinsShort(it, st))}` })];
       case 'level': return [btn('lvl', [icon('lock'), `Lv ${it.unlockLevel}`], () => toast({ title: `${it.name} unlocks at level ${it.unlockLevel}`,
@@ -206,7 +207,7 @@ export function mountShop(el, ctx = {}) {
       const why = { insufficient: 'Not enough coins.', paid: 'This one is Steam DLC.', owned: 'You already own it.',
         locked: it.unlockLevel ? `Unlocks at level ${it.unlockLevel}.` : 'Not for sale.', unknown: 'This item is no longer available.' }[r?.reason];
       if (r?.state) setState(r.state);
-      return toast({ title: `Couldn't buy ${it.name}`, body: why || (r ? 'Please try again.' : 'The shop needs the Shellcade desktop app.'), kind: 'error' });
+      return toast({ title: `Couldn't buy ${it.name}`, body: why || (r ? 'Please try again.' : 'The shop needs the Kayboro desktop app.'), kind: 'error' });
     }
     play('spend');
     const from = document.querySelector('[data-hud-coin]') || wallet;
@@ -411,7 +412,7 @@ export function mountShop(el, ctx = {}) {
     const price = presetPrice();
     if ((st?.coins || 0) < price) {
       replay(btn, 'sc-shake'); play('error');
-      return toast({ title: `${fmt.format(price - (st?.coins || 0))} more coins for a preset slot`, body: 'You earn 1 coin every minute in Shellcade.', kind: 'coin' });
+      return toast({ title: `${fmt.format(price - (st?.coins || 0))} more coins for a preset slot`, body: 'You earn 1 coin every minute in Kayboro.', kind: 'coin' });
     }
     if (!btn.classList.contains('is-confirm')) {
       btn.classList.add('is-confirm');
@@ -467,6 +468,7 @@ export function mountShop(el, ctx = {}) {
   }
 
   function signature() {
+    if (prefs.tab === 'weekly') return JSON.stringify([prefs, st?.coins, (st?.inventory || []).length, weekly?.bundle?.id, studio.items.length]);
     if (prefs.tab === 'wallpapers') {
       return JSON.stringify([prefs, presetsOf(st), activeRef(st, 'stage'), activeRef(st, 'fill'), (st?.coins || 0) >= presetPrice(), we.length, recent.length, (cat?.wallpapers || []).length]);
     }
@@ -481,7 +483,97 @@ export function mountShop(el, ctx = {}) {
     if (s === sig) return;
     sig = s;
     dispose();
-    if (prefs.tab === 'wallpapers') { loadWallpapers(); renderWallpapers(); } else renderItems();
+    if (prefs.tab === 'wallpapers') { loadWallpapers(); renderWallpapers(); } else if (prefs.tab === 'weekly') renderWeekly(); else renderItems();
+  }
+
+  // ---- Weekly bundle ---------------------------------------------------------------------------
+  // This week's bundle (curated by a developer, or picked automatically) at a discount; buying it
+  // unlocks every item in it you don't own yet. Running from source adds the Bundle Studio below it.
+  let weekly = null, weeklyAt = 0;
+  const studio = { name: '', week: nextWeek(), desc: '', discount: 0.3, items: [], q: '' };
+  async function loadWeekly(force = false) {
+    if (!force && weekly && Date.now() - weeklyAt < 60000) return;
+    weekly = await call(shell, 'getWeeklyBundle').catch(() => null);
+    weeklyAt = Date.now();
+    sig = '';
+    render();
+  }
+  function renderWeekly() {
+    if (!weekly) { loadWeekly(); body.replaceChildren(h('p', { className: 'sc-foot-note', textContent: "Loading this week's bundle…" })); return; }
+    const { bundle: b, price } = weekly;
+    const all = withRewardLevels(withoutTakedowns(['frames', 'finishes', 'colorways', 'fills'].flatMap(k => cat?.[k] || []), cat?.takedowns), cat?.levels);
+    const byId = new Map(all.map(it => [it.id, it]));
+    const list = b.items.map(id => byId.get(id)).filter(Boolean);
+    const short = Math.max(0, price.coins - (st?.coins || 0)), off = Math.round(b.discount * 100);
+    const buyBtn = !price.missing.length ? h('button', { type: 'button', className: 'sc-act is-on', disabled: true }, icon('check'), 'You own all of it')
+      : h('button', { type: 'button', className: `sc-act ${short ? 'short' : 'buy'}`, 'aria-label': `Buy ${b.name} for ${fmt.format(price.coins)} coins`,
+        onclick: e => {
+          if (!short) return buyBundle(b, e.currentTarget);
+          replay(e.currentTarget, 'sc-shake'); play('error');
+          toast({ title: `${fmt.format(short)} more coins for this bundle`, body: 'You earn 1 coin every minute in Kayboro.', kind: 'coin' });
+        } }, coinIcon('sc-coin'), fmt.format(price.coins));
+    const grid = h('div', { className: 'sc-grid' }, list.map(card));
+    body.replaceChildren(
+      h('section', { className: 'sc-bundle' },
+        h('div', { className: 'sc-bundle-head' },
+          h('div', {}, h('small', { textContent: `${b.week.replace('-W', ' · Week ')} · ${b.curated ? 'Curated' : 'Weekly pick'}` }), h('h3', { textContent: b.name }),
+            b.desc ? h('p', { textContent: b.desc }) : null),
+          h('div', { className: 'sc-bundle-buy' }, price.missing.length ? h('s', { textContent: fmt.format(price.full) }) : null,
+            price.missing.length ? h('b', { textContent: `${off}% off` }) : null, buyBtn)),
+        price.missing.length && price.missing.length < list.length ? h('p', { className: 'sc-foot-note', textContent: `You own ${list.length - price.missing.length} of ${list.length}; the price only counts the rest.` }) : null,
+        grid),
+      shell?.devTools ? renderStudio(all) : null);
+    loadFx(app).then(fx => { if (fx) for (const c of grid.children) c._preview?.(fx); });
+  }
+  async function buyBundle(b, btn) {
+    btn.disabled = true;
+    const r = await call(shell, 'buyBundle', b.id);
+    if (!r?.ok) {
+      btn.disabled = false;
+      play('error');
+      if (r?.state) setState(r.state);
+      const why = { insufficient: 'Not enough coins.', owned: 'You already own all of it.', expired: "This week's bundle changed. Have a look at the new one." }[r?.reason];
+      return toast({ title: `Couldn't buy ${b.name}`, body: why || 'Please try again.', kind: 'error' });
+    }
+    play('spend');
+    coinFlight(document.querySelector('[data-hud-coin]') || wallet, btn);
+    setState(r.state);
+    loadWeekly(true);
+    toast({ title: `${b.name} unlocked`, body: 'Everything in it is in your collection.', kind: 'ok' });
+  }
+
+  // Bundle Studio: compose a bundle for a coming week and save it as a file; a developer then publishes it
+  // with tools/bundles/publish.mjs. Weeks nobody curates get an automatic bundle.
+  function renderStudio(all) {
+    const sellable = all.filter(it => !it.starter && !it.dlc && !it.price?.usd && it.license !== 'fan-art' && it.id !== 'default' && it.id !== 'none');
+    const picked = new Set(studio.items);
+    const field = (label, input) => h('label', { className: 'sc-studio-field' }, h('span', { textContent: label }), input);
+    const text = (key, ph, max) => h('input', { type: 'text', value: studio[key], placeholder: ph, maxLength: max, oninput: e => { studio[key] = e.target.value; } });
+    const q = studio.q.trim().toLowerCase();
+    const shown = sellable.filter(it => !q || `${it.name} ${it.id} ${it.kind} ${it.collection || ''} ${it.theme || ''}`.toLowerCase().includes(q)).slice(0, 80);
+    const toggle = (id, on) => { studio.items = on ? [...studio.items, id] : studio.items.filter(x => x !== id); sig = ''; render(); };
+    const row = it => h('label', { className: 'sc-studio-item' },
+      h('input', { type: 'checkbox', checked: picked.has(it.id), disabled: !picked.has(it.id) && picked.size >= 8, onchange: e => toggle(it.id, e.target.checked) }),
+      h('span', { textContent: it.name }), h('small', { textContent: `${KIND_LABEL[it.kind] || it.kind} · ${rarityName(it.rarity || 'common')}` }));
+    const search = h('input', { type: 'text', value: studio.q, placeholder: 'Find items…', 'aria-label': 'Find items',
+      onchange: e => { studio.q = e.target.value; sig = ''; render(); } });
+    return h('section', { className: 'sc-studio' },
+      h('div', { className: 'sc-bundle-head' }, h('div', {}, h('small', { textContent: 'Developers only (running from source)' }), h('h3', { textContent: 'Bundle Studio' }),
+        h('p', { textContent: "Pick 2 to 8 items, name the bundle and save it. Publish the file with tools/bundles/publish.mjs and it becomes that week's bundle; any week without one gets an automatic pick." }))),
+      h('div', { className: 'sc-studio-form' },
+        field('Name', text('name', 'Midnight Masterpieces', 48)), field('Week', text('week', '2026-W44', 8)),
+        field('Discount', h('select', { className: 'sc-select', onchange: e => { studio.discount = +e.target.value; } },
+          [0.2, 0.3, 0.4, 0.5].map(d => h('option', { value: d, textContent: `${d * 100}% off`, selected: studio.discount === d })))),
+        field('Description', text('desc', 'One line for the shop.', 200))),
+      h('p', { className: 'sc-foot-note', textContent: `${studio.items.length} of 8 picked: ${studio.items.map(id => sellable.find(it => it.id === id)?.name || id).join(', ') || 'none yet'}` }),
+      search, h('div', { className: 'sc-studio-list' }, shown.map(row)),
+      h('button', { type: 'button', className: 'btn', onclick: saveStudio }, icon('download'), h('span', { textContent: 'Save Bundle File…' })));
+  }
+  async function saveStudio() {
+    const r = await call(shell, 'exportBundle', { name: studio.name, week: studio.week.trim().toUpperCase(), desc: studio.desc, items: studio.items, discount: studio.discount });
+    if (!r) return;
+    if (r.error) return toast({ title: 'Bundle not saved', body: r.error, kind: 'error' });
+    toast({ title: 'Bundle saved', body: `${r.file}. Publish it with: node tools/bundles/publish.mjs "<that file>"`, kind: 'ok' });
   }
 
   function update(s) {
@@ -495,7 +587,7 @@ export function mountShop(el, ctx = {}) {
     const c = await call(shell, 'listCatalog');
     if (c && typeof c === 'object') { cat = { ...cat, ...c }; ownCat = true; sig = ''; render(); }
   };
-  addEventListener('shellcade:catalog', refreshCatalog);
+  addEventListener('kayboro:catalog', refreshCatalog);
   const offCatalog = typeof shell?.onCatalog === 'function' ? shell.onCatalog(c => {
     if (c && typeof c === 'object') { cat = { ...cat, ...c }; ownCat = true; sig = ''; render(); }
   }) : null;
@@ -505,8 +597,17 @@ export function mountShop(el, ctx = {}) {
   return {
     update,
     showTab: setTab,
-    destroy() { dispose(); dlg?.remove(); removeEventListener('shellcade:catalog', refreshCatalog); if (typeof offCatalog === 'function') offCatalog(); el.replaceChildren(); },
+    destroy() { dispose(); dlg?.remove(); removeEventListener('kayboro:catalog', refreshCatalog); if (typeof offCatalog === 'function') offCatalog(); el.replaceChildren(); },
   };
+}
+
+// The ISO week after this one, 'YYYY-Www' (the Bundle Studio's default target).
+function nextWeek(now = new Date()) {
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() + 7));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const y = d.getUTCFullYear(), w = Math.ceil(((d - Date.UTC(y, 0, 1)) / 86400000 + 1) / 7);
+  return `${y}-W${String(w).padStart(2, '0')}`;
 }
 
 const swatch = it => {

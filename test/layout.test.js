@@ -145,17 +145,49 @@ test('findHole: threshold and null cases', () => {
 });
 
 test('frames: catalogue matches SVG files', () => {
-  assert.deepEqual(F.FRAMES.map(f => f.id), ['crt-tv', 'virtual-pet', 'handheld', 'arcade', 'bezel']);
+  assert.deepEqual(F.FRAMES.map(f => f.id), ['crt-tv', 'virtual-pet', 'handheld', 'arcade', 'bezel', 'pocket-brick', 'wide-pocket', 'split-pad', 'sleek-portable', 'plain-bezel', 'plain-handheld', 'plain-tv']);
   for (const f of F.FRAMES) {
     const { x, y, w, h } = f.hole;
     assert.ok(x >= 0 && y >= 0 && w > 0 && h > 0 && x + w <= 1 && y + h <= 1, f.id);
     assert.ok(Math.abs(f.aspect - (w * f.size.w) / (h * f.size.h)) < 1e-9, `${f.id} aspect`);
     const svg = fs.readFileSync(fileURLToPath(f.url), 'utf8');
     assert.match(svg, new RegExp(`viewBox="0 0 ${f.size.w} ${f.size.h}"`), f.id);
-    assert.match(svg, /fill-rule="evenodd"/, f.id);
+    assert.match(svg, /(?:fill|clip)-rule="evenodd"/, f.id); // hand-drawn starters cut with fill-rule, built ones with a clip path
     const outer = L.frameOuterRect(R(0, 0, 640, 480), f.hole);
     near({ x: outer.x + x * outer.w, y: outer.y + y * outer.h }, { x: 0, y: 0 }, `${f.id} round trip`);
   }
-  assert.equal(F.frameById('arcade').name, 'Arcade cabinet');
+  assert.equal(F.frameById('arcade').name, 'Arcade Cabinet');
   assert.equal(F.frameById('nope'), null);
+});
+
+test('holeRect inverts frameOuterRect', () => {
+  const hole = { x: 0.1, y: 0.2, w: 0.7, h: 0.5 }, c = R(100, 50, 350, 200);
+  near(L.holeRect(L.frameOuterRect(c, hole), hole), c);
+  near(L.holeRect(R(0, 0, 10, 10), null), R(0, 0, 10, 10));
+});
+
+test('zoomRect: identity at zoom 1, scales about the opening centre, pans by opening fractions', () => {
+  const op = R(100, 100, 400, 300), base = L.fitRect(16 / 9, op, 'contain'); // letterboxed: 400 x 225 at y 137.5
+  near(L.zoomRect(base, op, 1, null), base);
+  near(L.zoomRect(base, op, 2, { x: 0, y: 0 }), R(-100, 25, 800, 450));
+  near(L.zoomRect(base, op, 1, { x: 0.25, y: -0.5 }), R(200, -12.5, 400, 225));
+  near(L.zoomRect(base, op, 99, null), L.zoomRect(base, op, L.ZOOM_MAX, null)); // clamped
+});
+
+test('zoomFor inverts zoomRect and clamps', () => {
+  const op = R(0, 0, 640, 360), base = L.fitRect(4 / 3, op, 'contain');
+  for (const [z, pan] of [[1.5, { x: 0.1, y: -0.2 }], [0.5, { x: -0.3, y: 0.25 }], [1, { x: 0, y: 0 }]]) {
+    const r = L.zoomFor(base, op, L.zoomRect(base, op, z, pan));
+    assert.ok(Math.abs(r.zoom - z) < 1e-9 && Math.abs(r.pan.x - pan.x) < 1e-9 && Math.abs(r.pan.y - pan.y) < 1e-9, JSON.stringify(r));
+  }
+  assert.equal(L.zoomFor(base, op, R(0, 0, 1, 1)).zoom, L.ZOOM_MIN);
+  assert.equal(L.zoomFor(base, op, R(0, 0, 1e6, 1e6)).pan.x, L.PAN_MAX); // centre far right: clamped
+});
+
+test('isZoomed only for a real zoom or pan', () => {
+  assert.equal(L.isZoomed({}), false);
+  assert.equal(L.isZoomed({ zoom: 1, pan: { x: 0, y: 0 } }), false);
+  assert.equal(L.isZoomed({ zoom: 'x', pan: null }), false);
+  assert.equal(L.isZoomed({ zoom: 1.2 }), true);
+  assert.equal(L.isZoomed({ zoom: 1, pan: { x: 0.1, y: 0 } }), true);
 });

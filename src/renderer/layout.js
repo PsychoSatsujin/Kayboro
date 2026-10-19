@@ -57,6 +57,35 @@ export function frameOuterRect(c, hole) {
   return { x: c.x - hole.x * w, y: c.y - hole.y * h, w, h };
 }
 
+/** The opening of a frame drawn at outer rect `o` (inverse of frameOuterRect). */
+export function holeRect(o, hole) {
+  if (!hole || !pos(hole.w) || !pos(hole.h)) return { ...o };
+  return { x: o.x + hole.x * o.w, y: o.y + hole.y * o.h, w: hole.w * o.w, h: hole.h * o.h };
+}
+
+// The game inside a shell's opening is sized apart from the shell: `zoom` scales the fitted picture about
+// the opening's centre and `pan` shifts it by fractions of the opening, so both follow the shell's size.
+export const ZOOM_MIN = 0.25, ZOOM_MAX = 4, PAN_MAX = 2;
+const fin = (n, d = 0) => (Number.isFinite(n) ? n : d);
+export const clampZoom = z => (pos(z) ? Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z)) : 1);
+export const clampPan = n => Math.min(PAN_MAX, Math.max(-PAN_MAX, fin(n)));
+
+/** Where the picture fitted at `base` ends up inside `opening` after zoom and pan. */
+export function zoomRect(base, opening, zoom = 1, pan = null) {
+  const z = clampZoom(zoom), cx = opening.x + opening.w / 2, cy = opening.y + opening.h / 2;
+  return { x: cx + (base.x - cx) * z + clampPan(pan?.x) * opening.w, y: cy + (base.y - cy) * z + clampPan(pan?.y) * opening.h,
+    w: base.w * z, h: base.h * z };
+}
+
+/** { zoom, pan } that put the picture at `rect` (its centre kept when the zoom is clamped). Inverse of zoomRect. */
+export function zoomFor(base, opening, rect) {
+  const zoom = clampZoom(rect.w / base.w), cx = opening.x + opening.w / 2, cy = opening.y + opening.h / 2;
+  const bx = base.x + base.w / 2 - cx, by = base.y + base.h / 2 - cy;
+  return { zoom, pan: { x: clampPan((rect.x + rect.w / 2 - cx - bx * zoom) / opening.w), y: clampPan((rect.y + rect.h / 2 - cy - by * zoom) / opening.h) } };
+}
+
+export const isZoomed = s => clampZoom(s?.zoom) !== 1 || !!clampPan(s?.pan?.x) || !!clampPan(s?.pan?.y);
+
 /** Normalized (u, v) inside the captured client area -> stage coordinates. */
 export function cursorToStage(u, v, r) {
   return { x: r.x + u * r.w, y: r.y + v * r.h };

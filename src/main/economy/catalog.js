@@ -1,6 +1,6 @@
 'use strict';
 // Loads the shop catalog from src/catalog/*.json, appends mod items and hides taken-down ids.
-// Frame lists are optional (missing/broken files are skipped); the five built-in starter frames are
+// Frame lists are optional (missing/broken files are skipped); the built-in starter frames are
 // always present, free and owned. Wallpapers are never locked: they carry no price.
 const fs = require('fs');
 const path = require('path');
@@ -9,7 +9,8 @@ const { pathToFileURL } = require('url');
 const DIR = path.join(__dirname, '..', '..', 'catalog');
 const RENDERER = path.join(__dirname, '..', '..', 'renderer');
 const FILES = { frames: ['frames-pixel.json', 'frames-vector.json'], finishes: ['finishes.json'], colorways: ['colorways.json'],
-  fills: ['fills.json'], wallpapers: ['wallpapers.json'], levels: ['levels.json'], developers: ['developers.json'], takedowns: ['takedowns.json'] };
+  fills: ['fills.json'], wallpapers: ['wallpapers.json'], levels: ['levels.json'], developers: ['developers.json'], takedowns: ['takedowns.json'],
+  bundles: ['bundles.json'] };
 const KINDS = { frames: 'frame', finishes: 'finish', colorways: 'colorway', fills: 'fill' }; // ownable shop items
 const ITEM_KEYS = [...Object.keys(KINDS), 'wallpapers'];
 const RARITY = ['common', 'rare', 'epic', 'legendary'];
@@ -21,17 +22,25 @@ const ID = /^[\w-]{1,64}$/;
 const HEX = /^#[0-9a-f]{3,8}$/i;
 
 // Mirrors src/renderer/frames/frames.js (an ES module the main process can't require).
-const starter = (id, name, W, H, x, y, w, h) => ({
+const starter = (id, name, W, H, x, y, w, h, r = 0, translucent = false) => ({
   id, name, kind: 'frame', style: 'vector', theme: 'classic', rarity: 'common', price: null, unlockLevel: null,
-  file: `frames/${id}.svg`, size: { w: W, h: H }, hole: { x: x / W, y: y / H, w: w / W, h: h / H }, holeRadius: 0,
-  aspect: w / h, translucent: false, author: 'Shellcade', tags: ['starter'], starter: true,
+  file: `frames/${id}.svg`, size: { w: W, h: H }, hole: { x: x / W, y: y / H, w: w / W, h: h / H }, holeRadius: r / w,
+  aspect: w / h, translucent, author: 'Kayboro', tags: ['starter'], starter: true,
 });
 const STARTERS = [
-  starter('crt-tv', 'CRT TV', 1000, 800, 100, 90, 640, 480),
-  starter('virtual-pet', 'Virtual pet', 600, 720, 180, 200, 240, 240),
-  starter('handheld', 'Handheld', 600, 1000, 130, 110, 340, 306),
-  starter('arcade', 'Arcade cabinet', 800, 1000, 150, 200, 500, 375),
-  starter('bezel', 'Thin bezel', 1000, 600, 20, 20, 960, 540),
+  starter('crt-tv', 'CRT TV', 1040, 950, 130, 266, 640, 480, 34, false),
+  starter('virtual-pet', 'Virtual Pet', 1040, 1340, 255, 384, 530, 530, 58, true),
+  starter('handheld', 'Handheld', 1000, 1580, 220, 198, 560, 420, 18, true),
+  starter('arcade', 'Arcade Cabinet', 840, 1080, 160, 264, 520, 390, 18, false),
+  starter('bezel', 'Thin Bezel', 1012, 648, 26, 26, 960, 540, 8, false),
+  starter('pocket-brick', 'Pocket Brick', 1000, 1600, 240, 256, 520, 468, 8, false),
+  starter('wide-pocket', 'Wide Pocket', 1500, 960, 450, 206, 600, 400, 10, false),
+  starter('split-pad', 'Split Pad', 1740, 850, 390, 132, 960, 540, 10, false),
+  starter('sleek-portable', 'Sleek Portable', 1800, 870, 420, 156, 960, 540, 10, false),
+  // Plain shells: deliberately basic, to use as they are or as templates for your own (docs/MODDING.md).
+  starter('plain-bezel', 'Plain Bezel', 1056, 636, 48, 48, 960, 540, 12, false),
+  starter('plain-handheld', 'Plain Handheld', 600, 820, 60, 60, 480, 360, 12, false),
+  starter('plain-tv', 'Plain TV', 884, 600, 60, 60, 640, 480, 24, false),
 ];
 
 function readList(file, key) {
@@ -46,6 +55,16 @@ function readList(file, key) {
 }
 
 const str = (s, max = 200) => (typeof s === 'string' ? s.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max) : '');
+// A shell's particles + screen glass (mirrors normFx in src/renderer/frames/frames.js).
+const PARTICLES = ['sparkles', 'hearts', 'bubbles', 'pixel-stars', 'petals', 'embers', 'fireflies', 'confetti', 'snow', 'notes'];
+const GLASS = ['round', 'crt', 'flat'];
+function normFx(fx) {
+  if (!fx || typeof fx !== 'object') return null;
+  const out = { particles: PARTICLES.includes(fx.particles) ? fx.particles : null, glass: GLASS.includes(fx.glass) ? fx.glass : null };
+  if (Array.isArray(fx.palette) && fx.palette.length && fx.palette.length <= 6 && fx.palette.every((c) => /^#[0-9a-f]{6}$/i.test(c))) out.palette = [...fx.palette];
+  if (Number.isFinite(fx.density)) out.density = Math.min(2, Math.max(0.2, fx.density));
+  return out.particles || out.glass ? out : null;
+}
 const price = (p) => (p && Number.isInteger(p.coins) && p.coins >= 0 ? { coins: p.coins }
   : p && Number.isFinite(p.usd) && p.usd > 0 ? { usd: p.usd } : null);
 const palette = (p) => (Array.isArray(p) && p.length && p.length <= 6 && p.every((c) => HEX.test(c)) ? [...p] : null);
@@ -55,8 +74,9 @@ function normItem(it, kind) {
   if (kind === 'frame' && !SAFE_FILE.test(String(it.file || ''))) return null;
   const out = {
     ...it, kind, starter: STARTERS.includes(it), name: String(it.name || it.id), rarity: RARITY.includes(it.rarity) ? it.rarity : 'common', price: price(it.price),
-    unlockLevel: Number.isInteger(it.unlockLevel) && it.unlockLevel >= 1 ? it.unlockLevel : null, author: it.author || 'Shellcade',
+    unlockLevel: Number.isInteger(it.unlockLevel) && it.unlockLevel >= 1 ? it.unlockLevel : null, author: it.author || 'Kayboro',
   };
+  if (kind === 'frame') { const fx = normFx(it.fx); if (fx) out.fx = fx; else delete out.fx; }
   // Paid designs ship as Steam DLC: passed through as a badge, never bought with coins.
   if (it.dlc && typeof it.dlc === 'object') out.dlc = { appid: Number.isSafeInteger(it.dlc.appid) && it.dlc.appid > 0 ? it.dlc.appid : null };
   else delete out.dlc;
@@ -84,7 +104,7 @@ function normWallpaper(it, resolve) {
     id: it.id, kind: 'wallpaper', name: str(it.name) || it.id, desc: str(it.desc, 500), media,
     preview: previewUrl ? String(it.preview) : null, previewUrl, rarity: RARITY.includes(it.rarity) ? it.rarity : 'common',
     credit: c ? { artist: str(c.artist), source: str(c.source), url: /^https:\/\//.test(c.url) ? str(c.url, 500) : null } : null,
-    author: str(it.author) || 'Shellcade', tags: Array.isArray(it.tags) ? it.tags.filter((t) => typeof t === 'string') : [], price: null,
+    author: str(it.author) || 'Kayboro', tags: Array.isArray(it.tags) ? it.tags.filter((t) => typeof t === 'string') : [], price: null,
   };
 }
 
@@ -107,6 +127,7 @@ function build() {
     links: { patreon: d.links?.patreon || null, kofi: d.links?.kofi || null, itch: d.links?.itch || null, website: d.links?.website || null },
     verified: !!d.verified, sample: !!d.sample,
   }));
+  out.bundles = readList(FILES.bundles[0], 'bundles').filter((b) => b && typeof b === 'object'); // validated per week by bundles.js
   out.takedowns = readList(FILES.takedowns[0], 'removed').map((t) => (typeof t === 'string' ? t : t && t.id)).filter((id) => typeof id === 'string' && id);
   // levels.json is the source of truth for when an item unlocks.
   const byId = index(out);
@@ -147,4 +168,4 @@ const reservedIds = () => {
   return new Set(ITEM_KEYS.flatMap((k) => c[k].map((it) => it.id)));
 };
 
-module.exports = { load, index, finish, normItem, normWallpaper, reservedIds, STARTERS, SCREENSAVERS, MEDIA, ID, HEX, DIR, RENDERER };
+module.exports = { load, index, finish, normItem, normFx, PARTICLES, GLASS, normWallpaper, reservedIds, STARTERS, SCREENSAVERS, MEDIA, ID, HEX, DIR, RENDERER };

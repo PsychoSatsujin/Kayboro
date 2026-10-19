@@ -1,5 +1,5 @@
 'use strict';
-// The hosted-game session: which game Shellcade is showing, its achievement watcher (only while
+// The hosted-game session: which game Kayboro is showing, its achievement watcher (only while
 // achievement rewards are on), and (Windows) detection of newly launched Steam games. Time spent is
 // counted by activity.js, which credits the hosted game's appid through app().
 const path = require('path');

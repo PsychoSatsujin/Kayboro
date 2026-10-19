@@ -8,7 +8,7 @@ const os = require('os');
 const path = require('path');
 
 const args = process.argv.slice(process.argv.findIndex((a) => path.resolve(a) === __filename) + 1);
-const outDir = path.resolve(args[0] || path.join(os.tmpdir(), 'shellcade-panel-shots'));
+const outDir = path.resolve(args[0] || path.join(os.tmpdir(), 'kayboro-panel-shots'));
 const views = args.length > 1 ? args.slice(1) : ['shop?tab=frames', 'shop?tab=finishes', 'shop?tab=colorways', 'shop?tab=fills', 'shop?tab=wallpapers', 'profile', 'devs', 'toasts', 'gallery'];
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('force-device-scale-factor', '1.5');

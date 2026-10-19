@@ -1,0 +1,13 @@
+# Keep generated art, catalogs and scripts byte-identical on every OS: the frame tests parse the
+# SVGs and the integrity manifest hashes shipped files.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.woff2 binary
+*.png binary
+*.ico binary
+*.jpg binary
+*.gif binary
+*.mp4 binary
+*.webm binary

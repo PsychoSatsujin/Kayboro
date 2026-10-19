@@ -1,0 +1,18 @@
+{
+ "achievements": [
+  { "apiName": "KB_FIRST_SHELL", "name": "In a Shell", "desc": "Own your first catalog shell.", "hidden": false, "motif": "shell", "value": 1 },
+  { "apiName": "KB_FIRST_PLAY", "name": "Press Play", "desc": "Start play mode for the first time.", "hidden": false, "motif": "play", "value": 1 },
+  { "apiName": "KB_LEVEL_10", "name": "Getting Comfy", "desc": "Reach level 10.", "hidden": false, "motif": "level", "value": 10 },
+  { "apiName": "KB_LEVEL_25", "name": "Regular", "desc": "Reach level 25.", "hidden": false, "motif": "level", "value": 25 },
+  { "apiName": "KB_LEVEL_50", "name": "Halfway There", "desc": "Reach level 50.", "hidden": false, "motif": "level", "value": 50 },
+  { "apiName": "KB_LEVEL_100", "name": "The Gallery", "desc": "Reach level 100.", "hidden": false, "motif": "legend", "value": 100 },
+  { "apiName": "KB_FIRST_COIN", "name": "Window Shopper", "desc": "Spend coins in the shop for the first time.", "hidden": false, "motif": "coin", "value": 1 },
+  { "apiName": "KB_COLLECTION_POCKET_PALS", "name": "Pocket Pals", "desc": "Own every shell in the Pocket Pals collection.", "hidden": false, "motif": "collection", "value": 1 },
+  { "apiName": "KB_COLLECTION_COIN_OP", "name": "Coin-Op", "desc": "Own every shell in the Coin-Op collection.", "hidden": false, "motif": "collection", "value": 2 },
+  { "apiName": "KB_COLLECTION_BLUE_CEL", "name": "Blue Cel", "desc": "Own every shell in the Blue Cel collection.", "hidden": false, "motif": "collection", "value": 3 },
+  { "apiName": "KB_TIME_10H", "name": "Ten Hours In", "desc": "Spend 10 hours in Kayboro.", "hidden": false, "motif": "time", "value": 36000 },
+  { "apiName": "KB_FIRST_PRESET", "name": "Quick Swap", "desc": "Buy your first wallpaper preset slot.", "hidden": false, "motif": "preset", "value": 1 },
+  { "apiName": "KB_FULL_STYLE", "name": "Dressed Up", "desc": "Equip a finish, a colorway and a shell fill at the same time.", "hidden": false, "motif": "style", "value": 3 },
+  { "apiName": "KB_FIRST_MOD", "name": "Modder", "desc": "Load your first mod.", "hidden": false, "motif": "mod", "value": 1 }
+ ]
+}

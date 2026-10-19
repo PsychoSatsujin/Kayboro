@@ -6,4 +6,6 @@ module.exports = {
   ...require('./achievements'),
   ...require('./watcher'),
   selfStats: require('./selfStats'),
+  overlay: require('./overlay'),
+  kayboroAchievements: require('./kayboroAchievements'),
 };

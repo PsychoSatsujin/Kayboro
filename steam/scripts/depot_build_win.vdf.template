@@ -1,0 +1,19 @@
+// Windows depot: everything electron-builder put in dist/win-unpacked (ContentRoot is the parent dir,
+// LocalPath points at the folder, so the depot root is the app folder itself).
+"DepotBuild"
+{
+	"DepotID" "{{DEPOT_WIN}}"
+	"ContentRoot" "{{CONTENT_ROOT}}"
+	"FileMapping"
+	{
+		"LocalPath" "*"
+		"DepotPath" "."
+		"recursive" "1"
+	}
+	// Runs driver\kbvdd-setup.exe on install/uninstall (filled in by upload.ps1 when the driver is in the build).
+	{{INSTALLSCRIPT}}
+	// Never ship a dev app id: Steam sets the id for the launched exe itself.
+	"FileExclusion" "steam_appid.txt"
+	"FileExclusion" "*.pdb"
+	"FileExclusion" "*.log"
+}

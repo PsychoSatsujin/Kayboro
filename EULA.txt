@@ -1,0 +1,64 @@
+KAYBORO END USER LICENSE AGREEMENT
+
+Please read this before installing or using Kayboro. By installing or using Kayboro you agree to it.
+
+1. KAYBORO IS FREE
+Kayboro is free to download and use. You may install it on any computer you use. Coins, levels and items
+in Kayboro are earned by using the app and are never sold for money.
+
+2. THE KAYBORO VIRTUAL SCREEN DRIVER
+Kayboro installs a small display driver called the Kayboro Virtual Screen Driver the first time you install
+it. On Steam this happens once, during first-time setup, and Windows asks for administrator approval.
+
+What it is for: the "Hide Game Window" feature. Kayboro uses the driver to create an invisible screen, moves
+your game onto it, and shows the game inside a shell in Kayboro. Your game keeps running at full speed, and
+you don't see a second copy of it on your desktop.
+
+What it does:
+  - Adds a display adapter named "Kayboro Virtual Screen" to Windows.
+  - Creates invisible screens only when you use Hide Game Window, at the size of your shell.
+  - Removes those screens automatically within a few seconds when Kayboro closes, so a game can never be
+    left on a screen you can't see.
+
+What it does not do:
+  - It does not record, store or send anything, and it has no network access.
+  - It does not change your other monitors or their settings.
+  - It does nothing at all while Kayboro is not running.
+
+Removing it: uninstalling Kayboro removes the driver. You can also remove it at any time:
+  - Device Manager > Display adapters > Kayboro Virtual Screen > Uninstall device (tick "Attempt to remove
+    the driver for this device"), or
+  - run "driver\kbvdd-setup.exe uninstall" from the Kayboro folder as an administrator.
+Kayboro works without the driver; only Hide Game Window needs it.
+
+The driver is open source under the Microsoft Public License and is based on Microsoft's Indirect Display
+Driver sample.
+
+3. CONTENT
+Shells, wallpapers and other art in Kayboro are covered by LICENSE-CONTENT.md in the Kayboro folder. Mods and
+fan content belong to their creators.
+
+Community art from Kaybo: the Kaybo tab shows works from the Kaybo website that the site has approved for all
+ages. Kayboro does not include, own or license that art. If you use a work as a background, shell fill or
+custom shell, or save a copy, you do so at your own discretion. Copyright and DMCA claims about works on
+Kaybo are handled by the Kaybo website, not by Kayboro. Kayboro only downloads a work when you choose to
+use or save it, and keeps that copy on your computer.
+
+4. YOUR GAMES AND ANTI-CHEAT
+Kayboro shows windows you choose to capture. Some online games do not allow screen capture or overlays.
+Check a game's rules before using Kayboro with it. You are responsible for how you use Kayboro with other
+software.
+
+5. PRIVACY
+Kayboro keeps your progress, settings and scenes on your own computer. It does not collect personal data.
+When you open the Kaybo tab, Kayboro asks the Kaybo website for works to show; the site sees those requests
+as it would from a web browser. No account or sign-in is used.
+Steam features (achievements, cloud saves, DLC) are handled by Steam under Valve's terms.
+
+6. NO WARRANTY
+Kayboro and the Kayboro Virtual Screen Driver are provided "as is", without warranties of any kind. To the
+extent the law allows, the authors are not liable for any damages arising from their use.
+
+7. THIRD-PARTY SOFTWARE
+Kayboro includes third-party software under its own licenses (Electron, Chromium and others). Their licenses
+are in the Kayboro folder.

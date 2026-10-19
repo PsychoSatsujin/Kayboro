@@ -6,9 +6,10 @@ const path = require('path');
 const { EventEmitter } = require('events');
 const progression = require('./progression');
 const catalogLib = require('./catalog');
+const bundles = require('./bundles');
 
 const RULES = {
-  time: { coinsPerMinute: 1, xpPerMinute: 10, maxTickSeconds: 3600 }, // while Shellcade is visible or in play mode
+  time: { coinsPerMinute: 1, xpPerMinute: 10, maxTickSeconds: 3600 }, // while Kayboro is visible or in play mode
   achievement: { coins: 50, xp: 120 }, // only with settings.rewards.achievements on
   preset: { price: 200 }, // each extra wallpaper preset slot; no maximum
 };
@@ -16,7 +17,7 @@ const SLOTS = { finish: 'finish', colorway: 'colorway', fill: 'fill' };
 const DEFAULT_EQUIPPED = { finish: 'none', colorway: 'default', fill: 'starfield' };
 const DEFAULT_SETTINGS = { rewards: { achievements: false } };
 const TARGETS = ['stage', 'fill'];
-const SOURCES = ['shellcade', 'mod', 'we', 'file'];
+const SOURCES = ['kayboro', 'mod', 'we', 'file'];
 const REF_ID = /^[^\u0000-\u001f\u007f/\\]{1,200}$/; // catalog/mod item id or a Wallpaper Engine folder name
 
 const int = (n, min = 0) => Math.max(min, Math.floor(Number(n)) || 0);
@@ -24,7 +25,7 @@ const r3 = (n) => Math.round(n * 1000) / 1000;
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
-// A wallpaper reference: {source: 'shellcade'|'mod'|'we', id} or {source: 'file', url: 'file://...'}; null when malformed.
+// A wallpaper reference: {source: 'kayboro'|'mod'|'we', id} or {source: 'file', url: 'file://...'}; null when malformed.
 function wallpaperRef(w) {
   if (!w || typeof w !== 'object' || !SOURCES.includes(w.source)) return null;
   if (w.source === 'file') {
@@ -34,12 +35,14 @@ function wallpaperRef(w) {
 }
 
 class Economy extends EventEmitter {
-  constructor({ dir, catalog = catalogLib.load, now = Date.now } = {}) {
+  // ownsDlc(appid): Steam DLC ownership for "dlc" catalog items (the Steam build passes selfStats.ownsDlc).
+  constructor({ dir, catalog = catalogLib.load, now = Date.now, ownsDlc = () => false } = {}) {
     super();
     this.dir = dir;
     this.file = path.join(dir, 'state.json');
     this.now = now;
     this.catalog = typeof catalog === 'function' ? catalog : () => catalog;
+    this.ownsDlc = typeof ownsDlc === 'function' ? ownsDlc : () => false;
     this.session = null; // { appid, name, startedAt } while a game is hosted
     this.load();
   }
@@ -101,6 +104,14 @@ class Economy extends EventEmitter {
       this._log('levelup', { level: l, ...rewards });
       if (notify) this.emit('levelUp', { level: l, rewards });
     }
+    // Items a catalog update added to levels already passed still reach the player (items only, no coins).
+    for (let l = 1; l <= this.s.levelRewarded; l++) {
+      for (const id of progression.rewardsFor(l, table).items) {
+        if (this.s.items.has(id)) continue;
+        this.s.items.add(id);
+        this._log('levelcatchup', { level: l, item: id });
+      }
+    }
   }
 
   _changed() {
@@ -123,9 +134,18 @@ class Economy extends EventEmitter {
   owns(item) {
     if (!item) return false;
     if (item.starter || item.mod || this.s.items.has(item.id)) return true;
-    if (item.dlc || (item.price && item.price.usd)) return false;
+    if (item.dlc) return this._ownsDlc(item.dlc.appid);
+    if (item.price && item.price.usd) return false;
     if (item.unlockLevel != null) return this.level >= item.unlockLevel;
     return !item.price || item.price.coins === 0;
+  }
+
+  _ownsDlc(appid) {
+    try {
+      return Number.isSafeInteger(appid) && appid > 0 && this.ownsDlc(appid) === true;
+    } catch {
+      return false;
+    }
   }
 
   getSettings() { return clone(this.s.settings); }
@@ -160,7 +180,7 @@ class Economy extends EventEmitter {
 
   // ---- Earning ------------------------------------------------------------
 
-  // Time spent in Shellcade: 1 coin + 10 XP per whole minute (fractions carry over). `app` is the
+  // Time spent in Kayboro: 1 coin + 10 XP per whole minute (fractions carry over). `app` is the
   // hosted game, whose Steam appid also collects the seconds for the developer split.
   addTime(seconds, app = null) {
     const sec = Math.min(RULES.time.maxTickSeconds, Number(seconds));
@@ -197,7 +217,7 @@ class Economy extends EventEmitter {
     return award;
   }
 
-  // Debug/test only (wired up when SHELLCADE_TEST=1).
+  // Debug/test only (wired up when KAYBORO_TEST=1).
   grant({ coins = 0, xp = 0 } = {}) {
     this.s.coins = Math.max(0, this.s.coins + (Math.trunc(coins) || 0));
     this.s.xp += Math.max(0, Math.trunc(xp) || 0);
@@ -221,6 +241,18 @@ class Economy extends EventEmitter {
     this.s.coins -= item.price.coins;
     this.s.items.add(item.id);
     this._log('purchase', { itemId: item.id, coins: -item.price.coins });
+    return this._ok();
+  }
+
+  // Buys a weekly bundle (see bundles.js): every item in it the player doesn't own yet, at the bundle price.
+  buyBundle(bundle) {
+    if (!bundle) return this._fail('unknown');
+    const q = bundles.quote(bundle, this.catalog(), (id) => this.owns(catalogLib.index(this.catalog()).get(id)));
+    if (!q.missing.length) return this._fail('owned');
+    if (this.s.coins < q.coins) return this._fail('insufficient');
+    this.s.coins -= q.coins;
+    for (const id of q.missing) this.s.items.add(id);
+    this._log('bundle', { bundle: bundle.id, items: q.missing, coins: -q.coins });
     return this._ok();
   }
 
@@ -259,7 +291,7 @@ class Economy extends EventEmitter {
     if (!TARGETS.includes(target)) return this._fail('target');
     const ref = wallpaper == null ? null : wallpaperRef(wallpaper);
     if (wallpaper != null && !ref) return this._fail('invalid');
-    if (ref && (ref.source === 'shellcade' || ref.source === 'mod') && !(this.catalog().wallpapers || []).some((w) => w.id === ref.id)) return this._fail('unknown');
+    if (ref && (ref.source === 'kayboro' || ref.source === 'mod') && !(this.catalog().wallpapers || []).some((w) => w.id === ref.id)) return this._fail('unknown');
     this.s.active[target] = ref;
     return this._ok();
   }

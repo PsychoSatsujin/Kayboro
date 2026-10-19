@@ -1,6 +1,6 @@
 // Writes <root>/integrity.json: the sha256 of every shipped file under src/ (the manifest itself
 // excluded). Run it as the last step before packaging: npm run integrity [-- --root DIR]
-// At startup Shellcade compares its files against it (src/main/economy/integrity.js); without the
+// At startup Kayboro compares its files against it (src/main/economy/integrity.js); without the
 // manifest (a dev checkout) the check is skipped.
 import { createRequire } from 'node:module';
 import fs from 'node:fs';

@@ -1,5 +1,5 @@
 'use strict';
-// "List your game" form submissions, saved locally to <dir>/dev-submissions.json for the Shellcade
+// "List your game" form submissions, saved locally to <dir>/dev-submissions.json for the Kayboro
 // team to pick up. Same rules as the Devs tab form (src/renderer/panels/logic.js validateDevForm).
 const fs = require('fs');
 const path = require('path');

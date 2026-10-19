@@ -1,0 +1,14 @@
+// Linux depot (optional, for the Linux/Steam Deck build from `npm run dist:linux`): dist/linux-unpacked.
+"DepotBuild"
+{
+	"DepotID" "{{DEPOT_LINUX}}"
+	"ContentRoot" "{{CONTENT_ROOT}}"
+	"FileMapping"
+	{
+		"LocalPath" "*"
+		"DepotPath" "."
+		"recursive" "1"
+	}
+	"FileExclusion" "steam_appid.txt"
+	"FileExclusion" "*.log"
+}

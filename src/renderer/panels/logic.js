@@ -109,13 +109,13 @@ export function parseUsd(text) {
   return Number.isSafeInteger(cents) ? cents : null;
 }
 
-// The 70/30 split of a revenue amount: floor(70%) to developers, the rest to Shellcade.
+// The 70/30 split of a revenue amount: floor(70%) to developers, the rest to Kayboro.
 export function splitRevenue(cents) {
   const c = Math.max(0, Math.floor(Number(cents) || 0)), devs = Math.floor((c * DEV_SHARE) / 100);
-  return { devs, shellcade: c - devs };
+  return { devs, kayboro: c - devs };
 }
 
-// Games played inside Shellcade, most played first.
+// Games played inside Kayboro, most played first.
 export function gameStats(st) {
   return Object.entries(st?.stats?.perApp || {}).filter(([, a]) => a)
     .map(([appid, a]) => ({ appid: Number(appid), name: a.name || `App ${appid}`, playSeconds: a.playSeconds || 0, achievements: a.achievements || 0 }))
@@ -132,7 +132,7 @@ export function steamIcon(url) {
   } catch { return null; }
 }
 
-const RANKS = [[100, 'Shellcade Master'], [75, 'Living Legend'], [50, 'Cabinet Legend'], [25, 'Shell Collector'], [10, 'Arcade Regular'], [1, 'Rookie Shell']];
+const RANKS = [[100, 'Kayboro Master'], [75, 'Living Legend'], [50, 'Cabinet Legend'], [25, 'Shell Collector'], [10, 'Arcade Regular'], [1, 'Rookie Shell']];
 export const rankTitle = level => RANKS.find(([l]) => (level || 1) >= l)[1];
 
 export const initials = name => String(name || '?').replace(/\(.*?\)/g, '').split(/[\s:_-]+/).filter(w => /[\p{L}\p{N}]/u.test(w)).slice(0, 2).map(w => [...w][0].toUpperCase()).join('') || '?';
@@ -141,8 +141,8 @@ export const initials = name => String(name || '?').replace(/\(.*?\)/g, '').spli
 // Every wallpaper the user can pick, from four sources, as one shape:
 //   { key, source, id, url, type: 'video'|'image'|'gif'|'screensaver', fill, name, preview, credit, mod, usable }
 // A reference to one (presets, the active wallpaper) is { source, id } or { source: 'file', url }.
-export const WP_SOURCES = ['shellcade', 'mod', 'we', 'file'];
-const SOURCE_ALIAS = { shellcade: 'shellcade', catalog: 'shellcade', builtin: 'shellcade', mod: 'mod', mods: 'mod', we: 'we',
+export const WP_SOURCES = ['kayboro', 'mod', 'we', 'file'];
+const SOURCE_ALIAS = { kayboro: 'kayboro', catalog: 'kayboro', builtin: 'kayboro', mod: 'mod', mods: 'mod', we: 'we',
   'wallpaper-engine': 'we', wallpaperengine: 'we', workshop: 'we', file: 'file', files: 'file', local: 'file' };
 export const wpSource = s => SOURCE_ALIAS[String(s || '').toLowerCase()] || null;
 const VIDEO_EXT = /\.(mp4|webm|m4v|mov)(?:[?#]|$)/i, GIF_EXT = /\.gif(?:[?#]|$)/i;
@@ -165,7 +165,7 @@ export function fromCatalogWallpaper(it, resolve = f => f) {
   const fill = type === 'screensaver' ? String(m.fill || m.id || m.file || '') || null : null;
   const url = type === 'screensaver' ? null : it.url || m.url || (m.file ? resolve(m.file) : null);
   const preview = it.previewUrl || (typeof it.preview === 'string' && it.preview ? (/^[a-z]+:/i.test(it.preview) ? it.preview : resolve(it.preview)) : null);
-  const source = it.mod ? 'mod' : 'shellcade';
+  const source = it.mod ? 'mod' : 'kayboro';
   return { key: `${source}:${it.id}`, source, id: it.id, url, type, fill, palette: Array.isArray(m.palette) ? m.palette : null, name: String(it.name || it.id), preview: preview || (type === 'image' || type === 'gif' ? url : null),
     credit: it.credit || null, mod: it.mod || null, usable: type === 'screensaver' ? !!fill : !!url, rarity: it.rarity || 'common' };
 }

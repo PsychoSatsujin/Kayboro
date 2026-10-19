@@ -2,6 +2,6 @@
   "name": "ror-fake-game",
   "version": "1.0.0",
   "private": true,
-  "description": "Stand-in 'Steam game' for the RateofReality smoke test: one solid #ff00ff 800x600 window.",
+  "description": "Stand-in 'Steam game' for the Kayboro smoke test: one solid #ff00ff 800x600 window.",
   "main": "main.js"
 }

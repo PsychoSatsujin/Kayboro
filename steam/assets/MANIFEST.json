@@ -1,0 +1,163 @@
+{
+  "generated": "tools/brand/steam-assets.cjs",
+  "docs": {
+    "standard": "https://partner.steamgames.com/doc/store/assets/standard",
+    "library": "https://partner.steamgames.com/doc/store/assets/libraryassets",
+    "community": "https://partner.steamgames.com/doc/store/assets/community"
+  },
+  "shellsInCatalog": [
+    "px-pocket",
+    "px-crt",
+    "px-pet-egg",
+    "px-arcade",
+    "px-dungeon",
+    "px-cloud-castle",
+    "px-cat-monitor",
+    "px-space-console",
+    "vx-sakura-handheld",
+    "vx-magical-compact",
+    "vx-mecha-hud",
+    "vx-cozy-wood-tv",
+    "vx-neko-tv",
+    "vx-synthwave",
+    "vx-ufo-pet",
+    "vx-gallery"
+  ],
+  "files": [
+    {
+      "file": "small_capsule.png",
+      "size": "462x174",
+      "doc": "https://partner.steamgames.com/doc/store/assets/standard",
+      "note": "logo nearly fills it; used in lists and search",
+      "shells": []
+    },
+    {
+      "file": "header_capsule.png",
+      "size": "920x430",
+      "doc": "https://partner.steamgames.com/doc/store/assets/standard",
+      "note": "store page top; logo left, three shells right",
+      "shells": [
+        "px-crt",
+        "vx-neko-tv",
+        "px-pet-egg"
+      ]
+    },
+    {
+      "file": "library_header.png",
+      "size": "920x430",
+      "doc": "https://partner.steamgames.com/doc/store/assets/libraryassets",
+      "note": "same art as the header capsule, no extra text",
+      "shells": [
+        "vx-neko-tv",
+        "px-pet-egg",
+        "vx-sakura-handheld"
+      ]
+    },
+    {
+      "file": "main_capsule.png",
+      "size": "1232x706",
+      "doc": "https://partner.steamgames.com/doc/store/assets/standard",
+      "note": "front page carousel; six shells around the stacked lockup and Kay",
+      "shells": [
+        "px-crt",
+        "vx-neko-tv",
+        "px-pet-egg",
+        "vx-sakura-handheld",
+        "px-arcade",
+        "vx-cozy-wood-tv"
+      ]
+    },
+    {
+      "file": "vertical_capsule.png",
+      "size": "748x896",
+      "doc": "https://partner.steamgames.com/doc/store/assets/standard",
+      "note": "seasonal sale pages; lockup on top, six shells below",
+      "shells": [
+        "px-crt",
+        "vx-neko-tv",
+        "px-pet-egg",
+        "vx-sakura-handheld",
+        "px-arcade",
+        "vx-cozy-wood-tv"
+      ]
+    },
+    {
+      "file": "library_capsule.png",
+      "size": "600x900",
+      "doc": "https://partner.steamgames.com/doc/store/assets/libraryassets",
+      "note": "library grid; lockup on top, four shells and Kay",
+      "shells": [
+        "px-crt",
+        "vx-neko-tv",
+        "px-pet-egg",
+        "vx-sakura-handheld"
+      ]
+    },
+    {
+      "file": "library_hero.png",
+      "size": "3840x1240",
+      "doc": "https://partner.steamgames.com/doc/store/assets/libraryassets",
+      "note": "NO text or logo; key shells inside the centred safe area; Steam overlays library_logo.png",
+      "shells": [
+        "px-crt",
+        "vx-neko-tv",
+        "px-pet-egg",
+        "vx-sakura-handheld",
+        "px-arcade",
+        "vx-cozy-wood-tv",
+        "px-cloud-castle"
+      ]
+    },
+    {
+      "file": "library_logo.png",
+      "size": "1280x349",
+      "doc": "https://partner.steamgames.com/doc/store/assets/libraryassets",
+      "note": "transparent; only the logotype and mark (1280 wide, under 720 tall)",
+      "shells": []
+    },
+    {
+      "file": "page_background.png",
+      "size": "1438x810",
+      "doc": "https://partner.steamgames.com/doc/store/assets/standard",
+      "note": "ambient: dim shells, no logo (Steam applies its own template over it)",
+      "shells": [
+        "px-dungeon",
+        "vx-mecha-hud",
+        "px-space-console",
+        "vx-gallery",
+        "px-cat-monitor",
+        "vx-synthwave",
+        "px-pocket",
+        "vx-magical-compact"
+      ]
+    },
+    {
+      "file": "community_icon.jpg",
+      "size": "184x184",
+      "doc": "https://partner.steamgames.com/doc/store/assets/community",
+      "note": "app icon, jpg (no alpha): the vector mark on the panel colour",
+      "shells": []
+    },
+    {
+      "file": "shortcut_icon.png",
+      "size": "256x256",
+      "doc": "https://partner.steamgames.com/doc/store/assets/community",
+      "note": "desktop shortcut; Steam makes the .ico from it (we ship one too)",
+      "shells": []
+    },
+    {
+      "file": "shortcut_icon.ico",
+      "size": "16,24,32,48,64,128,256",
+      "doc": "https://partner.steamgames.com/doc/store/assets/community",
+      "note": "desktop shortcut icon",
+      "shells": []
+    },
+    {
+      "file": "client_icon.ico",
+      "size": "16,24,32,48,64,128,256",
+      "doc": "https://partner.steamgames.com/doc/store/assets/community",
+      "note": "Steamworks installation client icon (multi-size .ico)",
+      "shells": []
+    }
+  ]
+}

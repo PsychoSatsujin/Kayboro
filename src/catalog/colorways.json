@@ -1,20 +1,20 @@
 {
   "colorways": [
-    { "id": "default", "name": "Original", "kind": "colorway", "rarity": "common", "price": null, "unlockLevel": null, "author": "Shellcade",
+    { "id": "default", "name": "Original", "kind": "colorway", "rarity": "common", "price": null, "unlockLevel": null, "author": "Kayboro",
       "desc": "The colors the shell was drawn in.", "swatch": ["#6b6680", "#2c2740"], "filter": "none", "translucent": false },
-    { "id": "berry", "name": "Berry", "kind": "colorway", "rarity": "common", "price": null, "unlockLevel": 6, "author": "Shellcade",
+    { "id": "berry", "name": "Berry", "kind": "colorway", "rarity": "common", "price": null, "unlockLevel": 6, "author": "Kayboro",
       "desc": "Raspberry pink with grape trim.", "swatch": ["#ff5c9a", "#8a3ffc"], "filter": "sepia(.5) saturate(2.4) hue-rotate(292deg) brightness(.97)", "translucent": false },
-    { "id": "mint", "name": "Mint", "kind": "colorway", "rarity": "common", "price": { "coins": 150 }, "unlockLevel": null, "author": "Shellcade",
+    { "id": "mint", "name": "Mint", "kind": "colorway", "rarity": "common", "price": { "coins": 150 }, "unlockLevel": null, "author": "Kayboro",
       "desc": "Fresh pastel mint.", "swatch": ["#9ff5d0", "#3bbf9a"], "filter": "sepia(.45) saturate(1.35) hue-rotate(112deg) brightness(1.06)", "translucent": false },
-    { "id": "midnight", "name": "Midnight", "kind": "colorway", "rarity": "rare", "price": null, "unlockLevel": 16, "author": "Shellcade",
+    { "id": "midnight", "name": "Midnight", "kind": "colorway", "rarity": "rare", "price": null, "unlockLevel": 16, "author": "Kayboro",
       "desc": "Deep navy with starlight accents.", "swatch": ["#1b2240", "#7a8cff"], "filter": "sepia(.4) saturate(1.9) hue-rotate(188deg) brightness(.62) contrast(1.12)", "translucent": false },
-    { "id": "sunset", "name": "Sunset", "kind": "colorway", "rarity": "rare", "price": { "coins": 300 }, "unlockLevel": null, "author": "Shellcade",
+    { "id": "sunset", "name": "Sunset", "kind": "colorway", "rarity": "rare", "price": { "coins": 300 }, "unlockLevel": null, "author": "Kayboro",
       "desc": "Peach to tangerine, like a summer evening.", "swatch": ["#ffb36b", "#ff6b8b"], "filter": "sepia(.45) saturate(2.3) hue-rotate(-14deg) brightness(1.04)", "translucent": false },
-    { "id": "mono", "name": "Mono", "kind": "colorway", "rarity": "rare", "price": null, "unlockLevel": 28, "author": "Shellcade",
+    { "id": "mono", "name": "Mono", "kind": "colorway", "rarity": "rare", "price": null, "unlockLevel": 28, "author": "Kayboro",
       "desc": "Clean greyscale, like a dev kit.", "swatch": ["#e6e6e6", "#4a4a4a"], "filter": "grayscale(1) contrast(1.08) brightness(1.03)", "translucent": false },
-    { "id": "gold", "name": "Gold", "kind": "colorway", "rarity": "epic", "price": { "coins": 1200 }, "unlockLevel": null, "author": "Shellcade",
+    { "id": "gold", "name": "Gold", "kind": "colorway", "rarity": "epic", "price": { "coins": 1200 }, "unlockLevel": null, "author": "Kayboro",
       "desc": "Limited-edition gold plating.", "swatch": ["#ffe08a", "#b8860b"], "filter": "sepia(1) saturate(2.1) hue-rotate(-9deg) brightness(.9) contrast(1.25)", "translucent": false },
-    { "id": "clear", "name": "Clear", "kind": "colorway", "rarity": "epic", "price": null, "unlockLevel": 35, "author": "Shellcade",
+    { "id": "clear", "name": "Clear", "kind": "colorway", "rarity": "epic", "price": null, "unlockLevel": 35, "author": "Kayboro",
       "desc": "See-through shell: your equipped fill glows inside.", "swatch": ["#ffffff33", "#7af0ff66"], "filter": "saturate(.8) brightness(1.1)", "translucent": true, "opacity": 0.55 }
   ]
 }

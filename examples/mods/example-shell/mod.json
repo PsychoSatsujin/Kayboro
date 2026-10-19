@@ -1,7 +1,7 @@
 {
   "id": "example-shell",
   "name": "Example Shell",
-  "author": "Shellcade",
+  "author": "Kayboro",
   "version": "1.0.0",
   "description": "A pastel console shell, a dusk wallpaper, a minty bubble fill and a lagoon colorway. Copy this folder to start your own mod.",
   "frames": [
@@ -29,7 +29,7 @@
       "name": "Dusk Grid",
       "media": { "type": "image", "file": "wallpapers/dusk-grid.svg" },
       "preview": "wallpapers/dusk-grid.svg",
-      "credit": { "artist": "Shellcade", "source": "Original", "url": null },
+      "credit": { "artist": "Kayboro", "source": "Original", "url": null },
       "price": null
     }
   ],

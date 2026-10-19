@@ -8,7 +8,7 @@ const { spawnSync } = require('node:child_process');
 
 const I = require('../src/main/economy/integrity');
 
-const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'shellcade-int-'));
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'kayboro-int-'));
 after(() => fs.rmSync(TMP, { recursive: true, force: true }));
 
 function tree() {

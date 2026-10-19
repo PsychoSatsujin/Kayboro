@@ -1,5 +1,5 @@
 // DOM helpers shared by the panels: element builder, inline icons (Tabler, MIT; pixel coin and trophy
-// are Shellcade's), number formatting, item thumbnails and the coin-flight animation.
+// are Kayboro's), number formatting, item thumbnails and the coin-flight animation.
 export const fmt = new Intl.NumberFormat('en-US');
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -105,7 +105,7 @@ export const getShell = ctx => ctx?.shell || globalThis.window?.shell || null;
 // Calls shell[name](...args); resolves to null when the method is missing or fails (older main, plain browser).
 export async function call(shell, name, ...args) {
   if (typeof shell?.[name] !== 'function') return null;
-  try { return await shell[name](...args); } catch (err) { console.warn(`[shellcade] ${name} failed:`, err?.message || err); return null; }
+  try { return await shell[name](...args); } catch (err) { console.warn(`[kayboro] ${name} failed:`, err?.message || err); return null; }
 }
 export const has = (shell, name) => typeof shell?.[name] === 'function';
 // Catalog file paths are relative to src/renderer/.

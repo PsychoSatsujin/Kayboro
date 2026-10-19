@@ -1,16 +1,16 @@
 {
   "finishes": [
-    { "id": "none", "name": "Factory", "kind": "finish", "rarity": "common", "price": null, "unlockLevel": null, "author": "Shellcade",
+    { "id": "none", "name": "Factory", "kind": "finish", "rarity": "common", "price": null, "unlockLevel": null, "author": "Kayboro",
       "desc": "The shell straight off the line.", "swatch": ["#3a3550", "#2a263a"] },
-    { "id": "matte", "name": "Matte", "kind": "finish", "rarity": "common", "price": null, "unlockLevel": 3, "author": "Shellcade",
+    { "id": "matte", "name": "Matte", "kind": "finish", "rarity": "common", "price": null, "unlockLevel": 3, "author": "Kayboro",
       "desc": "Soft-touch plastic that eats glare.", "swatch": ["#5b5670", "#4a4560"] },
-    { "id": "gloss", "name": "Gloss", "kind": "finish", "rarity": "rare", "price": null, "unlockLevel": 10, "author": "Shellcade",
+    { "id": "gloss", "name": "Gloss", "kind": "finish", "rarity": "rare", "price": null, "unlockLevel": 10, "author": "Kayboro",
       "desc": "Candy-shell shine with a moving highlight.", "swatch": ["#ffffff", "#8a84a8"] },
-    { "id": "holo", "name": "Holo", "kind": "finish", "rarity": "epic", "price": null, "unlockLevel": 25, "author": "Shellcade",
+    { "id": "holo", "name": "Holo", "kind": "finish", "rarity": "epic", "price": null, "unlockLevel": 25, "author": "Kayboro",
       "desc": "Trading-card rainbow foil that shifts as the shell moves.", "swatch": ["#ff6ad5", "#7af0ff", "#ffd166"] },
-    { "id": "pearl", "name": "Pearl", "kind": "finish", "rarity": "rare", "price": { "coins": 400 }, "unlockLevel": null, "author": "Shellcade",
+    { "id": "pearl", "name": "Pearl", "kind": "finish", "rarity": "rare", "price": { "coins": 400 }, "unlockLevel": null, "author": "Kayboro",
       "desc": "Milky pearlescent sheen with a pink-blue flip.", "swatch": ["#fdf6ff", "#d8e8ff", "#ffd8f0"] },
-    { "id": "glitter", "name": "Glitter", "kind": "finish", "rarity": "epic", "price": { "coins": 650 }, "unlockLevel": null, "author": "Shellcade",
+    { "id": "glitter", "name": "Glitter", "kind": "finish", "rarity": "epic", "price": { "coins": 650 }, "unlockLevel": null, "author": "Kayboro",
       "desc": "Tiny sparkles suspended in the plastic.", "swatch": ["#ffd166", "#ff6ad5", "#ffffff"] }
   ]
 }

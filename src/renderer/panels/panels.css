@@ -1,4 +1,4 @@
-/* Shellcade panels: HUD, Shop, Profile, Devs and toasts. Uses the design tokens from styles.css.
+/* Kayboro panels: HUD, Shop, Profile, Devs and toasts. Uses the design tokens from styles.css.
    Numbers use Silkscreen (--font-num): its digits stay legible at small sizes. */
 :root { --font-num: "Silkscreen", var(--font-pixel), ui-monospace, monospace; }
 .sc-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 14px 16px 28px; min-width: 0; }
@@ -363,6 +363,15 @@ dialog.sc-gallery-dlg > .sc-gallery { padding: 0 22px 22px; }
 .sc-mods-head .sc-set-ic { color: var(--ok); }
 .sc-mods-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .sc-mods-acts .btn .i { width: 14px; height: 14px; }
+/* Tester tools (Profile, tester sandbox only) */
+.sc-tester-note { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 9px 12px; border-radius: var(--r); border: 1px dashed color-mix(in srgb, var(--coin) 45%, var(--line-2));
+  background: color-mix(in srgb, var(--coin) 7%, var(--panel-2)); font-size: 12px; font-weight: 700; line-height: 1.45; text-wrap: pretty; }
+.sc-tester-note .i { flex: none; width: 15px; height: 15px; margin-top: 1px; color: var(--coin); }
+.sc-tester-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sc-tester-acts .btn { min-width: 0; }
+.sc-tester-acts .btn .i, .sc-tester-acts .btn .sc-coin { width: 14px; height: 14px; flex: none; }
+.sc-tester-wide { grid-column: 1 / -1; }
+.btn.sc-tester-reset.is-armed, .btn.sc-tester-reset.is-armed .i { border-color: var(--danger); color: var(--danger); }
 .sc-modlist, .sc-sublist { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .sc-mod, .sc-sublist li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: var(--r); border: 1px solid var(--line); background: color-mix(in srgb, var(--panel-2) 60%, transparent); }
 .sc-mod.is-bad { border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); }
@@ -532,3 +541,50 @@ dialog.sc-gallery-dlg > .sc-gallery { padding: 0 22px 22px; }
   .sc-card:hover, .sc-wp:hover, .sc-preset:hover, .sc-link:hover, .sc-node:hover .sc-node-card { transform: none; }
   .sc-card:hover .sc-prev img, .sc-card:hover .sc-mini, .sc-wp:hover .sc-wp-thumb > img { transform: none; }
 }
+
+/* ---- Kaybo: community art from the Kaybo site ---- */
+.sc-kaybo-notice { display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--accent-2) 12%, var(--panel-2));
+  border: 1px solid color-mix(in srgb, var(--accent-2) 40%, transparent); }
+.sc-kaybo-notice > .i { flex: none; width: 18px; height: 18px; color: var(--accent-2); margin-top: 1px; }
+.sc-kaybo-notice b { display: block; font-size: 13px; }
+.sc-kaybo-notice p { color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.45; }
+.sc-kaybo-bar { display: grid; gap: 8px; }
+.sc-kaybo-bar input[type=search] { height: 34px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: inherit; font: inherit; }
+.sc-kaybo-bar input[type=search]:focus-visible { outline: none; border-color: var(--accent-2); }
+.sc-kaybo-bar .sc-chips { display: flex; gap: 6px; }
+.sc-kaybo-bar .sc-chip { cursor: pointer; border: 0; }
+.sc-kaybo-bar .sc-chip[aria-pressed=true] { background: var(--accent); color: #fff; }
+.sc-kaybo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.sc-kaybo-tile { display: grid; gap: 4px; padding: 0; border: 0; background: none; color: var(--muted); cursor: pointer; text-align: left; min-width: 0; }
+.sc-kaybo-tile img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; background: var(--panel-3); transition: transform .15s; }
+.sc-kaybo-tile:hover img, .sc-kaybo-tile:focus-visible img { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--accent); }
+.sc-kaybo-tile span { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-kaybo-status { color: var(--muted); font-size: 12px; }
+.sc-kaybo-detail { position: relative; display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding: 12px; border-radius: 12px; background: var(--panel-2); }
+.sc-kaybo-detail[hidden] { display: none; }
+.sc-kaybo-preview { width: 120px; max-height: 180px; object-fit: contain; border-radius: 8px; background: var(--panel-3); }
+.sc-kaybo-meta { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.sc-kaybo-meta > span { color: var(--muted); font-size: 12px; }
+.sc-kaybo-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.sc-kaybo-actions .btn { height: 30px; padding: 0 10px; font-size: 12px; }
+.sc-kaybo-close { position: absolute; top: 6px; right: 6px; }
+
+/* ---- Shop > Weekly: this week's bundle, and the developers' Bundle Studio ---- */
+.sc-bundle, .sc-studio { display: grid; gap: 12px; padding: 14px; border-radius: 14px; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 14%, var(--panel-2)), var(--panel-2));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.sc-studio { background: var(--panel-2); border-style: dashed; border-color: var(--line-2); margin-top: 14px; }
+.sc-bundle-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.sc-bundle-head > div:first-child { flex: 1 1 180px; min-width: 0; }
+.sc-bundle-head small { color: var(--accent-2); font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.sc-bundle-head h3 { font-size: 17px; font-weight: 900; margin-top: 2px; }
+.sc-bundle-head p { color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.45; }
+.sc-bundle-buy { display: grid; justify-items: end; gap: 4px; flex: none; }
+.sc-bundle-buy s { color: var(--faint); font-size: 12px; }
+.sc-bundle-buy b { color: var(--coin); font-size: 12px; }
+.sc-studio-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sc-studio-field { display: grid; gap: 4px; font-size: 11px; color: var(--muted); }
+.sc-studio-field:last-child { grid-column: 1 / -1; }
+.sc-studio-list { display: grid; gap: 2px; max-height: 260px; overflow: auto; padding-right: 4px; }
+.sc-studio-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.sc-studio-item:hover { background: var(--panel-3); }
+.sc-studio-item small { color: var(--faint); font-size: 11px; }
