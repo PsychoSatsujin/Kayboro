@@ -1,0 +1,24 @@
+[Unit]
+Description=Fandom Clash API (Kayboro)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=clash
+Group=clash
+Environment=NODE_ENV=production PORT=8787 HOST=127.0.0.1 DATA_DIR=/var/lib/kayboro-clash
+ExecStart=/usr/bin/node --experimental-sqlite --no-warnings /opt/kayboro-clash/server/clash/node/server.mjs
+# server.mjs drains on SIGTERM (in-flight requests finish, SQLite is checkpointed and closed) within 10 s.
+KillSignal=SIGTERM
+TimeoutStopSec=15
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/kayboro-clash
+MemoryMax=400M
+
+[Install]
+WantedBy=multi-user.target

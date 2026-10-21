@@ -91,14 +91,14 @@ function lamp(x, y, r, halo = 3.2) {
 
 // ---- vertebrae ----------------------------------------------------------------------------------
 /** One vertebra in local coordinates: the column runs along x, outward is -y. */
-function vertebra(k, amber) {
-  const s = (v) => n1(v * k);
+function vertebra(k, amber, long = 1) {
+  const s = (v) => n1(v * k), h = (v) => n1(v * k * long);
   const body = `M${s(-19)} ${s(-15)}C${s(-23)} ${s(-4)} ${s(-23)} ${s(6)} ${s(-18)} ${s(16)}L${s(18)} ${s(16)}C${s(23)} ${s(6)} ${s(23)} ${s(-4)} ${s(19)} ${s(-15)}Z`;
-  const spine = `M${s(-15)} ${s(-12)}C${s(-17)} ${s(-38)} ${s(-6)} ${s(-60)} ${s(16)} ${s(-74)}C${s(8)} ${s(-54)} ${s(10)} ${s(-34)} ${s(15)} ${s(-12)}Z`;
+  const spine = `M${s(-15)} ${s(-12)}C${s(-14)} ${h(-34)} ${s(4)} ${h(-52)} ${s(34)} ${h(-66)}C${s(16)} ${h(-48)} ${s(12)} ${h(-30)} ${s(15)} ${s(-12)}Z`;
   const wing = `M${s(12)} ${s(-8)}C${s(30)} ${s(-12)} ${s(44)} ${s(-26)} ${s(52)} ${s(-44)}C${s(46)} ${s(-24)} ${s(34)} ${s(-8)} ${s(16)} ${s(4)}Z`;
   return path(wing, { fill: 'url(#bmMetalD)', stroke: DARK, strokeWidth: 1.6 })
     + path(spine, { fill: 'url(#bmMetal)', stroke: DARK, strokeWidth: 1.8 })
-    + path(`M${s(-13)} ${s(-16)}C${s(-14)} ${s(-38)} ${s(-5)} ${s(-56)} ${s(12)} ${s(-69)}`, { fill: 'none', stroke: '#dfe8f0', strokeOpacity: 0.55, strokeWidth: 1.6, strokeLinecap: 'round' })
+    + path(`M${s(-12)} ${s(-16)}C${s(-11)} ${h(-34)} ${s(5)} ${h(-50)} ${s(30)} ${h(-63)}`, { fill: 'none', stroke: '#dfe8f0', strokeOpacity: 0.55, strokeWidth: 1.6, strokeLinecap: 'round' })
     + path(body, { fill: 'url(#bmMetal)', stroke: DARK, strokeWidth: 2 })
     + path(`M${s(-21)} ${s(-5)}H${s(21)}M${s(-21)} ${s(6)}H${s(21)}`, { stroke: DARK, strokeOpacity: 0.7, strokeWidth: 1.6 })
     + path(`M${s(-16)} ${s(-12)}Q${s(0)} ${s(-16)} ${s(16)} ${s(-12)}`, { fill: 'none', stroke: '#eef4fa', strokeOpacity: 0.6, strokeWidth: 1.4, strokeLinecap: 'round' })
@@ -112,7 +112,7 @@ function column(pts, count, kFn, flipHalf = true) {
     const t = i / (count - 1), out1 = (f.x + f.nx - CX) ** 2 + (f.y + f.ny - CY) ** 2 > (f.x - f.nx - CX) ** 2 + (f.y - f.ny - CY) ** 2;
     const flip = flipHalf && t > 0.5 ? ' scale(-1 1)' : '';
     const up = out1 ? ' scale(1 -1)' : ''; // local -y must point outward
-    out += g({ transform: `translate(${P1(f.x, f.y)}) rotate(${n1(f.a)})${up}${flip}` }, vertebra(kFn(t), i % 4 === 2));
+    out += g({ transform: `translate(${P1(f.x, f.y)}) rotate(${n1(f.a)})${up}${flip}` }, vertebra(kFn(t), i % 4 === 2, i % 2 ? 0.62 : 1));
   });
   return out;
 }
@@ -154,14 +154,14 @@ function carapace() {
   const shell = cr(SHELL, { closed: true });
   // ridge plates: concentric grooves following the shell, drawn between the shell and the bezel
   let grooves = '';
-  for (const k of [0.25, 0.45, 0.65, 0.82]) {
+  for (const k of [0.14, 0.28, 0.42, 0.55, 0.67, 0.78, 0.88]) {
     const pts = SHELL.map(([x, y]) => [CX + (x - CX) * (1 - k * 0.17), CY + (y - CY) * (1 - k * 0.27)]);
     grooves += cr(pts, { closed: true });
   }
   // radial ribs from the bezel out to the shell edge, like the segments of an exoskeleton
   let ribsD = '';
-  for (let i = 0; i < 64; i++) {
-    const a = (i / 64) * Math.PI * 2, c = Math.cos(a), s = Math.sin(a);
+  for (let i = 0; i < 16; i++) {
+    const a = ((i + 0.5) / 16) * Math.PI * 2, c = Math.cos(a), s = Math.sin(a);
     const r0x = hole.w / 2 + 60, r0y = hole.h / 2 + 60;
     const x0 = CX + c * r0x * 1.02, y0 = CY + s * r0y * 1.05, x1 = CX + c * 640, y1 = CY + s * 420;
     ribsD += `M${P0(x0, y0)}L${P0(x1, y1)}`;
@@ -170,12 +170,27 @@ function carapace() {
     path(shell, { fill: '#000', fillOpacity: 0.38, transform: 'translate(10 16)' }),
     path(shell, { fill: 'url(#bmShell)', stroke: DARK, strokeWidth: 4 }),
     g({ clipPath: 'url(#bmShellClip)' },
-      path(ribsD, { stroke: DARK, strokeOpacity: 0.55, strokeWidth: 5 }),
-      path(ribsD, { stroke: '#65707b', strokeOpacity: 0.25, strokeWidth: 1.6, transform: 'translate(-2.5 -2.5)' }),
+      path(ribsD, { stroke: DARK, strokeOpacity: 0.8, strokeWidth: 7 }),
+      path(ribsD, { stroke: '#8792a0', strokeOpacity: 0.3, strokeWidth: 1.6, transform: 'translate(-3.5 -3.5)' }),
+      wet(),
       path(grooves, { fill: 'none', stroke: DARK, strokeOpacity: 0.7, strokeWidth: 5 }),
       path(grooves, { fill: 'none', stroke: '#8792a0', strokeOpacity: 0.3, strokeWidth: 1.5, transform: 'translate(-2 -3)' }),
       path(shell, { fill: 'none', stroke: '#c9d4de', strokeOpacity: 0.25, strokeWidth: 3, transform: 'translate(3 5)' }),
       path(shell, { fill: 'url(#bmSheen)' })));
+}
+
+/** Wet sheen: long bright streaks along the shell's upper curves and a scatter of moisture beads. */
+function wet() {
+  const rnd = rng(5);
+  let beads = '';
+  for (let i = 0; i < 60; i++) {
+    const a = rnd() * Math.PI * 2, x = CX + Math.cos(a) * (560 + rnd() * 60), y = CY + Math.sin(a) * (330 + rnd() * 50);
+    if (y > CY + 200) continue;
+    const r = 1 + rnd() ** 2 * 3;
+    beads += path(circle(x, y, r), { fill: DARK, fillOpacity: 0.5 }) .replace('/>', ' transform="translate(1 1.5)"/>') + path(circle(x, y, r), { fill: '#e9f1f8', fillOpacity: 0.5 + rnd() * 0.4 });
+  }
+  return path('M300 300C420 240 620 232 760 238M840 238C980 232 1180 240 1300 300M226 420C214 500 220 560 232 620', { fill: 'none', stroke: '#f2f7fb', strokeOpacity: 0.32, strokeWidth: 3, strokeLinecap: 'round' })
+    + path('M330 290C450 246 620 242 700 246M900 246C980 242 1150 246 1270 290', { fill: 'none', stroke: '#ffffff', strokeOpacity: 0.55, strokeWidth: 1.2, strokeLinecap: 'round' }) + beads;
 }
 
 /** The calm bezel right around the screen: smooth gunmetal, a fine chrome bead and a dark lip. */
@@ -194,14 +209,15 @@ function bezel() {
 /** Cranial node over the top column: a ridged dome with swept tusks and an amber visor slit. */
 function cranium() {
   const x = CX, y = 168;
-  const dome = `M${x - 96} ${y + 52}C${x - 104} ${y - 10} ${x - 64} ${y - 78} ${x} ${y - 92}C${x + 64} ${y - 78} ${x + 104} ${y - 10} ${x + 96} ${y + 52}C${x + 50} ${y + 70} ${x - 50} ${y + 70} ${x - 96} ${y + 52}Z`;
+  const dome = `M${x - 130} ${y + 52}C${x - 150} ${y + 10} ${x - 120} ${y - 30} ${x - 70} ${y - 40}C${x - 50} ${y - 74} ${x - 20} ${y - 84} ${x} ${y - 84}C${x + 20} ${y - 84} ${x + 50} ${y - 74} ${x + 70} ${y - 40}C${x + 120} ${y - 30} ${x + 150} ${y + 10} ${x + 130} ${y + 52}C${x + 60} ${y + 72} ${x - 60} ${y + 72} ${x - 130} ${y + 52}Z`;
   let ridges = '';
-  for (let k = -3; k <= 3; k++) ridges += `M${x + k * 24} ${y + 50}C${x + k * 26} ${y + 10} ${x + k * 20} ${y - 40} ${x + k * 8} ${y - 84 + Math.abs(k) * 8}`;
+  for (let k = -2; k <= 2; k++) ridges += `M${x + k * 22} ${y + 54}C${x + k * 24} ${y + 10} ${x + k * 18} ${y - 40} ${x + k * 8} ${y - 80 + Math.abs(k) * 6}`;
+  for (const sgn of [-1, 1]) for (let k = 0; k < 3; k++) ridges += `M${x + sgn * (78 + k * 18)} ${y + 56 - k * 2}C${x + sgn * (84 + k * 20)} ${y + 20} ${x + sgn * (78 + k * 14)} ${y - 10} ${x + sgn * (66 + k * 10)} ${y - 30 + k * 10}`;
   const tusk = (s) => sweep([[x + s * 70, y + 30], [x + s * 150, y + 10], [x + s * 230, y - 30], [x + s * 290, y - 96]], 34, (t) => 1 - 0.92 * t, 16).d;
-  const visor = `M${x - 62} ${y + 18}C${x - 30} ${y + 30} ${x + 30} ${y + 30} ${x + 62} ${y + 18}C${x + 34} ${y + 40} ${x - 34} ${y + 40} ${x - 62} ${y + 18}Z`;
-  return g({},
+  const visor = `M${x - 70} ${y + 10}L${x} ${y + 26}L${x + 70} ${y + 10}L${x + 66} ${y + 20}L${x} ${y + 36}L${x - 66} ${y + 20}Z`;
+  return [g({},
     path(tusk(-1) + tusk(1), { fill: 'url(#bmChrome)', stroke: DARK, strokeWidth: 2.5 }),
-    path(`M${x - 80} ${y + 26}C${x - 160} ${y + 6} ${x - 230} ${y - 34} ${x - 282} ${y - 90}M${x + 80} ${y + 26}C${x + 160} ${y + 6} ${x + 230} ${y - 34} ${x + 282} ${y - 90}`, { fill: 'none', stroke: '#f2f7fb', strokeOpacity: 0.55, strokeWidth: 2, strokeLinecap: 'round' }),
+    path(`M${x - 80} ${y + 26}C${x - 160} ${y + 6} ${x - 230} ${y - 34} ${x - 282} ${y - 90}M${x + 80} ${y + 26}C${x + 160} ${y + 6} ${x + 230} ${y - 34} ${x + 282} ${y - 90}`, { fill: 'none', stroke: '#f2f7fb', strokeOpacity: 0.55, strokeWidth: 2, strokeLinecap: 'round' })), g({},
     path(dome, { fill: '#000', fillOpacity: 0.35, transform: 'translate(6 10)' }),
     path(dome, { fill: 'url(#bmDome)', stroke: DARK, strokeWidth: 3 }),
     path(ridges, { fill: 'none', stroke: DARK, strokeWidth: 6, strokeLinecap: 'round' }),
@@ -209,8 +225,8 @@ function cranium() {
     path(ellipse(x, y + 25, 140, 40), { fill: 'url(#bmHaloWide)' }),
     path(visor, { fill: '#1a0d02', stroke: DARK, strokeWidth: 3 }),
     path(visor, { fill: 'url(#bmVisor)' }),
-    path(`M${x - 50} ${y + 22}Q${x} ${y + 32} ${x + 50} ${y + 22}`, { fill: 'none', stroke: '#fff2cf', strokeOpacity: 0.8, strokeWidth: 1.6 }),
-    path(ellipse(x - 30, y - 50, 22, 10), { fill: '#ffffff', fillOpacity: 0.35, transform: `rotate(-24 ${x - 30} ${y - 50})` }));
+    path(`M${x - 56} ${y + 17}L${x} ${y + 30}L${x + 56} ${y + 17}`, { fill: 'none', stroke: '#fff2cf', strokeOpacity: 0.85, strokeWidth: 1.6 }),
+    path(ellipse(x - 30, y - 50, 22, 10), { fill: '#ffffff', fillOpacity: 0.35, transform: `rotate(-24 ${x - 30} ${y - 50})` }))];
 }
 
 /** Intake grille under the bottom column: a jaw of ribbed plates with an amber glow deep behind. */
@@ -258,13 +274,16 @@ function draw() {
     rib([[300, 246], [190, 300], [110, 420], [96, 560]], 40),
     rib([[262, 276], [170, 360], [140, 470], [150, 580]], 30),
     rib([[300, 952], [196, 900], [118, 790], [96, 650]], 40),
-    rib([[264, 924], [180, 846], [146, 740], [150, 620]], 30));
+    rib([[264, 924], [180, 846], [146, 740], [150, 620]], 30),
+    rib([[340, 232], [250, 250], [160, 320], [120, 400]], 24),
+    rib([[340, 968], [250, 952], [160, 884], [120, 800]], 24));
   const cables = mirror(
     tube('M286 300C200 380 214 520 170 620C130 720 150 860 250 980C300 1040 380 1060 430 1036', 26, { rib: 8 }),
     tube('M300 320C236 420 248 540 214 640C186 740 200 850 276 950', 16, { base: '#3a2e24', lite: '#7a6250', rib: 6 }),
     tube('M250 300C150 360 60 480 64 620C66 760 120 900 210 990', 12, { base: '#1d2126', lite: '#4a535d' }));
-  const pistons = mirror(piston([258, 260], [150, 170], 24), piston([258, 940], [150, 1046], 24));
+  const pistons = mirror(piston([236, 340], [104, 420], 22), piston([236, 860], [104, 780], 22));
 
+  const crn = cranium();
   const art = [
     // hoses loop behind everything at the bottom corners and over the shoulders
     cables,
@@ -275,7 +294,7 @@ function draw() {
     botCol,
     intake(),
     topCol,
-    cranium(),
+    crn[1],
     mirror(lamp(200, 600, 9), lamp(268, 286, 6), lamp(268, 916, 6)),
     bezel(),
     // a faint amber pilot light in each bezel corner

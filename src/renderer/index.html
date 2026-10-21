@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob: kaybo: https://cdn.cloudflare.steamstatic.com https://shared.cloudflare.steamstatic.com https://steamcdn-a.akamaihd.net; media-src 'self' file: data: blob: mediastream:; connect-src 'self' file: data: blob:; font-src 'self' file: data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob: kaybo: kclash: https://cdn.cloudflare.steamstatic.com https://shared.cloudflare.steamstatic.com https://steamcdn-a.akamaihd.net; media-src 'self' file: data: blob: mediastream:; connect-src 'self' file: data: blob:; font-src 'self' file: data:; object-src 'none'; base-uri 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0f0d16">
@@ -48,6 +48,7 @@
 <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10" /></symbol>
 <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 9l5 -5l5 5" /><path d="M12 4l0 12" /></symbol>
 <symbol id="i-swatch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3h-4a2 2 0 0 0 -2 2v12a4 4 0 0 0 8 0v-12a2 2 0 0 0 -2 -2" /><path d="M13 7.35l-2 -2a2 2 0 0 0 -2.828 0l-2.828 2.828a2 2 0 0 0 0 2.828l9 9" /><path d="M7.3 13h-2.3a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h12" /><path d="M17 17l0 .01" /></symbol>
+<symbol id="i-sword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4v5l-9 7l-4 4l-3 -3l4 -4l7 -9z" /><path d="M6.5 11.5l6 6" /></symbol>
 <symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" /></symbol>
 <symbol id="i-coin-px" viewBox="0 0 9 9" shape-rendering="crispEdges"><path fill="#9a5b12" d="M2 0h5v1H2zM2 8h5v1H2zM0 2h1v5H0zM8 2h1v5H8zM1 1h1v1H1zM7 1h1v1H7zM1 7h1v1H1zM7 7h1v1H7z"/><path fill="#ffd166" d="M2 1h5v7H2zM1 2h7v5H1z"/><path fill="#e8a33a" d="M7 2h1v5H7zM2 7h5v1H2zM4 3h1v3H4z"/><path fill="#fff5cf" d="M2 2h1v3H2zM3 2h1v1H3z"/></symbol>
 <symbol id="i-logo" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#2a0b22" d="M1 3h14v1h-14zM0 4h1v9h-1zM15 4h1v9h-1zM6 9h1v1h-1zM9 9h1v1h-1zM7 10h2v1h-2zM1 13h1v1h-1zM14 13h1v1h-1zM2 14h12v1h-12z"/><path fill="#3fc0e6" d="M3 10h1v1h-1zM12 10h1v1h-1z"/><path fill="#7af0ff" d="M1 1h1v1h-1zM3 7h1v3h-1zM5 7h6v1h-6zM12 7h1v3h-1z"/><path fill="#9e2b80" d="M2 1h1v1h-1zM13 1h1v1h-1zM3 2h1v1h-1zM12 2h1v1h-1zM2 5h12v1h-12zM2 6h1v6h-1zM13 6h1v6h-1zM3 11h1v1h-1zM6 11h4v1h-4zM12 11h1v1h-1zM2 15h2v1h-2zM12 15h2v1h-2z"/><path fill="#c9fbff" d="M3 6h10v1h-10z"/><path fill="#d9459f" d="M14 5h1v8h-1zM2 13h12v1h-12z"/><path fill="#e0962f" d="M14 1h1v1h-1z"/><path fill="#e2c6f0" d="M11 10h1v1h-1z"/><path fill="#ff6ad5" d="M3 4h12v1h-12zM1 7h1v6h-1zM2 12h5v1h-5zM8 12h6v1h-6z"/><path fill="#ff8fcf" d="M5 10h1v1h-1zM10 10h1v1h-1z"/><path fill="#ffa6ea" d="M1 4h2v1h-2zM1 5h1v2h-1z"/><path fill="#ffd166" d="M14 0h1v1h-1zM7 12h1v1h-1z"/><path fill="#fff3fa" d="M4 7h1v5h-1zM11 7h1v3h-1zM5 8h6v1h-6zM5 9h1v1h-1zM7 9h2v1h-2zM10 9h1v1h-1zM6 10h1v1h-1zM9 10h1v1h-1zM5 11h1v1h-1zM10 11h2v1h-2z"/><path fill="#ffffff" d="M1 0h1v1h-1z"/></symbol>
@@ -76,6 +77,7 @@
     <div id="tabs" class="tabs" role="tablist" aria-label="Panels">
       <button type="button" role="tab" id="tab-stage" aria-controls="panel-stage" aria-selected="true"><svg class="i" aria-hidden="true"><use href="#i-gamepad"/></svg><span>Stage</span></button>
       <button type="button" role="tab" id="tab-kaybo" aria-controls="panel-kaybo" aria-selected="false" tabindex="-1" title="Community art from the Kaybo site"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg><span>Kaybo</span></button>
+      <button type="button" role="tab" id="tab-arcade" aria-controls="panel-arcade" aria-selected="false" tabindex="-1" title="Fandom Clash and other mini-games"><svg class="i" aria-hidden="true"><use href="#i-sword"/></svg><span>Arcade</span></button>
       <button type="button" role="tab" id="tab-shop" aria-controls="panel-shop" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-bag"/></svg><span>Shop</span></button>
       <button type="button" role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-user"/></svg><span>Profile</span></button>
       <button type="button" role="tab" id="tab-devs" aria-controls="panel-devs" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><span>Devs</span></button>
@@ -237,6 +239,7 @@
   <section id="panel-profile" class="panel" role="tabpanel" aria-labelledby="tab-profile" tabindex="-1" hidden></section>
   <section id="panel-devs" class="panel" role="tabpanel" aria-labelledby="tab-devs" tabindex="-1" hidden></section>
   <section id="panel-kaybo" class="panel" role="tabpanel" aria-labelledby="tab-kaybo" tabindex="-1" hidden></section>
+  <section id="panel-arcade" class="panel" role="tabpanel" aria-labelledby="tab-arcade" tabindex="-1" hidden></section>
 
   <footer class="ui-foot">
     <label class="switch"><input type="checkbox" id="fullscreen" role="switch"><span class="track" aria-hidden="true"></span><span>Fullscreen</span></label>

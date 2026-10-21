@@ -7,3 +7,14 @@ src/integrity.json
 test/local/out/
 steam/out/
 build/driver/
+
+# Fandom Clash: HTTP cache + full snapshots, Worker secrets
+.cache/
+server/clash/.dev.vars
+server/clash/.env
+server/clash/.wrangler/
+server/clash/node_modules/
+.env
+
+# Helper scratch output (screenshots, throwaway scripts)
+scratchpad/

@@ -1,0 +1,23 @@
+# Fandom Clash API Worker. Nothing here is secret; the API token is read by wrangler from the
+# CLOUDFLARE_API_TOKEN environment variable and IP_SALT is a Worker secret (wrangler secret put).
+# Fill in the two REPLACE_ME ids after creating the resources (see README.md).
+name = "kayboro-clash"
+main = "src/index.mjs"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "kayboro-clash"
+database_id = "REPLACE_ME_D1_DATABASE_ID"
+
+[[kv_namespaces]]
+binding = "CLASH_KV"
+id = "REPLACE_ME_KV_NAMESPACE_ID"
+
+# Daily cleanup of expired matches and rate-limit rows.
+[triggers]
+crons = ["17 4 * * *"]
+
+[observability]
+enabled = true

@@ -35,7 +35,7 @@ const STARTERS = [
   starter('bezel', 'Thin Bezel', 1012, 648, 26, 26, 960, 540, 8, false),
   starter('pocket-brick', 'Pocket Brick', 1000, 1600, 240, 256, 520, 468, 8, false),
   starter('wide-pocket', 'Wide Pocket', 1500, 960, 450, 206, 600, 400, 10, false),
-  starter('split-pad', 'Split Pad', 1740, 850, 390, 132, 960, 540, 10, false),
+  starter('split-pad', 'Glider Pad', 1740, 850, 390, 132, 960, 540, 10, false),
   starter('sleek-portable', 'Sleek Portable', 1800, 870, 420, 156, 960, 540, 10, false),
   // Plain shells: deliberately basic, to use as they are or as templates for your own (docs/MODDING.md).
   starter('plain-bezel', 'Plain Bezel', 1056, 636, 48, 48, 960, 540, 12, false),

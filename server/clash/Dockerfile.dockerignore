@@ -1,0 +1,9 @@
+# Build context filter for server/clash/Dockerfile (BuildKit reads <Dockerfile>.dockerignore): only what the
+# server needs, never caches, keys, the app or node_modules.
+*
+!server/clash/schema.sql
+!server/clash/src/
+!server/clash/node/server.mjs
+!server/clash/node/shim.mjs
+!tools/clash/matchmaking.js
+!src/main/clash-matchmaking.js

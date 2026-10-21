@@ -157,6 +157,11 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
       fs.writeFileSync(r.filePath, JSON.stringify(file, null, 2) + '\n', 'utf8');
       return { file: r.filePath, bundle: b };
     },
+    // Coin bets (escrow; see Economy.placeBet). Fandom Clash settles its own bets in main (src/main/clash.js).
+    betLimits: () => economy.betLimits(),
+    placeBet: (amount, meta) => economy.placeBet(amount, meta && typeof meta === 'object' ? meta : {}),
+    // The renderer may only cancel (refund) its own bet; wins and losses are settled in main (clash.js).
+    settleBet: (ticket, outcome) => (outcome === 'cancel' ? economy.settleBet(ticket, 'cancel') : { ok: false, reason: 'main-only' }),
     getSettings: () => economy.getSettings(),
     setSettings: (patch) => economy.setSettings(patch && typeof patch === 'object' ? patch : {}),
     getIntegrity,
@@ -215,7 +220,7 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
   }
   const FALLBACK = { getState: null, listCatalog: { frames: [], finishes: [], colorways: [], fills: [], wallpapers: [], levels: [], takedowns: [] },
     listDevelopers: [], listLocalWallpapers: [], sessionStart: null, sessionStop: false, openLink: false, debugSimulateUnlock: null,
-    getSettings: null, setSettings: null, getMods: [], reloadMods: [], openModsFolder: false, listSubmissions: [], exportPayoutSheet: null, debugAdvanceTime: null,
+    getSettings: null, setSettings: null, getMods: [], reloadMods: [], openModsFolder: false, listSubmissions: [], exportPayoutSheet: null, betLimits: { min: 1, max: 0, maxMultiplier: 5, open: 0, maxOpen: 5 }, debugAdvanceTime: null,
     getIntegrity: { ok: true, checked: 0, mismatched: [], missing: [], skipped: true } };
 
   for (const [name, fn] of Object.entries(HANDLERS)) {

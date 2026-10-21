@@ -1,0 +1,728 @@
+{
+ "version": 1,
+ "generatedAt": "2026-10-19T00:00:00.000Z",
+ "sites": [
+  "danbooru",
+  "gelbooru",
+  "safebooru",
+  "konachan",
+  "yandere"
+ ],
+ "characters": [
+  {
+   "id": "aria_sunfield_(starlight_academy)",
+   "name": "Aria Sunfield",
+   "franchise": "starlight-academy",
+   "counts": {
+    "danbooru": 1642,
+    "gelbooru": 1403,
+    "safebooru": 2983,
+    "konachan": 2384,
+    "yandere": 1764
+   },
+   "total": 10176,
+   "image": {
+    "site": "safebooru",
+    "postId": "100000",
+    "url": "https://img.clash-fixture.test/sfw/0.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "mio_kurose_(starlight_academy)",
+   "name": "Mio Kurose",
+   "franchise": "starlight-academy",
+   "counts": {
+    "danbooru": 1497,
+    "gelbooru": 1181,
+    "safebooru": 1392,
+    "konachan": 1319,
+    "yandere": 1589
+   },
+   "total": 6978,
+   "image": {
+    "site": "safebooru",
+    "postId": "100001",
+    "url": "https://img.clash-fixture.test/sfw/1.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "rin_hoshizora_(starlight_academy)",
+   "name": "Rin Hoshizora",
+   "franchise": "starlight-academy",
+   "counts": {
+    "danbooru": 318,
+    "gelbooru": 489,
+    "safebooru": 484,
+    "konachan": 155,
+    "yandere": 476
+   },
+   "total": 1922,
+   "image": {
+    "site": "safebooru",
+    "postId": "100002",
+    "url": "https://img.clash-fixture.test/sfw/2.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "professor_vale_(starlight_academy)",
+   "name": "Professor Vale",
+   "franchise": "starlight-academy",
+   "counts": {
+    "danbooru": 417,
+    "gelbooru": 376,
+    "safebooru": 133,
+    "konachan": 272,
+    "yandere": 418
+   },
+   "total": 1616,
+   "image": null
+  },
+  {
+   "id": "kiki_the_owl_(starlight_academy)",
+   "name": "Kiki the Owl",
+   "franchise": "starlight-academy",
+   "counts": {
+    "danbooru": 211,
+    "gelbooru": 195,
+    "safebooru": 274,
+    "konachan": 273,
+    "yandere": 147
+   },
+   "total": 1100,
+   "image": {
+    "site": "safebooru",
+    "postId": "100004",
+    "url": "https://img.clash-fixture.test/sfw/4.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "captain_brask_(iron_tide)",
+   "name": "Captain Brask",
+   "franchise": "iron-tide",
+   "counts": {
+    "danbooru": 15145,
+    "gelbooru": 10471,
+    "safebooru": 14245,
+    "konachan": 17648,
+    "yandere": 14173
+   },
+   "total": 71682,
+   "image": {
+    "site": "safebooru",
+    "postId": "100005",
+    "url": "https://img.clash-fixture.test/sfw/5.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "nyx_calder_(iron_tide)",
+   "name": "Nyx Calder",
+   "franchise": "iron-tide",
+   "counts": {
+    "danbooru": 12355,
+    "gelbooru": 14985,
+    "safebooru": 17259,
+    "konachan": 4723,
+    "yandere": 8011
+   },
+   "total": 57333,
+   "image": {
+    "site": "safebooru",
+    "postId": "100006",
+    "url": "https://img.clash-fixture.test/sfw/6.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "tobias_reed_(iron_tide)",
+   "name": "Tobias Reed",
+   "franchise": "iron-tide",
+   "counts": {
+    "danbooru": 4822,
+    "gelbooru": 4267,
+    "safebooru": 2815,
+    "konachan": 7365,
+    "yandere": 1937
+   },
+   "total": 21206,
+   "image": {
+    "site": "safebooru",
+    "postId": "100007",
+    "url": "https://img.clash-fixture.test/sfw/7.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "unit_seven_(iron_tide)",
+   "name": "Unit Seven",
+   "franchise": "iron-tide",
+   "counts": {
+    "danbooru": 1727,
+    "gelbooru": 2658,
+    "safebooru": 3414,
+    "konachan": 2224,
+    "yandere": 1208
+   },
+   "total": 11231,
+   "image": null
+  },
+  {
+   "id": "hana_mochizuki_(moonlit_bakery)",
+   "name": "Hana Mochizuki",
+   "franchise": "moonlit-bakery",
+   "counts": {
+    "danbooru": 11657,
+    "gelbooru": 12785,
+    "safebooru": 11052,
+    "konachan": 14829,
+    "yandere": 16392
+   },
+   "total": 66715,
+   "image": {
+    "site": "safebooru",
+    "postId": "100009",
+    "url": "https://img.clash-fixture.test/sfw/9.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "pip_(moonlit_bakery)",
+   "name": "Pip",
+   "franchise": "moonlit-bakery",
+   "counts": {
+    "danbooru": 11379,
+    "gelbooru": 6965,
+    "safebooru": 10951,
+    "konachan": 8709,
+    "yandere": 8701
+   },
+   "total": 46705,
+   "image": {
+    "site": "safebooru",
+    "postId": "100010",
+    "url": "https://img.clash-fixture.test/sfw/10.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "old_man_crumb_(moonlit_bakery)",
+   "name": "Old Man Crumb",
+   "franchise": "moonlit-bakery",
+   "counts": {
+    "danbooru": 5473,
+    "gelbooru": 6807,
+    "safebooru": 8624,
+    "konachan": 4688,
+    "yandere": 6947
+   },
+   "total": 32539,
+   "image": {
+    "site": "safebooru",
+    "postId": "100011",
+    "url": "https://img.clash-fixture.test/sfw/11.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "ryu_kaneda_(dragon_circuit)",
+   "name": "Ryu Kaneda",
+   "franchise": "dragon-circuit",
+   "counts": {
+    "danbooru": 10018,
+    "gelbooru": 9684,
+    "safebooru": 10699,
+    "konachan": 17426,
+    "yandere": 18808
+   },
+   "total": 66635,
+   "image": {
+    "site": "safebooru",
+    "postId": "100012",
+    "url": "https://img.clash-fixture.test/sfw/12.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "sable_(dragon_circuit)",
+   "name": "Sable",
+   "franchise": "dragon-circuit",
+   "counts": {
+    "danbooru": 5877,
+    "gelbooru": 1801,
+    "safebooru": 3610,
+    "konachan": 2218,
+    "yandere": 1802
+   },
+   "total": 15308,
+   "image": null
+  },
+  {
+   "id": "volt_(dragon_circuit)",
+   "name": "Volt",
+   "franchise": "dragon-circuit",
+   "counts": {
+    "danbooru": 3189,
+    "gelbooru": 5988,
+    "safebooru": 2675,
+    "konachan": 4798,
+    "yandere": 5720
+   },
+   "total": 22370,
+   "image": {
+    "site": "safebooru",
+    "postId": "100014",
+    "url": "https://img.clash-fixture.test/sfw/14.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "empress_lyra_(dragon_circuit)",
+   "name": "Empress Lyra",
+   "franchise": "dragon-circuit",
+   "counts": {
+    "danbooru": 2022,
+    "gelbooru": 1957,
+    "safebooru": 1968,
+    "konachan": 1958,
+    "yandere": 1997
+   },
+   "total": 9902,
+   "image": {
+    "site": "safebooru",
+    "postId": "100015",
+    "url": "https://img.clash-fixture.test/sfw/15.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "gizmo_(dragon_circuit)",
+   "name": "Gizmo",
+   "franchise": "dragon-circuit",
+   "counts": {
+    "danbooru": 920,
+    "gelbooru": 456,
+    "safebooru": 872,
+    "konachan": 571,
+    "yandere": 440
+   },
+   "total": 3259,
+   "image": {
+    "site": "safebooru",
+    "postId": "100016",
+    "url": "https://img.clash-fixture.test/sfw/16.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "fluffmon_(pocket_spirits)",
+   "name": "Fluffmon",
+   "franchise": "pocket-spirits",
+   "counts": {
+    "danbooru": 26046,
+    "gelbooru": 19429,
+    "safebooru": 24637,
+    "konachan": 12825,
+    "yandere": 29749
+   },
+   "total": 112686,
+   "image": {
+    "site": "safebooru",
+    "postId": "100017",
+    "url": "https://img.clash-fixture.test/sfw/17.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "embertail_(pocket_spirits)",
+   "name": "Embertail",
+   "franchise": "pocket-spirits",
+   "counts": {
+    "danbooru": 9059,
+    "gelbooru": 16614,
+    "safebooru": 5348,
+    "konachan": 10733,
+    "yandere": 3673
+   },
+   "total": 45427,
+   "image": null
+  },
+  {
+   "id": "aquabell_(pocket_spirits)",
+   "name": "Aquabell",
+   "franchise": "pocket-spirits",
+   "counts": {
+    "danbooru": 12831,
+    "gelbooru": 16956,
+    "safebooru": 3920,
+    "konachan": 16637,
+    "yandere": 6338
+   },
+   "total": 56682,
+   "image": {
+    "site": "safebooru",
+    "postId": "100019",
+    "url": "https://img.clash-fixture.test/sfw/19.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "leafkit_(pocket_spirits)",
+   "name": "Leafkit",
+   "franchise": "pocket-spirits",
+   "counts": {
+    "danbooru": 6726,
+    "gelbooru": 7667,
+    "safebooru": 4259,
+    "konachan": 3900,
+    "yandere": 3786
+   },
+   "total": 26338,
+   "image": {
+    "site": "safebooru",
+    "postId": "100020",
+    "url": "https://img.clash-fixture.test/sfw/20.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "shadepaw_(pocket_spirits)",
+   "name": "Shadepaw",
+   "franchise": "pocket-spirits",
+   "counts": {
+    "danbooru": 1018,
+    "gelbooru": 3433,
+    "safebooru": 3202,
+    "konachan": 3247,
+    "yandere": 2520
+   },
+   "total": 13420,
+   "image": {
+    "site": "safebooru",
+    "postId": "100021",
+    "url": "https://img.clash-fixture.test/sfw/21.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "trainer_yui_(pocket_spirits)",
+   "name": "Trainer Yui",
+   "franchise": "pocket-spirits",
+   "counts": {
+    "danbooru": 363,
+    "gelbooru": 1177,
+    "safebooru": 383,
+    "konachan": 944,
+    "yandere": 1150
+   },
+   "total": 4017,
+   "image": {
+    "site": "safebooru",
+    "postId": "100022",
+    "url": "https://img.clash-fixture.test/sfw/22.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "kaito_shiba_(neon_ronin)",
+   "name": "Kaito Shiba",
+   "franchise": "neon-ronin",
+   "counts": {
+    "danbooru": 6229,
+    "gelbooru": 6965,
+    "safebooru": 6750,
+    "konachan": 5688,
+    "yandere": 3753
+   },
+   "total": 29385,
+   "image": null
+  },
+  {
+   "id": "lady_akane_(neon_ronin)",
+   "name": "Lady Akane",
+   "franchise": "neon-ronin",
+   "counts": {
+    "danbooru": 1723,
+    "gelbooru": 1996,
+    "safebooru": 1143,
+    "konachan": 855,
+    "yandere": 1154
+   },
+   "total": 6871,
+   "image": {
+    "site": "safebooru",
+    "postId": "100024",
+    "url": "https://img.clash-fixture.test/sfw/24.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "ghostwire_(neon_ronin)",
+   "name": "Ghostwire",
+   "franchise": "neon-ronin",
+   "counts": {
+    "danbooru": 1375,
+    "gelbooru": 1022,
+    "safebooru": 1482,
+    "konachan": 1674,
+    "yandere": 995
+   },
+   "total": 6548,
+   "image": {
+    "site": "safebooru",
+    "postId": "100025",
+    "url": "https://img.clash-fixture.test/sfw/25.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "princess_opal_(crystal_hearts)",
+   "name": "Princess Opal",
+   "franchise": "crystal-hearts",
+   "counts": {
+    "danbooru": 16890,
+    "gelbooru": 21147,
+    "safebooru": 46512,
+    "konachan": 46839,
+    "yandere": 33220
+   },
+   "total": 164608,
+   "image": {
+    "site": "safebooru",
+    "postId": "100026",
+    "url": "https://img.clash-fixture.test/sfw/26.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "garnet_(crystal_hearts)",
+   "name": "Garnet",
+   "franchise": "crystal-hearts",
+   "counts": {
+    "danbooru": 34822,
+    "gelbooru": 13398,
+    "safebooru": 26682,
+    "konachan": 11486,
+    "yandere": 22277
+   },
+   "total": 108665,
+   "image": {
+    "site": "safebooru",
+    "postId": "100027",
+    "url": "https://img.clash-fixture.test/sfw/27.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "sir_quartz_(crystal_hearts)",
+   "name": "Sir Quartz",
+   "franchise": "crystal-hearts",
+   "counts": {
+    "danbooru": 13163,
+    "gelbooru": 15410,
+    "safebooru": 9434,
+    "konachan": 5634,
+    "yandere": 8978
+   },
+   "total": 52619,
+   "image": null
+  },
+  {
+   "id": "amethyst_(crystal_hearts)",
+   "name": "Amethyst",
+   "franchise": "crystal-hearts",
+   "counts": {
+    "danbooru": 4282,
+    "gelbooru": 3621,
+    "safebooru": 3807,
+    "konachan": 3550,
+    "yandere": 4725
+   },
+   "total": 19985,
+   "image": {
+    "site": "safebooru",
+    "postId": "100029",
+    "url": "https://img.clash-fixture.test/sfw/29.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "zephyr_(sky_pirates)",
+   "name": "Zephyr",
+   "franchise": "sky-pirates",
+   "counts": {
+    "danbooru": 7233,
+    "gelbooru": 14382,
+    "safebooru": 20745,
+    "konachan": 11864,
+    "yandere": 25495
+   },
+   "total": 79719,
+   "image": {
+    "site": "safebooru",
+    "postId": "100030",
+    "url": "https://img.clash-fixture.test/sfw/30.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "marlowe_(sky_pirates)",
+   "name": "Marlowe",
+   "franchise": "sky-pirates",
+   "counts": {
+    "danbooru": 4617,
+    "gelbooru": 8645,
+    "safebooru": 6455,
+    "konachan": 3092,
+    "yandere": 9722
+   },
+   "total": 32531,
+   "image": {
+    "site": "safebooru",
+    "postId": "100031",
+    "url": "https://img.clash-fixture.test/sfw/31.png",
+    "w": 600,
+    "h": 900
+   }
+  },
+  {
+   "id": "cookie_(sky_pirates)",
+   "name": "Cookie",
+   "franchise": "sky-pirates",
+   "counts": {
+    "danbooru": 9731,
+    "gelbooru": 9685,
+    "safebooru": 7772,
+    "konachan": 10093,
+    "yandere": 2298
+   },
+   "total": 39579,
+   "image": {
+    "site": "safebooru",
+    "postId": "100032",
+    "url": "https://img.clash-fixture.test/sfw/32.png",
+    "w": 600,
+    "h": 900
+   }
+  }
+ ],
+ "franchises": [
+  {
+   "id": "starlight-academy",
+   "name": "Starlight Academy",
+   "total": 29419,
+   "characters": [
+    "aria_sunfield_(starlight_academy)",
+    "mio_kurose_(starlight_academy)",
+    "rin_hoshizora_(starlight_academy)",
+    "professor_vale_(starlight_academy)",
+    "kiki_the_owl_(starlight_academy)"
+   ]
+  },
+  {
+   "id": "iron-tide",
+   "name": "Iron Tide",
+   "total": 217960,
+   "characters": [
+    "captain_brask_(iron_tide)",
+    "nyx_calder_(iron_tide)",
+    "tobias_reed_(iron_tide)",
+    "unit_seven_(iron_tide)"
+   ]
+  },
+  {
+   "id": "moonlit-bakery",
+   "name": "Moonlit Bakery",
+   "total": 197045,
+   "characters": [
+    "hana_mochizuki_(moonlit_bakery)",
+    "pip_(moonlit_bakery)",
+    "old_man_crumb_(moonlit_bakery)"
+   ]
+  },
+  {
+   "id": "dragon-circuit",
+   "name": "Dragon Circuit",
+   "total": 158590,
+   "characters": [
+    "ryu_kaneda_(dragon_circuit)",
+    "sable_(dragon_circuit)",
+    "volt_(dragon_circuit)",
+    "empress_lyra_(dragon_circuit)",
+    "gizmo_(dragon_circuit)"
+   ]
+  },
+  {
+   "id": "pocket-spirits",
+   "name": "Pocket Spirits",
+   "total": 349070,
+   "characters": [
+    "fluffmon_(pocket_spirits)",
+    "embertail_(pocket_spirits)",
+    "aquabell_(pocket_spirits)",
+    "leafkit_(pocket_spirits)",
+    "shadepaw_(pocket_spirits)",
+    "trainer_yui_(pocket_spirits)"
+   ]
+  },
+  {
+   "id": "neon-ronin",
+   "name": "Neon Ronin",
+   "total": 57785,
+   "characters": [
+    "kaito_shiba_(neon_ronin)",
+    "lady_akane_(neon_ronin)",
+    "ghostwire_(neon_ronin)"
+   ]
+  },
+  {
+   "id": "crystal-hearts",
+   "name": "Crystal Hearts",
+   "total": 466934,
+   "characters": [
+    "princess_opal_(crystal_hearts)",
+    "garnet_(crystal_hearts)",
+    "sir_quartz_(crystal_hearts)",
+    "amethyst_(crystal_hearts)"
+   ]
+  },
+  {
+   "id": "sky-pirates",
+   "name": "Sky Pirates of Aerth",
+   "total": 204969,
+   "characters": [
+    "zephyr_(sky_pirates)",
+    "marlowe_(sky_pirates)",
+    "cookie_(sky_pirates)"
+   ]
+  }
+ ]
+}

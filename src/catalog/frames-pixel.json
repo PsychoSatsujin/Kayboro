@@ -17,6 +17,7 @@
       "translucent": true,
       "author": "Kayboro",
       "tags": ["handheld","portrait","retro","clear-plastic","pixel"],
+      "desc": "A frosty sea-glass pocket console with a dimpled dial and a thumbwheel for scrolling through snacks.",
       "fx": {"particles":"pixel-stars","glass":"flat"}
     },
     {
@@ -227,7 +228,7 @@
       "name": "Wrist Arcade",
       "kind": "frame",
       "style": "pixel",
-      "theme": "game-watch",
+      "theme": "wristwatch",
       "rarity": "common",
       "price": null,
       "unlockLevel": null,
@@ -261,7 +262,7 @@
       "translucent": true,
       "author": "Kayboro",
       "tags": ["handheld","clear-plastic","widescreen","x-ray","animated","pixel"],
-      "desc": "Peek inside a wide-screen handheld made of see-through purple plastic, chips, battery and all.",
+      "desc": "Peek inside a wide-screen handheld made of see-through tangerine plastic, chips, battery and all.",
       "license": "CC-BY-4.0",
       "collection": "pocket-pals",
       "fx": {"particles":"pixel-stars","glass":"round"}

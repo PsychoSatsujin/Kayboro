@@ -16,7 +16,7 @@ const api = {
     'setActiveWallpaper', 'setWallpaperPreset', 'buyWallpaperPreset', 'listLocalWallpapers',
     'sessionStart', 'sessionStop', 'openLink', 'getSettings', 'setSettings', 'getIntegrity',
     'getMods', 'reloadMods', 'openModsFolder', 'submitDeveloper', 'listSubmissions', 'exportPayoutSheet',
-    'getWeeklyBundle', 'buyBundle', 'exportBundle',
+    'getWeeklyBundle', 'buyBundle', 'exportBundle', 'betLimits', 'placeBet', 'settleBet',
   ].map((n) => [n, call(n)])),
   onState: on('state'),
   onUnlock: on('unlock'),

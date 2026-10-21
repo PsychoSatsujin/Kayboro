@@ -7,7 +7,7 @@ import { findHole, parseAspect } from './layout.js';
 const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
 const ASPECTS = ['source', 'free', '16:9', '4:3', '21:9', '32:9', '1:1', '3:2'];
-const TABS = ['stage', 'kaybo', 'shop', 'profile', 'devs'];
+const TABS = ['stage', 'kaybo', 'arcade', 'shop', 'profile', 'devs'];
 const RARITY_ORDER = { common: 0, rare: 1, epic: 2, legendary: 3 };
 const fmt = new Intl.NumberFormat();
 
@@ -91,11 +91,15 @@ export function initUI(app) {
     if (!$('sources').querySelector('.tile')) $('sources').replaceChildren(...[0, 1].map(() => h('span', { className: 'tile skeleton', 'aria-hidden': 'true' }, h('span', { className: 'thumb' }), h('span', { className: 'name' }))));
     const list = await ror.listSources().catch(() => []);
     btn.classList.remove('busy'); btn.removeAttribute('aria-busy');
-    $('sources').replaceChildren(...list.map(src => h('button', { type: 'button', className: 'tile src', title: src.name, 'data-kind': src.kind,
+    const arcade = h('button', { type: 'button', className: 'tile src arcade-src', title: 'Play Fandom Clash inside this console', 'aria-label': 'Fandom Clash (play inside the console)',
+      onclick: e => app.assignSource({ id: 'kayboro:arcade', name: 'Fandom Clash', hwnd: null, exePath: null }, e.shiftKey) },
+      h('span', { className: 'thumb arcade-thumb', 'aria-hidden': 'true' }, h('b', { textContent: 'VS' })),
+      h('span', { className: 'name' }, icon('gamepad'), h('span', { textContent: 'Fandom Clash' })));
+    $('sources').replaceChildren(arcade, ...list.map(src => h('button', { type: 'button', className: 'tile src', title: src.name, 'data-kind': src.kind,
       'aria-label': `${src.name} (${src.kind === 'screen' ? 'monitor' : src.isSteamGame ? 'Steam game' : 'window'})`, onclick: e => app.assignSource(src, e.shiftKey) },
       h('span', { className: 'thumb' }, h('img', { src: src.thumbnail || '', alt: '', width: 160, height: 90, decoding: 'async' })),
       h('span', { className: 'name' }, icon(src.kind === 'screen' ? 'monitor' : src.isSteamGame ? 'steam' : 'window'), h('span', { textContent: src.name })))));
-    if (!list.length) $('sources').replaceChildren(h('p', { className: 'empty', textContent: ror.stub ? 'Desktop capture needs the Kayboro desktop app.' : 'No windows or monitors found. Open your game, then refresh.' }));
+    if (!list.length) $('sources').append(h('p', { className: 'empty', textContent: ror.stub ? 'Desktop capture needs the Kayboro desktop app.' : 'No windows or monitors found. Open your game, then refresh.' }));
   }
   on('srcRefresh', refreshSources);
   on('srcSteam', async () => {
@@ -461,7 +465,7 @@ function miniHud(el) {
 }
 
 function fallbackPanel(el, name, app) {
-  const title = { shop: 'Shop', profile: 'Profile', devs: 'Developers' }[name];
+  const title = { shop: 'Shop', profile: 'Profile', devs: 'Developers', kaybo: 'Kaybo', arcade: 'Arcade' }[name];
   el.replaceChildren(h('div', { className: 'panel-empty' }, h('h2', { textContent: title }),
     h('p', { textContent: `The ${title} panel could not be loaded. The stage still works.` }),
     h('button', { type: 'button', className: 'btn sm', 'data-goto': 'stage' }, 'Back to Stage')));

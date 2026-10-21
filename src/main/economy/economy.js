@@ -3,6 +3,7 @@
 // Purchases, level-ups and achievements are also appended to <dir>/history.jsonl for reference.
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { EventEmitter } = require('events');
 const progression = require('./progression');
 const catalogLib = require('./catalog');
@@ -12,6 +13,8 @@ const RULES = {
   time: { coinsPerMinute: 1, xpPerMinute: 10, maxTickSeconds: 3600 }, // while Kayboro is visible or in play mode
   achievement: { coins: 50, xp: 120 }, // only with settings.rewards.achievements on
   preset: { price: 200 }, // each extra wallpaper preset slot; no maximum
+  // Coin bets (Fandom Clash): the stake is held in escrow until settled; open tickets are refunded on the next load.
+  bet: { min: 1, max: 500, maxShare: 0.25, maxMultiplier: 5, maxOpen: 5 },
 };
 const SLOTS = { finish: 'finish', colorway: 'colorway', fill: 'fill' };
 const DEFAULT_EQUIPPED = { finish: 'none', colorway: 'default', fill: 'starfield' };
@@ -68,8 +71,19 @@ class Economy extends EventEmitter {
       equipped: { ...DEFAULT_EQUIPPED, ...(p.equipped && typeof p.equipped === 'object' ? p.equipped : {}) },
       achieved: new Set(arr(p.achieved)), achievements: int(p.achievements), perApp,
       settings: { rewards: { achievements: p.settings?.rewards?.achievements === true } },
+      bets: {},
     };
     this._settleLevels(false);
+    // Bets still open when the last run ended (a crash, a closed window mid-round): the stake comes back.
+    let refunded = 0;
+    for (const [ticket, b] of Object.entries(p.bets && typeof p.bets === 'object' ? p.bets : {})) {
+      const amount = int(b && b.amount);
+      if (!amount) continue;
+      this.s.coins += amount;
+      refunded += amount;
+      this._log('betRefund', { ticket: String(ticket).slice(0, 40), coins: amount, reason: 'restart' });
+    }
+    if (refunded) this._save();
     return this;
   }
 
@@ -305,6 +319,52 @@ class Economy extends EventEmitter {
       this.emit('state', this.getState());
     }
     return this.getSettings();
+  }
+
+  // ---- Bets -----------------------------------------------------------------
+
+  // The most a player may stake right now: 25% of the balance, at most 500 coins.
+  betLimits() {
+    const { min, max, maxShare, maxMultiplier, maxOpen } = RULES.bet;
+    return { min, max: Math.max(0, Math.min(max, Math.floor(this.s.coins * maxShare))), maxMultiplier, open: Object.keys(this.s.bets).length, maxOpen };
+  }
+
+  // Escrow: the stake leaves the balance now and the ticket is saved, so a crash before settling refunds it.
+  placeBet(amount, meta = {}) {
+    const a = amount;
+    if (typeof a !== 'number' || !Number.isSafeInteger(a) || a < RULES.bet.min) return this._fail('amount');
+    const lim = this.betLimits();
+    if (lim.open >= lim.maxOpen) return this._fail('busy');
+    if (a > this.s.coins) return this._fail('insufficient');
+    if (a > lim.max) return this._fail('cap');
+    const ticket = 'bet-' + crypto.randomBytes(8).toString('hex');
+    const game = String((meta && meta.game) || 'clash').replace(/[^\w.-]/g, '').slice(0, 40) || 'clash';
+    this.s.coins -= a;
+    this.s.bets[ticket] = { amount: a, at: this.now(), game };
+    this._log('bet', { ticket, game, coins: -a });
+    this._changed();
+    return { ok: true, ticket, amount: a, state: this.getState() };
+  }
+
+  // outcome 'win' pays stake * multiplier (1..5, rounded down), 'loss' pays nothing, 'cancel' or 'push' refunds.
+  settleBet(ticket, outcome, multiplier = 1) {
+    const b = typeof ticket === 'string' && own(this.s.bets, ticket) ? this.s.bets[ticket] : null;
+    if (!b) return this._fail('unknown');
+    let payout;
+    if (outcome === 'win') {
+      const m = Number(multiplier);
+      if (!Number.isFinite(m)) return this._fail('multiplier');
+      // Integer arithmetic (multiplier in thousandths): stake x 1.9 etc. must never land on 56.999... and lose a coin.
+      const milli = Math.round(Math.min(RULES.bet.maxMultiplier, Math.max(1, m)) * 1000);
+      payout = Math.floor((b.amount * milli) / 1000);
+    } else if (outcome === 'loss') payout = 0;
+    else if (outcome === 'cancel' || outcome === 'push') payout = b.amount;
+    else return this._fail('outcome');
+    delete this.s.bets[ticket];
+    this.s.coins += payout;
+    this._log('betSettle', { ticket, game: b.game, outcome, stake: b.amount, multiplier: outcome === 'win' ? Number(multiplier) : null, coins: payout });
+    this._changed();
+    return { ok: true, outcome, stake: b.amount, payout, state: this.getState() };
   }
 
   setSession(s) {

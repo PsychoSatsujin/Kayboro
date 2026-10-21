@@ -520,8 +520,8 @@ function onKey(e) {
 const [fx, panels, st, cat] = await Promise.all([
   Promise.all([optional('./fx/finishes.js'), optional('./fx/colorways.js'), optional('./fx/screensavers.js'), optional('./fx/particles.js'), optional('./fx/glass.js')])
     .then(([f, c, s, p, g]) => ({ ...f, ...c, ...s, createParticles: p?.createParticles, glassSvg: g?.glassSvg })),
-  Promise.all(['shop', 'profile', 'devs', 'toasts', 'hud', 'kaybo'].map(n => optional(`./panels/${n}.js`, 'panels/panels.css')))
-    .then(([shop, profile, devs, toasts, hud, kaybo]) => ({ shop: shop?.mountShop, profile: profile?.mountProfile, devs: devs?.mountDevs, kaybo: kaybo?.mountKaybo,
+  Promise.all(['shop', 'profile', 'devs', 'toasts', 'hud', 'kaybo', 'arcade'].map(n => optional(`./panels/${n}.js`, 'panels/panels.css')))
+    .then(([shop, profile, devs, toasts, hud, kaybo, arcade]) => ({ shop: shop?.mountShop, profile: profile?.mountProfile, devs: devs?.mountDevs, kaybo: kaybo?.mountKaybo, arcade: arcade?.mountArcade,
       toaster: toasts?.createToaster, hud: hud?.mountHud })),
   shell.getState().catch(() => null),
   shell.listCatalog().catch(() => null),

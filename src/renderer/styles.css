@@ -34,6 +34,13 @@ button, input, select { font: inherit; color: inherit; }
 #screens { position: absolute; inset: 0; }
 .screen { position: absolute; cursor: move; touch-action: none; }
 .screen > .media { position: absolute; inset: 0; z-index: 1; overflow: hidden; background: #000; }
+/* Fandom Clash playing inside the opening: the game takes the mouse, above the shell art's hole. */
+.screen.arcade > .media { z-index: 3; }
+.screen.arcade .media > video, .screen.arcade .media > canvas { display: none !important; }
+.arcade-host { position: absolute; inset: 0; overflow: hidden; cursor: auto; }
+.arcade-host > .cl-root.cl-embed { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; inset: auto; transform-origin: 0 0; z-index: auto; }
+.tile.arcade-src .arcade-thumb { display: grid; place-items: center; background: linear-gradient(135deg, #ff5fa8 0 50%, #4fd6ff 50% 100%); }
+.tile.arcade-src .arcade-thumb b { font: 900 22px/1 system-ui; color: #fff; text-shadow: 0 2px 0 #1b1033, 0 0 12px #ffd166; letter-spacing: .04em; }
 .media > video, .media > canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 .screen.live .media > canvas, .screen:not(.live) .media > video { display: none; }
 .shell-back, .shell-front { position: absolute; }

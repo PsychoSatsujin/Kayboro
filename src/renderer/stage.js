@@ -5,6 +5,7 @@ import { fitRect, frameOuterRect, holeRect, resizeRect, cursorToStage, zoomRect,
 // Particles and screen glass come from fx/particles.js and fx/glass.js through app.fx (optional modules).
 
 const HANDLES = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
+export const ARCADE = 'kayboro:arcade'; // the screen source that runs Fandom Clash in the opening
 const OBJECT_FIT = { contain: 'contain', cover: 'cover', stretch: 'fill' };
 const BG_SIZE = { cover: 'cover', contain: 'contain', stretch: '100% 100%', tile: 'auto' };
 const BARS = ['#eee9ff', '#ffd166', '#7af0ff', '#6ee7a8', '#ff6ad5', '#ff6b6b', '#7a6cff'];
@@ -81,6 +82,7 @@ export class Stage {
   destroy(v) { v.particles?.dispose(); this.stop(v); for (const l of ['finish', 'fill', 'depth']) this.setLayer(v, l, ''); v.el.remove(); this.views.delete(v.id); }
 
   stop(v) {
+    if (v.game) { try { v.game.close(); } catch {} v.game = null; v.gameHost?.remove(); v.gameHost = null; v.el.classList.remove('arcade'); }
     v.stream?.getTracks().forEach(t => t.stop());
     v.stream = null; v.video.srcObject = null; v.aspect = null;
     v.el.classList.remove('live');
@@ -90,6 +92,7 @@ export class Stage {
     this.stop(v);
     v.sourceId = sourceId;
     if (!sourceId) return;
+    if (sourceId === ARCADE) return this.arcade(v);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: false,
         video: { mandatory: { chromeMediaSource: 'desktop', chromeMediaSourceId: sourceId, maxFrameRate: 60 } } });
@@ -100,6 +103,24 @@ export class Stage {
       stream.getVideoTracks()[0]?.addEventListener('ended', () => { if (v.stream === stream) { this.stop(v); this.app.toast('Capture ended.'); } });
     } catch (err) {
       if (v.sourceId === sourceId) this.app.toast({ title: `Capture failed: ${err?.message || err}`, body: 'Keep the window open and not minimized, then pick it again.' });
+    }
+  }
+
+  // Fandom Clash inside the screen opening: a live, playable 16:9 game instead of a capture.
+  async arcade(v) {
+    const host = make('div', 'arcade-host');
+    v.gameHost = host;
+    v.media.append(host);
+    v.el.classList.add('live', 'arcade');
+    if (!document.querySelector('link[href="clash/clash.css"]')) document.head.append(Object.assign(make('link'), { rel: 'stylesheet', href: 'clash/clash.css' }));
+    try {
+      const { embedClash } = await import('./clash/game.js');
+      if (v.gameHost !== host) return; // the source changed while loading
+      v.game = embedClash(this.app, host);
+      if (v.aspect !== 16 / 9) { v.aspect = 16 / 9; this.app.sourceAspectChanged(v.id); }
+    } catch (err) {
+      host.remove();
+      this.app.toast({ title: 'Fandom Clash could not start here', body: String(err?.message || err), kind: 'error' });
     }
   }
 
@@ -213,6 +234,7 @@ export class Stage {
   // (always at the game's own aspect), and Alt+drag slides the game inside the opening.
   down(e, id) {
     if (this.app.playing || this.app.popout || e.button !== 0) return; // pop-outs drag the whole window instead
+    if (e.target.closest?.('.arcade-host')) return; // playing Fandom Clash inside the console
     e.preventDefault();
     document.activeElement?.blur?.(); // let arrow keys reach the stage
     this.app.select(id);

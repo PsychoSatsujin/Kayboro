@@ -80,6 +80,7 @@ export async function bootPopout(app, id, Stage) {
 
   addEventListener('pointerdown', (e) => {
     if (app.playing || e.button !== 0 || !onShell(e.clientX, e.clientY)) return;
+    if (e.target.closest?.('.arcade-host')) return; // Fandom Clash is played right here: clicks belong to the game
     e.preventDefault();
     if (inHole(e.clientX, e.clientY)) return void play();
     const edge = edgeAt(e.clientX, e.clientY);

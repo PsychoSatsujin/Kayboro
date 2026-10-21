@@ -57,7 +57,32 @@ const SOUNDS = {
   },
   tap: t => tone(880, t, 0.04, 'triangle', 0.3),
   error: t => { tone(220, t, 0.1, 'square', 0.25); tone(165, t + 0.09, 0.18, 'square', 0.25); },
+  // Fandom Clash (src/renderer/clash): the versus slam, a counter tick, right/miss (the miss is soft on
+  // purpose: no buzzer), a combo arpeggio and a card whoosh.
+  slam: t => { tone(150, t, 0.32, 'sine', 0.9, 45); tone(75, t, 0.4, 'triangle', 0.6, 40); noise(t, 0.18, 0.5, 900); },
+  tick: t => tone(1760, t, 0.018, 'square', 0.1),
+  right: t => { tone(784, t, 0.08, 'triangle', 0.6); tone(1175, t + 0.07, 0.22, 'triangle', 0.6); tone(2349, t + 0.12, 0.25, 'sine', 0.15); },
+  miss: t => { tone(392, t, 0.16, 'sine', 0.35, 330); tone(294, t + 0.13, 0.26, 'sine', 0.3, 262); },
+  combo: t => [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * 0.045, 0.09, 'square', 0.22)),
+  whoosh: t => noise(t, 0.22, 0.35, 2400, 500),
 };
+
+// A burst of filtered white noise (slams, whooshes): band-pass at f, optionally sweeping to f2.
+function noise(t, dur, vol, f, f2 = 0) {
+  const len = Math.max(1, Math.floor(ac.sampleRate * dur)), buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain();
+  src.buffer = buf;
+  bp.type = 'bandpass';
+  bp.frequency.setValueAtTime(f, t);
+  if (f2) bp.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp).connect(g).connect(out);
+  src.start(t);
+  src.stop(t + dur + 0.02);
+}
 export const SOUND_NAMES = Object.keys(SOUNDS);
 
 export function play(name) {

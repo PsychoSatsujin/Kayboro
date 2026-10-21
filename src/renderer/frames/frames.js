@@ -18,7 +18,7 @@ export const STARTER_FX = {
   bezel: { particles: 'sparkles', glass: 'flat', density: 0.5 },
   'pocket-brick': { particles: 'pixel-stars', glass: 'flat' },
   'wide-pocket': { particles: 'sparkles', glass: 'flat', palette: ['#ffd27a', '#fff4dc', '#ffb6dc'] },
-  'split-pad': { particles: 'confetti', glass: 'flat', palette: ['#4fd6ff', '#ff5a6a', '#ffffff'], density: 0.6 },
+  'split-pad': { particles: 'confetti', glass: 'flat', palette: ['#b98cff', '#ffc89a', '#ffffff'], density: 0.6 },
   'sleek-portable': { particles: 'sparkles', glass: 'flat', palette: ['#c9f0ff', '#e2d4ff', '#ffffff'], density: 0.6 },
   // Plain shells stay plain: screen glass only, no particles.
   'plain-bezel': { glass: 'flat' },
@@ -45,7 +45,7 @@ export const STARTERS = [
   def('bezel', 'Thin Bezel', 1012, 648, 26, 26, 960, 540, 8, false),
   def('pocket-brick', 'Pocket Brick', 1000, 1600, 240, 256, 520, 468, 8, false),
   def('wide-pocket', 'Wide Pocket', 1500, 960, 450, 206, 600, 400, 10, false),
-  def('split-pad', 'Split Pad', 1740, 850, 390, 132, 960, 540, 10, false),
+  def('split-pad', 'Glider Pad', 1740, 850, 390, 132, 960, 540, 10, false),
   def('sleek-portable', 'Sleek Portable', 1800, 870, 420, 156, 960, 540, 10, false),
   // Plain shells: deliberately basic, to use as they are or as templates for your own (docs/MODDING.md).
   def('plain-bezel', 'Plain Bezel', 1056, 636, 48, 48, 960, 540, 12, false),

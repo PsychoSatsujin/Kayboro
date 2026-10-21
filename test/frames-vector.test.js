@@ -35,7 +35,8 @@ function subpathBox(d) {
 
 const { ORDER } = require('../tools/vectorart/build.js');
 const COLLECTIONS = ['pocket-pals', 'coin-op', 'blue-cel', 'wild-pixels', 'world-tour', 'dreamscapes', 'fan-favorites',
-  'sci-fi-signals', 'old-masters', 'legends-dread', 'wild-tuneful', 'curio-cabinet'];
+  'sci-fi-signals', 'old-masters', 'legends-dread', 'wild-tuneful', 'curio-cabinet',
+  'atelier-noir', 'midnight-atelier'];
 
 test('catalogue lists every built frame in build order, the eight originals first', () => {
   assert.deepEqual(frames.map((f) => f.id), ORDER);

@@ -1,0 +1,33 @@
+name: test
+
+# Unit tests (npm test: node --test test/*.test.js), including the Fandom Clash server, matchmaking, numbers
+# and client tests. Linux only and no Electron binary, so it is quick and cheap; the full app smoke test
+# stays manual (smoke.yml).
+on:
+  push:
+    branches: [main, kayboro]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test

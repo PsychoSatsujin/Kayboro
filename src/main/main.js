@@ -13,8 +13,13 @@ const playCursor = require('./playCursor');
 // Running from source (not the packaged app): renderers show developer tools such as the Bundle Studio.
 if (!app.isPackaged) process.env.KAYBORO_DEV_TOOLS = '1';
 let kayboClient = null;
-protocol.registerSchemesAsPrivileged([require('./kaybo').SCHEME]); // before ready
+protocol.registerSchemesAsPrivileged([require('./kaybo').SCHEME, require('./clash').SCHEME]); // before ready, in one call
 const kaybo = () => (kayboClient ||= require('./kaybo').create({ net, userDataDir: app.getPath('userData') }));
+// Fandom Clash (src/main/clash.js): popularity trivia in the Arcade tab. Bets settle through the economy.
+let clashClient = null;
+const clash = () => (clashClient ||= require('./clash').create({ net, userDataDir: app.getPath('userData'), economy: () => economy?.economy }));
+const obj = (o) => (o && typeof o === 'object' ? o : {});
+const soft = (p) => Promise.resolve().then(p).catch((err) => ({ error: err.message }));
 const sandbox = require('./sandbox').apply(app); // KAYBORO_SANDBOX=1 only: separate tester userData (before anything reads it)
 require('./steam/overlay').enable(); // Steam overlay (steamworks.js), only when started by Steam; must run before app ready
 const selftest = require('./selftest').parseArgs(process.argv, path.join(app.getPath('userData'), 'kayboro', 'selftest.json')); // --self-test[=file]
@@ -348,6 +353,25 @@ const HANDLERS = {
     fs.copyFileSync(got.file, r.filePath);
     return { file: r.filePath };
   },
+  clashStatus: () => clash().status(),
+  clashCheck: () => clash().check(),
+  clashSnapshot: () => soft(() => clash().snapshotForRenderer()),
+  clashSetName: (name) => clash().setName(name),
+  clashSetServer: (url) => clash().setServer(url),
+  clashMatch: (o) => soft(() => clash().match(obj(o))),
+  clashSubmitRun: (o) => soft(() => clash().submitRun(obj(o))),
+  clashCancel: (o) => clash().cancel(obj(o)),
+  clashPercentage: (o) => soft(() => clash().percentage(obj(o))),
+  clashResolvePercent: (o) => soft(() => clash().resolvePercent(obj(o))),
+  clashOpponents: (o) => soft(() => clash().opponents(obj(o))),
+  clashResolvePick: (o) => soft(() => clash().resolvePick(obj(o))),
+  clashLeaderboard: (o) => soft(() => clash().leaderboard(obj(o))),
+  clashGroups: () => clash().groups(),
+  clashCreateGroup: (o) => soft(() => clash().createGroup(obj(o))),
+  clashJoinGroup: (code) => soft(() => clash().joinGroup(code)),
+  clashLeaveGroup: (code) => clash().leaveGroup(code),
+  clashGhosts: (o) => soft(() => clash().ghosts(obj(o))),
+  clashTopGhosts: (o) => soft(() => clash().topGhosts(obj(o))),
   kayboOpen: (url) => {
     const u = require('./kaybo').siteUrl(url || '/');
     return u ? shell.openExternal(u).then(() => true) : false;
@@ -371,6 +395,7 @@ function registerIpc() {
 app.whenReady().then(() => {
   registerIpc();
   require('./kaybo').registerProtocol(protocol, net);
+  require('./clash').registerProtocol(protocol, clash);
   require('./steam/library').probeLibraries().catch(() => {}); // skip hung library drives before anything scans them
   popout.register({ ipcMain, page: path.join(__dirname, '..', 'renderer', 'index.html'), preload: path.join(__dirname, '..', 'preload.js'),
     notify: (ev) => send('popout', ev), onPlayRequest: (id) => sendTo(popout.windowOf(id), 'popout', { type: 'playRequest', id }) });

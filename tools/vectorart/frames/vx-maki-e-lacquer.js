@@ -1,5 +1,5 @@
 'use strict';
-// Maki-e: the lid of an urushi lacquer box. A vermilion lacquer rim with gilt corner caps holds a deep black
+// Maki-e: the lid of an urushi lacquer box. A black lacquer rim with gilt corner caps holds a deep black
 // field dusted with nashiji gold that thickens toward the edges. Gold maki-e pictures fill the field: two
 // cranes with mother-of-pearl bodies wheel over the upper left, a mother-of-pearl moon rises behind mist
 // bands on the right, an old pine climbs the left side and flowing water runs along the bottom, scattered
@@ -10,7 +10,7 @@ const { rr, path, g, lg, rg, circle, ellipse, poly, tf, n, P, smooth, rng } = L;
 
 const W = 1700, H = 1290;
 const BOX = { x: 80, y: 160, w: 1540, h: 1020 };
-const RIM = 36; // vermilion rim width
+const RIM = 36; // lacquer rim width
 const F = { x: BOX.x + RIM, y: BOX.y + RIM, w: BOX.w - 2 * RIM, h: BOX.h - 2 * RIM }; // black field
 const hole = { x: 370, y: 390, w: 960, h: 540 }, radius = 6;
 const CX = W / 2;
@@ -84,7 +84,7 @@ function crane(x, y, S, rot = 0, flip = 1) {
     path(`M${P(S * 0.26, -S * 0.02)}C${P(S * 0.32, -S * 0.04, S * 0.4, -S * 0.06, S * 0.48, -S * 0.07)}`, { fill: 'none', stroke: 'url(#mkPearl)', strokeWidth: S * 0.05, strokeLinecap: 'round' }),
     path(ellipse(S * 1.06, -S * 0.11, S * 0.065, S * 0.05), { fill: INK, stroke: '#e3b65c', strokeWidth: 1.5 }),
     path(poly([[S * 1.1, -S * 0.14], [S * 1.38, -S * 0.08], [S * 1.1, -S * 0.08]]), { fill: 'url(#mkGold)', stroke: '#7a5418', strokeWidth: 1 }),
-    path(ellipse(S * 1.05, -S * 0.155, S * 0.032, S * 0.018), { fill: 'url(#mkShu)' }),
+    path(ellipse(S * 1.05, -S * 0.155, S * 0.032, S * 0.018), { fill: 'url(#mkCrown)' }),
     path(circle(S * 1.08, -S * 0.115, S * 0.012), { fill: '#e3b65c' }),
     // near wing
     g({ transform: tf(S * 0.04, -S * 0.08) }, wing(S, -46)));
@@ -277,12 +277,13 @@ function draw() {
   const holeD = rr(hole.x, hole.y, hole.w, hole.h, radius);
   const rnd = rng(3);
   let dust = '', dense = '';
-  for (let i = 0; i < 70; i++) { const z = 1 + rnd() * 1.8; dust += `M${P(rnd() * 140, rnd() * 140)}h${n(z)}v${n(z * 0.8)}h${n(-z)}Z`; }
-  for (let i = 0; i < 60; i++) { const z = 1.2 + rnd() * 2; dense += `M${P(rnd() * 60, rnd() * 60)}h${n(z)}v${n(z * 0.8)}h${n(-z)}Z`; }
+  for (let i = 0; i < 52; i++) { const z = 1 + rnd() * 1.8; dust += `M${P(rnd() * 140, rnd() * 140)}h${n(z)}v${n(z * 0.8)}h${n(-z)}Z`; }
+  for (let i = 0; i < 46; i++) { const z = 1.2 + rnd() * 2; dense += `M${P(rnd() * 60, rnd() * 60)}h${n(z)}v${n(z * 0.8)}h${n(-z)}Z`; }
   const fieldD = rr(F.x, F.y, F.w, F.h, 14);
   const defs = [
-    lg('mkShu', [0, 0, 1, 1], [[0, '#e8513a'], [0.5, '#c2301f'], [1, '#8a1a10']]),
-    lg('mkShuRim', [0, 0, 0, 1], [[0, '#d8432e'], [0.5, '#b42a1a'], [1, '#7a160c']]),
+    lg('mkShu', [0, 0, 1, 1], [[0, '#2c2426'], [0.5, '#141012'], [1, '#060405']]),
+    lg('mkShuRim', [0, 0, 0, 1], [[0, '#3a3236'], [0.5, '#1c1618'], [1, '#0a0708']]),
+    lg('mkCrown', [0, 0, 1, 1], [[0, '#e8513a'], [0.5, '#c2301f'], [1, '#8a1a10']]),
     lg('mkField', [0, 0, 1, 1], [[0, '#1a1414'], [0.45, '#0a0808'], [0.55, '#110d0d'], [1, '#050404']]),
     lg('mkGold', [0, 0, 1, 1], [[0, '#fbe6a6'], [0.4, '#e2b65a'], [0.75, '#b8862e'], [1, '#e8c56c']]),
     lg('mkGoldH', [0, 0, 1, 0], [[0, '#a07a30'], [0.3, '#f0cf7c'], [0.6, '#c99a40'], [1, '#e8c56c']]),
@@ -314,8 +315,8 @@ function draw() {
   const body = [
     // shadow on the table
     [[18, 0.06], [10, 0.1], [4, 0.16]].map(([e, a]) => path(rr(BOX.x - e + 10, BOX.y - e + 18, BOX.w + 2 * e, BOX.h + 2 * e, 50 + e), { fill: '#000', fillOpacity: a })).join(''),
-    // vermilion rim with a raised lip and a gold line where it meets the field
-    path(rr(BOX.x, BOX.y, BOX.w, BOX.h, 48), { fill: 'url(#mkShuRim)', stroke: '#3a0a06', strokeWidth: 2 }),
+    // black lacquer rim with a raised lip and a gold line where it meets the field
+    path(rr(BOX.x, BOX.y, BOX.w, BOX.h, 48), { fill: 'url(#mkShuRim)', stroke: '#000000', strokeWidth: 2 }),
     path(rr(BOX.x + 6, BOX.y + 6, BOX.w - 12, BOX.h - 12, 44), { fill: 'url(#mkShu)' }),
     path(`M${BOX.x + 60} ${BOX.y + 9}H${BOX.x + BOX.w - 60}`, { stroke: '#ffb8a0', strokeOpacity: 0.35, strokeWidth: 3, strokeLinecap: 'round' }),
     path(rr(F.x - 5, F.y - 5, F.w + 10, F.h + 10, 18), { fill: 'url(#mkGold)' }),
@@ -336,7 +337,7 @@ function draw() {
     path(rr(hole.x - calm - 8, hole.y - calm - 8, hole.w + 2 * calm + 16, hole.h + 2 * calm + 16, 18), { fill: '#000', fillOpacity: 0.25 }),
     path(rr(hole.x - calm, hole.y - calm, hole.w + 2 * calm, hole.h + 2 * calm, 14), { fill: 'url(#mkField)', stroke: GOLD_LINE, strokeWidth: 3 }),
     path(rr(hole.x - calm + 8, hole.y - calm + 8, hole.w + 2 * calm - 16, hole.h + 2 * calm - 16, 10), { fill: 'none', stroke: GOLD_LINE, strokeOpacity: 0.45, strokeWidth: 1.2 }),
-    path(rr(hole.x - 10, hole.y - 10, hole.w + 20, hole.h + 20, radius + 6), { fill: 'url(#mkShu)', stroke: '#3a0a06', strokeWidth: 1.5 }),
+    path(rr(hole.x - 10, hole.y - 10, hole.w + 20, hole.h + 20, radius + 6), { fill: 'url(#mkShu)', stroke: '#000000', strokeWidth: 1.5 }),
     path(rr(...[hole.x - 3, hole.y - 3, hole.w + 6, hole.h + 6], radius + 2), { fill: 'none', stroke: GOLD_LINE, strokeWidth: 2 }),
     L.lip(holeD, '#000', [[6, 0.25], [3, 0.5]]),
     // lacquer sheen across the field
@@ -359,7 +360,7 @@ module.exports = {
   W, H, hole, radius, draw,
   meta: {
     name: 'Maki-e', theme: 'japanese lacquer', rarity: 'legendary', translucent: false, collection: 'atelier-noir', license: 'CC-BY-4.0',
-    desc: 'A vermilion and black urushi lacquer box lid, painted in gold with cranes, an old pine and flowing water under a mother-of-pearl moon.',
-    tags: ['japanese', 'lacquer', 'gold', 'cranes', 'mother-of-pearl', 'elegant', 'vermilion'],
+    desc: 'A black urushi lacquer box lid, painted in gold with cranes, an old pine and flowing water under a mother-of-pearl moon.',
+    tags: ['japanese', 'lacquer', 'gold', 'cranes', 'mother-of-pearl', 'elegant', 'black lacquer'],
   },
 };

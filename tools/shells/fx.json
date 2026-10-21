@@ -79,5 +79,14 @@
   "vx-shark-diver": {"particles": "bubbles", "glass": "round", "palette": ["#e6fffb", "#9ff0e6", "#ffffff"]},
   "vx-apothecary": {"particles": "fireflies", "glass": "flat", "palette": ["#ffd27a", "#ffb347", "#fff1c4"], "density": 0.5},
   "vx-chalkboard-club": {"particles": "sparkles", "palette": ["#ff9fc2", "#b9a5f0", "#8fc8ff", "#ffe27a"], "density": 0.8},
-  "vx-samurai-brocade": {"particles": "petals", "glass": "flat", "palette": ["#ffd1dc", "#f6b6c8", "#e2b856"], "density": 0.6}
+  "vx-samurai-brocade": {"particles": "petals", "glass": "flat", "palette": ["#ffd1dc", "#f6b6c8", "#e2b856"], "density": 0.6},
+  "vx-art-deco-noir": {"particles": "sparkles", "glass": "flat", "palette": ["#f2d88e", "#e6c675", "#3fd492"], "density": 0.6},
+  "vx-maki-e-lacquer": {"particles": "petals", "glass": "flat", "palette": ["#f0cf7c", "#e8513a", "#f4f8ff"], "density": 0.5},
+  "vx-horology": {"particles": "sparkles", "glass": "round", "palette": ["#e7a78c", "#9ec0ff", "#e8204a"], "density": 0.4},
+  "vx-stained-glass": {"particles": "fireflies", "glass": "flat", "palette": ["#2a5ad8", "#d01830", "#18a868", "#f0a020"], "density": 0.5},
+  "vx-ink-dragon": {"particles": "petals", "glass": "flat", "palette": ["#2a2420", "#b8382a", "#e9dbbb"], "density": 0.5},
+  "vx-biomech": {"particles": "embers", "glass": "flat", "palette": ["#ffb347", "#ff8a1a", "#fff1c9"], "density": 0.4},
+  "vx-botanical-engraving": {"particles": "fireflies", "glass": "flat", "palette": ["#f6e7b0", "#d8e6a0", "#ffffff"], "density": 0.5},
+  "vx-obsidian-throne": {"particles": "embers", "glass": "flat", "palette": ["#ff6a1a", "#ffb347", "#ff3a0a"], "density": 0.9},
+  "vx-sakura-classic": {"particles": "petals", "glass": "round"}
 }

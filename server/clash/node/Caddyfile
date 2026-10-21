@@ -1,0 +1,45 @@
+# Caddy in front of the Fandom Clash API (installed by setup.sh, refreshed by deploy.sh, which replace
+# __HOST__ with the server's DNS name and validate the result before reloading Caddy).
+{
+	servers {
+		timeouts {
+			read_header 10s
+			read_body 15s
+			write 30s
+			idle 2m
+		}
+	}
+}
+
+__HOST__ {
+	encode zstd gzip
+
+	# Nothing the API accepts is bigger than a few KB (a run is ~3 KB); Node refuses > 64 KB as well.
+	request_body {
+		max_size 64KB
+	}
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+		Permissions-Policy "interest-cohort=()"
+	}
+
+	reverse_proxy 127.0.0.1:8787 {
+		# The real client address for the API's per-IP rate limits (overwrites anything the client sent).
+		header_up X-Real-IP {remote_host}
+		# During a restart (deploy) wait for Node to come back instead of answering 502 at once.
+		lb_try_duration 8s
+		lb_try_interval 250ms
+		fail_duration 5s
+		transport http {
+			dial_timeout 3s
+			response_header_timeout 20s
+			keepalive 30s
+		}
+	}
+}

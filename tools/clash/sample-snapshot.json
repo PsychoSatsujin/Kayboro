@@ -1,0 +1,4021 @@
+{
+ "version": 1,
+ "generatedAt": "2026-10-21T00:52:06.919Z",
+ "sites": [
+  "danbooru",
+  "safebooru",
+  "e621",
+  "paheal",
+  "yandere",
+  "konachan"
+ ],
+ "characters": [
+  {
+   "id": "hatsune_miku",
+   "name": "Hatsune Miku",
+   "franchise": "vocaloid",
+   "counts": {
+    "danbooru": 148051,
+    "safebooru": 112887,
+    "e621": 1494,
+    "paheal": 14608,
+    "yandere": 12321,
+    "konachan": 15803
+   },
+   "total": 305164,
+   "image": {
+    "site": "danbooru",
+    "postId": "6804106",
+    "url": "https://cdn.donmai.us/sample/05/33/sample-053340478d3ce9a1057f64d1e2e2708a.jpg",
+    "w": 850,
+    "h": 1000
+   }
+  },
+  {
+   "id": "flandre_scarlet",
+   "name": "Flandre Scarlet",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 64043,
+    "safebooru": 48930,
+    "e621": 121,
+    "paheal": 8380,
+    "yandere": 2505,
+    "konachan": 2113
+   },
+   "total": 126092,
+   "image": {
+    "site": "danbooru",
+    "postId": "52492",
+    "url": "https://cdn.donmai.us/sample/ad/df/sample-addfebb2d9acff872acc6389e34daad5.jpg",
+    "w": 850,
+    "h": 638
+   }
+  },
+  {
+   "id": "komeiji_koishi",
+   "name": "Komeiji Koishi",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 45974,
+    "safebooru": 35506,
+    "e621": 45,
+    "paheal": 4290,
+    "yandere": 1091,
+    "konachan": 857
+   },
+   "total": 87763,
+   "image": {
+    "site": "danbooru",
+    "postId": "5476048",
+    "url": "https://cdn.donmai.us/sample/70/63/sample-7063bd989dea03bb1827dc318ae4f7cc.jpg",
+    "w": 850,
+    "h": 850
+   }
+  },
+  {
+   "id": "patchouli_knowledge",
+   "name": "Patchouli Knowledge",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 39315,
+    "safebooru": 27702,
+    "e621": 75,
+    "paheal": 9182,
+    "yandere": 1688,
+    "konachan": 1123
+   },
+   "total": 79085,
+   "image": {
+    "site": "danbooru",
+    "postId": "495479",
+    "url": "https://cdn.donmai.us/720x720/a8/01/a801d3efe7de951399428700f5610053.webp",
+    "w": 720,
+    "h": 720
+   }
+  },
+  {
+   "id": "yakumo_yukari",
+   "name": "Yakumo Yukari",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 38974,
+    "safebooru": 27353,
+    "e621": 149,
+    "paheal": 5039,
+    "yandere": 1451,
+    "konachan": 1182
+   },
+   "total": 74148,
+   "image": {
+    "site": "danbooru",
+    "postId": "6907695",
+    "url": "https://cdn.donmai.us/sample/0b/37/sample-0b370d6f657e15fc980acf8857390e9d.jpg",
+    "w": 850,
+    "h": 815
+   }
+  },
+  {
+   "id": "pikachu",
+   "name": "Pikachu",
+   "franchise": "pokemon",
+   "counts": {
+    "danbooru": 17789,
+    "safebooru": 14464,
+    "e621": 22524,
+    "paheal": 9129,
+    "yandere": 137,
+    "konachan": 191
+   },
+   "total": 64234,
+   "image": {
+    "site": "danbooru",
+    "postId": "5891737",
+    "url": "https://cdn.donmai.us/sample/c8/42/sample-c84273f16b7a1e7ecfa1c6db7fcebe8b.jpg",
+    "w": 850,
+    "h": 1190
+   }
+  },
+  {
+   "id": "kaname_madoka",
+   "name": "Kaname Madoka",
+   "franchise": "mahou_shoujo_madoka_magica",
+   "counts": {
+    "danbooru": 30310,
+    "safebooru": 24135,
+    "e621": 79,
+    "paheal": 2413,
+    "yandere": 1580,
+    "konachan": 1415
+   },
+   "total": 59932,
+   "image": {
+    "site": "danbooru",
+    "postId": "5426935",
+    "url": "https://cdn.donmai.us/sample/d2/08/sample-d208e8761ce910bb8b20257a081fdc41.jpg",
+    "w": 850,
+    "h": 1911
+   }
+  },
+  {
+   "id": "akemi_homura",
+   "name": "Akemi Homura",
+   "franchise": "mahou_shoujo_madoka_magica",
+   "counts": {
+    "danbooru": 30325,
+    "safebooru": 22660,
+    "e621": 73,
+    "paheal": 2323,
+    "yandere": 1571,
+    "konachan": 1492
+   },
+   "total": 58444,
+   "image": {
+    "site": "danbooru",
+    "postId": "9228063",
+    "url": "https://cdn.donmai.us/sample/20/43/sample-2043406285fdb31a944455ea98b98f25.jpg",
+    "w": 850,
+    "h": 1242
+   }
+  },
+  {
+   "id": "hong_meiling",
+   "name": "Hong Meiling",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 28507,
+    "safebooru": 20562,
+    "e621": 57,
+    "paheal": 2915,
+    "yandere": 758,
+    "konachan": 659
+   },
+   "total": 53458,
+   "image": {
+    "site": "danbooru",
+    "postId": "468572",
+    "url": "https://cdn.donmai.us/720x720/3c/54/3c54102f5d9a4a6851260b95d261c92b.webp",
+    "w": 720,
+    "h": 405
+   }
+  },
+  {
+   "id": "sensei_(blue_archive)",
+   "name": "Sensei",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 40565,
+    "safebooru": 7910,
+    "e621": 44,
+    "paheal": 177,
+    "konachan": 104
+   },
+   "total": 48800,
+   "image": {
+    "site": "danbooru",
+    "postId": "9046634",
+    "url": "https://cdn.donmai.us/sample/4a/4c/sample-4a4cb325eb29629109e6bf1e1519983a.jpg",
+    "w": 850,
+    "h": 1329
+   }
+  },
+  {
+   "id": "tifa_lockhart",
+   "name": "Tifa Lockhart",
+   "franchise": "final_fantasy",
+   "counts": {
+    "danbooru": 17333,
+    "safebooru": 6830,
+    "e621": 733,
+    "paheal": 19219,
+    "yandere": 1020,
+    "konachan": 177
+   },
+   "total": 45312,
+   "image": {
+    "site": "danbooru",
+    "postId": "5075053",
+    "url": "https://cdn.donmai.us/sample/cc/ab/sample-ccaba08256e4e25d30f8a04be62259d0.jpg",
+    "w": 850,
+    "h": 850
+   }
+  },
+  {
+   "id": "kaenbyou_rin",
+   "name": "Kaenbyou Rin",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 22988,
+    "safebooru": 16168,
+    "e621": 370,
+    "paheal": 2020,
+    "yandere": 522,
+    "konachan": 450
+   },
+   "total": 42518,
+   "image": {
+    "site": "danbooru",
+    "postId": "6731440",
+    "url": "https://cdn.donmai.us/sample/e9/d0/sample-e9d05174775a1818931a68c108f77e86.jpg",
+    "w": 850,
+    "h": 1202
+   }
+  },
+  {
+   "id": "admiral_(kancolle)",
+   "name": "Admiral",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 39105,
+    "safebooru": 1264,
+    "e621": 4,
+    "yandere": 358,
+    "konachan": 238
+   },
+   "total": 40969,
+   "image": {
+    "site": "danbooru",
+    "postId": "2191599",
+    "url": "https://cdn.donmai.us/sample/ed/80/sample-ed803bcec33280f6e36868ea484cda54.jpg",
+    "w": 850,
+    "h": 680
+   }
+  },
+  {
+   "id": "princess_peach",
+   "name": "Princess Peach",
+   "franchise": "mario_(series)",
+   "counts": {
+    "danbooru": 8752,
+    "safebooru": 4159,
+    "e621": 4058,
+    "paheal": 21572,
+    "konachan": 273
+   },
+   "total": 38814,
+   "image": {
+    "site": "danbooru",
+    "postId": "9458513",
+    "url": "https://cdn.donmai.us/sample/1e/c0/sample-1ec03d5db402bfb1b3e858b8866c3978.jpg",
+    "w": 850,
+    "h": 1242
+   }
+  },
+  {
+   "id": "mash_kyrielight",
+   "name": "Mash Kyrielight",
+   "franchise": "fate/grand_order",
+   "counts": {
+    "danbooru": 21083,
+    "safebooru": 6712,
+    "e621": 102,
+    "paheal": 5110,
+    "yandere": 2935,
+    "konachan": 601
+   },
+   "total": 36543,
+   "image": {
+    "site": "danbooru",
+    "postId": "6538496",
+    "url": "https://cdn.donmai.us/sample/7d/f2/sample-7df215df2b24a8dc3d360058fc1f6272.jpg",
+    "w": 850,
+    "h": 1358
+   }
+  },
+  {
+   "id": "uzumaki_naruto",
+   "name": "Uzumaki Naruto",
+   "franchise": "naruto_(series)",
+   "counts": {
+    "danbooru": 5918,
+    "safebooru": 5010,
+    "e621": 342,
+    "paheal": 23541,
+    "yandere": 373,
+    "konachan": 174
+   },
+   "total": 35358,
+   "image": {
+    "site": "danbooru",
+    "postId": "5121480",
+    "url": "https://cdn.donmai.us/sample/65/e7/sample-65e7f465a6eaf252151c1a581d8794fa.jpg",
+    "w": 850,
+    "h": 572
+   }
+  },
+  {
+   "id": "kamishirasawa_keine",
+   "name": "Kamishirasawa Keine",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 17987,
+    "safebooru": 13413,
+    "e621": 54,
+    "paheal": 2244,
+    "yandere": 294,
+    "konachan": 314
+   },
+   "total": 34306,
+   "image": {
+    "site": "danbooru",
+    "postId": "639847",
+    "url": "https://cdn.donmai.us/sample/1e/66/sample-1e6696c50192d29e1b6db6eb82df30e3.jpg",
+    "w": 850,
+    "h": 797
+   }
+  },
+  {
+   "id": "ibuki_suika",
+   "name": "Ibuki Suika",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 16182,
+    "safebooru": 12014,
+    "e621": 56,
+    "paheal": 2506,
+    "yandere": 508,
+    "konachan": 506
+   },
+   "total": 31772,
+   "image": {
+    "site": "danbooru",
+    "postId": "3905994",
+    "url": "https://cdn.donmai.us/sample/66/79/sample-667953d25ae7e8f528f6197d7417b5ff.jpg",
+    "w": 850,
+    "h": 944
+   }
+  },
+  {
+   "id": "koakuma",
+   "name": "Koakuma",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 16378,
+    "safebooru": 11502,
+    "e621": 88,
+    "paheal": 2148,
+    "yandere": 539,
+    "konachan": 425
+   },
+   "total": 31080,
+   "image": {
+    "site": "danbooru",
+    "postId": "6906107",
+    "url": "https://cdn.donmai.us/sample/f3/9f/sample-f39fe0a8b71044897b058bb8b58dd6ed.jpg",
+    "w": 850,
+    "h": 1202
+   }
+  },
+  {
+   "id": "megurine_luka",
+   "name": "Megurine Luka",
+   "franchise": "vocaloid",
+   "counts": {
+    "danbooru": 14059,
+    "safebooru": 11499,
+    "e621": 53,
+    "paheal": 1539,
+    "yandere": 1211,
+    "konachan": 2521
+   },
+   "total": 30882,
+   "image": {
+    "site": "danbooru",
+    "postId": "8018917",
+    "url": "https://cdn.donmai.us/sample/56/9f/sample-569f55d46c53104088ce6e750739d809.jpg",
+    "w": 850,
+    "h": 957
+   }
+  },
+  {
+   "id": "trailblazer_(honkai:_star_rail)",
+   "name": "Trailblazer",
+   "franchise": "honkai:_star_rail",
+   "counts": {
+    "danbooru": 21707,
+    "safebooru": 8626,
+    "e621": 12,
+    "konachan": 177
+   },
+   "total": 30522,
+   "image": {
+    "site": "danbooru",
+    "postId": "11533993",
+    "url": "https://cdn.donmai.us/sample/96/12/sample-96127a8b92427236d53b5a291f5f8b5f.jpg",
+    "w": 850,
+    "h": 1024
+   }
+  },
+  {
+   "id": "ganyu_(genshin_impact)",
+   "name": "Ganyu",
+   "franchise": "genshin_impact",
+   "counts": {
+    "danbooru": 20294,
+    "safebooru": 7911,
+    "e621": 458,
+    "konachan": 711
+   },
+   "total": 29374,
+   "image": {
+    "site": "danbooru",
+    "postId": "6221684",
+    "url": "https://cdn.donmai.us/sample/59/16/sample-5916bc087a3d41410250966bdccbe9e8.jpg",
+    "w": 850,
+    "h": 1449
+   }
+  },
+  {
+   "id": "haruno_sakura",
+   "name": "Haruno Sakura",
+   "franchise": "naruto_(series)",
+   "counts": {
+    "danbooru": 5536,
+    "safebooru": 3731,
+    "e621": 116,
+    "paheal": 18591,
+    "yandere": 255,
+    "konachan": 121
+   },
+   "total": 28350,
+   "image": {
+    "site": "danbooru",
+    "postId": "5409360",
+    "url": "https://cdn.donmai.us/sample/d2/72/sample-d272723e25e8d8f314599577299e2949.jpg",
+    "w": 850,
+    "h": 1445
+   }
+  },
+  {
+   "id": "hijiri_byakuren",
+   "name": "Hijiri Byakuren",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 14783,
+    "safebooru": 10135,
+    "e621": 22,
+    "paheal": 2079,
+    "yandere": 413,
+    "konachan": 329
+   },
+   "total": 27761,
+   "image": {
+    "site": "danbooru",
+    "postId": "7114904",
+    "url": "https://cdn.donmai.us/sample/60/c3/sample-60c3b4c6c08ef57797879dff3c42b8f4.jpg",
+    "w": 850,
+    "h": 850
+   }
+  },
+  {
+   "id": "doodle_sensei_(blue_archive)",
+   "name": "Doodle Sensei",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 23112,
+    "safebooru": 3529,
+    "e621": 1,
+    "paheal": 3
+   },
+   "total": 26645,
+   "image": {
+    "site": "safebooru",
+    "postId": "7249085",
+    "url": "https://safebooru.org/samples/1365/sample_e65545492b99ecd5ce8d22a647697fb6c5f97ee8.jpg",
+    "w": 850,
+    "h": 680
+   }
+  },
+  {
+   "id": "shirakami_fubuki",
+   "name": "Shirakami Fubuki",
+   "franchise": "hololive",
+   "counts": {
+    "danbooru": 16250,
+    "safebooru": 7547,
+    "e621": 165,
+    "paheal": 464,
+    "yandere": 1683,
+    "konachan": 327
+   },
+   "total": 26436,
+   "image": {
+    "site": "danbooru",
+    "postId": "6951077",
+    "url": "https://cdn.donmai.us/sample/d9/3e/sample-d93ef2a5b10805901350cfa1c86ef1c4.jpg",
+    "w": 850,
+    "h": 746
+   }
+  },
+  {
+   "id": "gotoh_hitori",
+   "name": "Gotoh Hitori",
+   "franchise": "bocchi_the_rock!",
+   "counts": {
+    "danbooru": 18190,
+    "safebooru": 7397
+   },
+   "total": 25587,
+   "image": {
+    "site": "danbooru",
+    "postId": "5935413",
+    "url": "https://cdn.donmai.us/sample/50/ed/sample-50edb7870572d62f9fbcd48f7ffcc6b2.jpg",
+    "w": 850,
+    "h": 927
+   }
+  },
+  {
+   "id": "midoriya_izuku",
+   "name": "Midoriya Izuku",
+   "franchise": "boku_no_hero_academia",
+   "counts": {
+    "danbooru": 8737,
+    "safebooru": 4491,
+    "e621": 636,
+    "paheal": 11544,
+    "yandere": 85,
+    "konachan": 40
+   },
+   "total": 25533,
+   "image": {
+    "site": "danbooru",
+    "postId": "6103399",
+    "url": "https://cdn.donmai.us/sample/42/7e/sample-427ee980d0f28937978bef81f6e20889.jpg",
+    "w": 850,
+    "h": 478
+   }
+  },
+  {
+   "id": "firefly_(honkai:_star_rail)",
+   "name": "Firefly",
+   "franchise": "honkai:_star_rail",
+   "counts": {
+    "danbooru": 16842,
+    "safebooru": 7611,
+    "e621": 5,
+    "konachan": 305
+   },
+   "total": 24763,
+   "image": {
+    "site": "danbooru",
+    "postId": "11517075",
+    "url": "https://cdn.donmai.us/sample/65/65/sample-6565dbcdd246aec2fb2aa15b075a7742.jpg",
+    "w": 850,
+    "h": 1348
+   }
+  },
+  {
+   "id": "kagiyama_hina",
+   "name": "Kagiyama Hina",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 12338,
+    "safebooru": 10101,
+    "e621": 3,
+    "paheal": 1306,
+    "yandere": 366,
+    "konachan": 322
+   },
+   "total": 24436,
+   "image": {
+    "site": "danbooru",
+    "postId": "918319",
+    "url": "https://cdn.donmai.us/sample/96/7b/sample-967b424765b9354f2bd66d43cfddbee1.jpg",
+    "w": 850,
+    "h": 568
+   }
+  },
+  {
+   "id": "suzumiya_haruhi",
+   "name": "Suzumiya Haruhi",
+   "franchise": "suzumiya_haruhi_no_yuuutsu",
+   "counts": {
+    "danbooru": 11186,
+    "safebooru": 8143,
+    "e621": 24,
+    "paheal": 2824,
+    "yandere": 1287,
+    "konachan": 878
+   },
+   "total": 24342,
+   "image": {
+    "site": "danbooru",
+    "postId": "2181991",
+    "url": "https://cdn.donmai.us/720x720/a1/02/a1020b397a0c4f27b885c99ad7e46e4e.webp",
+    "w": 509,
+    "h": 720
+   }
+  },
+  {
+   "id": "saber_(fate)",
+   "name": "Saber",
+   "franchise": "fate_(series)",
+   "counts": {
+    "danbooru": 21361,
+    "safebooru": 2280
+   },
+   "total": 23641,
+   "image": {
+    "site": "danbooru",
+    "postId": "3967216",
+    "url": "https://cdn.donmai.us/sample/70/d0/sample-70d0bd742b43fbf1a9b22fd5f0bd095b.jpg",
+    "w": 850,
+    "h": 1206
+   }
+  },
+  {
+   "id": "misaka_mikoto",
+   "name": "Misaka Mikoto",
+   "franchise": "toaru_majutsu_no_index",
+   "counts": {
+    "danbooru": 10942,
+    "safebooru": 7697,
+    "e621": 20,
+    "paheal": 2457,
+    "yandere": 1321,
+    "konachan": 573
+   },
+   "total": 23010,
+   "image": {
+    "site": "danbooru",
+    "postId": "2389104",
+    "url": "https://cdn.donmai.us/720x720/2a/b2/2ab2ea5a131398736e9d9ebb99655a3e.webp",
+    "w": 688,
+    "h": 720
+   }
+  },
+  {
+   "id": "fate_testarossa",
+   "name": "Fate Testarossa",
+   "franchise": "lyrical_nanoha",
+   "counts": {
+    "danbooru": 10087,
+    "safebooru": 5799,
+    "e621": 6,
+    "paheal": 3888,
+    "yandere": 2074,
+    "konachan": 541
+   },
+   "total": 22395,
+   "image": {
+    "site": "danbooru",
+    "postId": "5791716",
+    "url": "https://cdn.donmai.us/sample/1a/38/sample-1a3883616b89cca457b70df42dc8f6fb.jpg",
+    "w": 850,
+    "h": 1020
+   }
+  },
+  {
+   "id": "shigure_(kancolle)",
+   "name": "Shigure",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 17855,
+    "safebooru": 2910,
+    "e621": 2,
+    "yandere": 948,
+    "konachan": 352
+   },
+   "total": 22067,
+   "image": {
+    "site": "danbooru",
+    "postId": "5816867",
+    "url": "https://cdn.donmai.us/sample/e5/cd/sample-e5cdafc327fda75b2083946b45b377dd.jpg",
+    "w": 850,
+    "h": 1201
+   }
+  },
+  {
+   "id": "furina_(genshin_impact)",
+   "name": "Furina",
+   "franchise": "genshin_impact",
+   "counts": {
+    "danbooru": 14206,
+    "safebooru": 7365,
+    "e621": 31,
+    "konachan": 222
+   },
+   "total": 21824,
+   "image": {
+    "site": "danbooru",
+    "postId": "7462879",
+    "url": "https://cdn.donmai.us/sample/cd/c5/sample-cdc52e54d461773508c70b5e2cf31aad.jpg",
+    "w": 850,
+    "h": 1365
+   }
+  },
+  {
+   "id": "toyosatomimi_no_miko",
+   "name": "Toyosatomimi no Miko",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 11536,
+    "safebooru": 8788,
+    "e621": 22,
+    "paheal": 756,
+    "yandere": 153,
+    "konachan": 150
+   },
+   "total": 21405,
+   "image": {
+    "site": "danbooru",
+    "postId": "5260066",
+    "url": "https://cdn.donmai.us/sample/76/b9/sample-76b9ef4fc6665e412274b260f7ef8ccc.jpg",
+    "w": 850,
+    "h": 865
+   }
+  },
+  {
+   "id": "ouro_kronii",
+   "name": "Ouro Kronii",
+   "franchise": "hololive",
+   "counts": {
+    "danbooru": 14848,
+    "safebooru": 4209,
+    "e621": 81,
+    "paheal": 1388,
+    "yandere": 654,
+    "konachan": 127
+   },
+   "total": 21307,
+   "image": {
+    "site": "danbooru",
+    "postId": "9228522",
+    "url": "https://cdn.donmai.us/sample/e3/2b/sample-e32b7c0631d147ed6113702b8b8bfbf5.jpg",
+    "w": 850,
+    "h": 1284
+   }
+  },
+  {
+   "id": "son_goku",
+   "name": "Son Goku",
+   "franchise": "dragon_ball",
+   "counts": {
+    "danbooru": 7277,
+    "safebooru": 4114,
+    "paheal": 9150,
+    "konachan": 39
+   },
+   "total": 20580,
+   "image": {
+    "site": "danbooru",
+    "postId": "4706238",
+    "url": "https://cdn.donmai.us/sample/92/e3/sample-92e375d73b34d5986046903c66082705.jpg",
+    "w": 850,
+    "h": 1038
+   }
+  },
+  {
+   "id": "aether_(genshin_impact)",
+   "name": "Aether",
+   "franchise": "genshin_impact",
+   "counts": {
+    "danbooru": 14316,
+    "safebooru": 5753,
+    "e621": 76,
+    "konachan": 121
+   },
+   "total": 20266,
+   "image": {
+    "site": "danbooru",
+    "postId": "7030315",
+    "url": "https://cdn.donmai.us/sample/30/cb/sample-30cb4a22d62c18487adf3fad97eee7d7.jpg",
+    "w": 850,
+    "h": 1133
+   }
+  },
+  {
+   "id": "onozuka_komachi",
+   "name": "Onozuka Komachi",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 10398,
+    "safebooru": 6845,
+    "e621": 14,
+    "paheal": 2135,
+    "yandere": 336,
+    "konachan": 243
+   },
+   "total": 19971,
+   "image": {
+    "site": "danbooru",
+    "postId": "2348960",
+    "url": "https://cdn.donmai.us/sample/c0/41/sample-c0410aa23048621dedd10931b112f40a.jpg",
+    "w": 850,
+    "h": 850
+   }
+  },
+  {
+   "id": "togawa_sakiko",
+   "name": "Togawa Sakiko",
+   "franchise": "bang_dream!",
+   "counts": {
+    "danbooru": 11924,
+    "safebooru": 7827,
+    "e621": 10,
+    "paheal": 19,
+    "yandere": 49,
+    "konachan": 28
+   },
+   "total": 19857,
+   "image": {
+    "site": "danbooru",
+    "postId": "8835233",
+    "url": "https://cdn.donmai.us/sample/47/08/sample-4708d8dc7cbf5b419610121e5a6f9e94.jpg",
+    "w": 850,
+    "h": 1813
+   }
+  },
+  {
+   "id": "nishizumi_miho",
+   "name": "Nishizumi Miho",
+   "franchise": "girls_und_panzer",
+   "counts": {
+    "danbooru": 10769,
+    "safebooru": 6680,
+    "e621": 6,
+    "paheal": 1303,
+    "yandere": 901,
+    "konachan": 124
+   },
+   "total": 19783,
+   "image": {
+    "site": "danbooru",
+    "postId": "5266993",
+    "url": "https://cdn.donmai.us/sample/a2/24/sample-a224d5639a4d60b2145e9488d442a61f.jpg",
+    "w": 850,
+    "h": 495
+   }
+  },
+  {
+   "id": "doctor_(arknights)",
+   "name": "Doctor",
+   "franchise": "arknights",
+   "counts": {
+    "danbooru": 13234,
+    "safebooru": 5541,
+    "e621": 328,
+    "yandere": 122,
+    "konachan": 72
+   },
+   "total": 19297,
+   "image": {
+    "site": "danbooru",
+    "postId": "6071584",
+    "url": "https://cdn.donmai.us/sample/86/5e/sample-865e44de47699249cc0ba73976265e42.jpg",
+    "w": 850,
+    "h": 1202
+   }
+  },
+  {
+   "id": "stelle_(honkai:_star_rail)",
+   "name": "Stelle",
+   "franchise": "honkai:_star_rail",
+   "counts": {
+    "danbooru": 13466,
+    "safebooru": 5520,
+    "e621": 30,
+    "konachan": 138
+   },
+   "total": 19154,
+   "image": {
+    "site": "danbooru",
+    "postId": "11533993",
+    "url": "https://cdn.donmai.us/sample/96/12/sample-96127a8b92427236d53b5a291f5f8b5f.jpg",
+    "w": 850,
+    "h": 1024
+   }
+  },
+  {
+   "id": "tsukino_usagi",
+   "name": "Tsukino Usagi",
+   "franchise": "bishoujo_senshi_sailor_moon",
+   "counts": {
+    "danbooru": 6913,
+    "safebooru": 5004,
+    "e621": 109,
+    "paheal": 6008,
+    "yandere": 477,
+    "konachan": 186
+   },
+   "total": 18697,
+   "image": {
+    "site": "danbooru",
+    "postId": "3914694",
+    "url": "https://cdn.donmai.us/sample/72/1e/sample-721e85fe2fbc08bee13d40107d4abdfe.jpg",
+    "w": 850,
+    "h": 605
+   }
+  },
+  {
+   "id": "nishikino_maki",
+   "name": "Nishikino Maki",
+   "franchise": "love_live!",
+   "counts": {
+    "danbooru": 8440,
+    "safebooru": 6748,
+    "e621": 12,
+    "paheal": 1143,
+    "yandere": 1467,
+    "konachan": 593
+   },
+   "total": 18403,
+   "image": {
+    "site": "danbooru",
+    "postId": "2697738",
+    "url": "https://cdn.donmai.us/720x720/7e/01/7e0135e74e96ec79c940e1bc94e7447f.webp",
+    "w": 694,
+    "h": 720
+   }
+  },
+  {
+   "id": "tainaka_ritsu",
+   "name": "Tainaka Ritsu",
+   "franchise": "k-on!",
+   "counts": {
+    "danbooru": 7605,
+    "safebooru": 6893,
+    "e621": 23,
+    "paheal": 1282,
+    "yandere": 1252,
+    "konachan": 979
+   },
+   "total": 18034,
+   "image": {
+    "site": "danbooru",
+    "postId": "5466786",
+    "url": "https://cdn.donmai.us/sample/5e/f9/sample-5ef92b2212c89e646edc0599b7ef41c0.jpg",
+    "w": 850,
+    "h": 927
+   }
+  },
+  {
+   "id": "elysia_(honkai_impact)",
+   "name": "Elysia",
+   "franchise": "honkai_(series)",
+   "counts": {
+    "danbooru": 13872,
+    "safebooru": 3682,
+    "e621": 1,
+    "yandere": 197,
+    "konachan": 85
+   },
+   "total": 17837,
+   "image": {
+    "site": "danbooru",
+    "postId": "5399565",
+    "url": "https://cdn.donmai.us/sample/ef/5b/sample-ef5b64191385182d0cb611a3f4b300fb.jpg",
+    "w": 850,
+    "h": 930
+   }
+  },
+  {
+   "id": "aris_(blue_archive)",
+   "name": "Aris",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 12103,
+    "safebooru": 5387,
+    "e621": 1
+   },
+   "total": 17491,
+   "image": {
+    "site": "danbooru",
+    "postId": "5354499",
+    "url": "https://cdn.donmai.us/sample/ef/26/sample-ef26825b368b570808f54bd2aaf9ef0b.jpg",
+    "w": 850,
+    "h": 1642
+   }
+  },
+  {
+   "id": "makima_(chainsaw_man)",
+   "name": "Makima",
+   "franchise": "chainsaw_man",
+   "counts": {
+    "danbooru": 11199,
+    "safebooru": 5535,
+    "e621": 143,
+    "yandere": 464,
+    "konachan": 49
+   },
+   "total": 17390,
+   "image": {
+    "site": "danbooru",
+    "postId": "6116768",
+    "url": "https://cdn.donmai.us/sample/0d/fe/sample-0dfed0e0c6785fbf0e2dc0bbb70898d5.jpg",
+    "w": 850,
+    "h": 833
+   }
+  },
+  {
+   "id": "toramaru_shou",
+   "name": "Toramaru Shou",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 9019,
+    "safebooru": 6930,
+    "e621": 68,
+    "paheal": 802,
+    "yandere": 166,
+    "konachan": 163
+   },
+   "total": 17148,
+   "image": {
+    "site": "danbooru",
+    "postId": "5027460",
+    "url": "https://cdn.donmai.us/sample/74/8a/sample-748aa57f1f650c02547b592ee94445d5.jpg",
+    "w": 850,
+    "h": 1360
+   }
+  },
+  {
+   "id": "minato_aqua",
+   "name": "Minato Aqua",
+   "franchise": "hololive",
+   "counts": {
+    "danbooru": 9686,
+    "safebooru": 4034,
+    "e621": 7,
+    "paheal": 375,
+    "yandere": 2592,
+    "konachan": 378
+   },
+   "total": 17072,
+   "image": {
+    "site": "danbooru",
+    "postId": "3943830",
+    "url": "https://cdn.donmai.us/sample/dd/8e/sample-dd8e5301106d9d373f1434530195d044.jpg",
+    "w": 850,
+    "h": 597
+   }
+  },
+  {
+   "id": "sakura_miko",
+   "name": "Sakura Miko",
+   "franchise": "hololive",
+   "counts": {
+    "danbooru": 10365,
+    "safebooru": 4890,
+    "e621": 10,
+    "paheal": 334,
+    "yandere": 921,
+    "konachan": 215
+   },
+   "total": 16735,
+   "image": {
+    "site": "danbooru",
+    "postId": "5865079",
+    "url": "https://cdn.donmai.us/sample/d0/18/sample-d0181cea16d444ec76f01dc8eac122b6.jpg",
+    "w": 850,
+    "h": 1511
+   }
+  },
+  {
+   "id": "rio_(blue_archive)",
+   "name": "Rio",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 15174,
+    "safebooru": 1482,
+    "e621": 3
+   },
+   "total": 16659,
+   "image": {
+    "site": "danbooru",
+    "postId": "6956727",
+    "url": "https://cdn.donmai.us/720x720/d3/72/d372d7b39637fa1dc1d1ecd901ae14f0.webp",
+    "w": 664,
+    "h": 720
+   }
+  },
+  {
+   "id": "kayoko_(blue_archive)",
+   "name": "Kayoko",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 11889,
+    "safebooru": 4480,
+    "e621": 19
+   },
+   "total": 16388,
+   "image": {
+    "site": "danbooru",
+    "postId": "6804699",
+    "url": "https://cdn.donmai.us/sample/19/ba/sample-19bae497ad4c39900edf4222660d792c.jpg",
+    "w": 850,
+    "h": 1174
+   }
+  },
+  {
+   "id": "matou_sakura",
+   "name": "Matou Sakura",
+   "franchise": "fate_(series)",
+   "counts": {
+    "danbooru": 6925,
+    "safebooru": 5146,
+    "e621": 19,
+    "paheal": 2795,
+    "yandere": 979,
+    "konachan": 362
+   },
+   "total": 16226,
+   "image": {
+    "site": "danbooru",
+    "postId": "4520791",
+    "url": "https://cdn.donmai.us/sample/f3/55/sample-f355bc3ba545db2cd5fff9e5ffcc534b.jpg",
+    "w": 850,
+    "h": 1246
+   }
+  },
+  {
+   "id": "nero_claudius_(fate)",
+   "name": "Nero Claudius",
+   "franchise": "fate_(series)",
+   "counts": {
+    "danbooru": 11474,
+    "safebooru": 2332,
+    "e621": 26,
+    "yandere": 1758,
+    "konachan": 490
+   },
+   "total": 16080,
+   "image": {
+    "site": "danbooru",
+    "postId": "5058165",
+    "url": "https://cdn.donmai.us/sample/2b/6d/sample-2b6d101b4b739d9903ba10300b7da262.jpg",
+    "w": 850,
+    "h": 601
+   }
+  },
+  {
+   "id": "columbina_(genshin_impact)",
+   "name": "Columbina",
+   "franchise": "genshin_impact",
+   "counts": {
+    "danbooru": 10132,
+    "safebooru": 5734,
+    "e621": 13,
+    "konachan": 100
+   },
+   "total": 15979,
+   "image": {
+    "site": "danbooru",
+    "postId": "5508269",
+    "url": "https://cdn.donmai.us/sample/13/13/sample-1313e6d8f63540d90440c24d385baa87.jpg",
+    "w": 850,
+    "h": 1700
+   }
+  },
+  {
+   "id": "jeanne_d'arc_alter_(fate)",
+   "name": "Jeanne D'arc Alter",
+   "franchise": "fate_(series)",
+   "counts": {
+    "danbooru": 13890,
+    "yandere": 2059
+   },
+   "total": 15949,
+   "image": {
+    "site": "danbooru",
+    "postId": "5908560",
+    "url": "https://cdn.donmai.us/720x720/71/8f/718faccdc8eee3de0c36f7908a7b5630.webp",
+    "w": 470,
+    "h": 720
+   }
+  },
+  {
+   "id": "hinoshita_kaho",
+   "name": "Hinoshita Kaho",
+   "franchise": "love_live!",
+   "counts": {
+    "danbooru": 9209,
+    "safebooru": 6304,
+    "paheal": 2,
+    "yandere": 159,
+    "konachan": 2
+   },
+   "total": 15676,
+   "image": {
+    "site": "danbooru",
+    "postId": "6505764",
+    "url": "https://cdn.donmai.us/sample/17/6d/sample-176df176931b854f3667cbdd5ac2e326.jpg",
+    "w": 850,
+    "h": 1202
+   }
+  },
+  {
+   "id": "joseph_joestar_(young)",
+   "name": "Joseph Joestar (Young)",
+   "franchise": "jojo_no_kimyou_na_bouken",
+   "counts": {
+    "danbooru": 6958,
+    "safebooru": 5961,
+    "e621": 86,
+    "paheal": 2604,
+    "yandere": 10
+   },
+   "total": 15619,
+   "image": {
+    "site": "safebooru",
+    "postId": "7238486",
+    "url": "https://safebooru.org/images/3924/1fc758c02201413c549ac50cce91024f31db6c36.png",
+    "w": 721,
+    "h": 616
+   }
+  },
+  {
+   "id": "murasa_minamitsu",
+   "name": "Murasa Minamitsu",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 8753,
+    "safebooru": 6435,
+    "e621": 24,
+    "paheal": 3,
+    "yandere": 180,
+    "konachan": 150
+   },
+   "total": 15545,
+   "image": {
+    "site": "danbooru",
+    "postId": "1011752",
+    "url": "https://cdn.donmai.us/sample/4b/e0/sample-4be004a8f08f117ec6de518ffb8be72d.jpg",
+    "w": 850,
+    "h": 1258
+   }
+  },
+  {
+   "id": "kazusa_(blue_archive)",
+   "name": "Kazusa",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 11388,
+    "safebooru": 4044
+   },
+   "total": 15432,
+   "image": {
+    "site": "danbooru",
+    "postId": "7622415",
+    "url": "https://cdn.donmai.us/sample/72/78/sample-727815c9cd47c2b32e43b1d86f3fcb4e.jpg",
+    "w": 850,
+    "h": 441
+   }
+  },
+  {
+   "id": "producer_(idolmaster)",
+   "name": "Producer",
+   "franchise": "idolmaster",
+   "counts": {
+    "danbooru": 11777,
+    "safebooru": 3474,
+    "konachan": 62
+   },
+   "total": 15313,
+   "image": {
+    "site": "danbooru",
+    "postId": "5592717",
+    "url": "https://cdn.donmai.us/sample/cf/4f/sample-cf4ffc102576db34e360f21154592677.jpg",
+    "w": 850,
+    "h": 1219
+   }
+  },
+  {
+   "id": "shiroko_(blue_archive)",
+   "name": "Shiroko",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 11657,
+    "safebooru": 3539,
+    "e621": 61,
+    "konachan": 4
+   },
+   "total": 15261,
+   "image": {
+    "site": "danbooru",
+    "postId": "6046249",
+    "url": "https://cdn.donmai.us/sample/6a/e4/sample-6ae4e1f7419360b4406c2221bb443ace.jpg",
+    "w": 850,
+    "h": 1262
+   }
+  },
+  {
+   "id": "ibaraki_kasen",
+   "name": "Ibaraki Kasen",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 7756,
+    "safebooru": 4891,
+    "e621": 21,
+    "paheal": 2157,
+    "yandere": 173,
+    "konachan": 105
+   },
+   "total": 15103,
+   "image": {
+    "site": "danbooru",
+    "postId": "8776829",
+    "url": "https://cdn.donmai.us/sample/df/05/sample-df05e7d5d249a6b3df86812fd082635f.jpg",
+    "w": 850,
+    "h": 850
+   }
+  },
+  {
+   "id": "shiranui_mai",
+   "name": "Shiranui Mai",
+   "franchise": "fatal_fury",
+   "counts": {
+    "danbooru": 6070,
+    "safebooru": 890,
+    "e621": 2,
+    "paheal": 7552,
+    "yandere": 281,
+    "konachan": 87
+   },
+   "total": 14882,
+   "image": {
+    "site": "danbooru",
+    "postId": "10191846",
+    "url": "https://cdn.donmai.us/sample/26/a9/sample-26a98cc65f98e37a5248d487d83bc209.jpg",
+    "w": 850,
+    "h": 908
+   }
+  },
+  {
+   "id": "hoshimi_miyabi",
+   "name": "Hoshimi Miyabi",
+   "franchise": "zenless_zone_zero",
+   "counts": {
+    "danbooru": 8151,
+    "safebooru": 4626,
+    "e621": 226,
+    "paheal": 1318,
+    "yandere": 220,
+    "konachan": 84
+   },
+   "total": 14625,
+   "image": {
+    "site": "danbooru",
+    "postId": "8815431",
+    "url": "https://cdn.donmai.us/720x720/99/1c/991c3f0048294eb703a0d83351a87531.webp",
+    "w": 509,
+    "h": 720
+   }
+  },
+  {
+   "id": "akagi_(kancolle)",
+   "name": "Akagi",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 13023,
+    "safebooru": 868,
+    "e621": 1,
+    "yandere": 312,
+    "konachan": 229
+   },
+   "total": 14433,
+   "image": {
+    "site": "danbooru",
+    "postId": "1403682",
+    "url": "https://cdn.donmai.us/720x720/59/c8/59c8ea2ff942e3e8a67420e5184992eb.webp",
+    "w": 680,
+    "h": 720
+   }
+  },
+  {
+   "id": "serval_(kemono_friends)",
+   "name": "Serval",
+   "franchise": "kemono_friends",
+   "counts": {
+    "danbooru": 8407,
+    "safebooru": 5963
+   },
+   "total": 14370,
+   "image": {
+    "site": "danbooru",
+    "postId": "2734179",
+    "url": "https://cdn.donmai.us/sample/4b/76/sample-4b76ed756b86713e0e8408521ba70e1c.jpg",
+    "w": 850,
+    "h": 1201
+   }
+  },
+  {
+   "id": "tomoe_mami_(magical_girl)",
+   "name": "Tomoe Mami (Magical Girl)",
+   "franchise": "mahou_shoujo_madoka_magica",
+   "counts": {
+    "danbooru": 9239,
+    "safebooru": 418,
+    "e621": 47,
+    "paheal": 2681,
+    "yandere": 950,
+    "konachan": 900
+   },
+   "total": 14235,
+   "image": {
+    "site": "danbooru",
+    "postId": "1274371",
+    "url": "https://cdn.donmai.us/sample/db/e2/sample-dbe213ff554c75dfd4110d3c28735821.jpg",
+    "w": 850,
+    "h": 1200
+   }
+  },
+  {
+   "id": "miyako_yoshika",
+   "name": "Miyako Yoshika",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 7597,
+    "safebooru": 5606,
+    "e621": 20,
+    "paheal": 652,
+    "yandere": 143,
+    "konachan": 99
+   },
+   "total": 14117,
+   "image": {
+    "site": "danbooru",
+    "postId": "8360196",
+    "url": "https://cdn.donmai.us/sample/68/ba/sample-68ba16b998df2ffa416d2999ad8aad3c.jpg",
+    "w": 850,
+    "h": 832
+   }
+  },
+  {
+   "id": "ookami_mio",
+   "name": "Ookami Mio",
+   "franchise": "hololive",
+   "counts": {
+    "danbooru": 8657,
+    "safebooru": 3968,
+    "e621": 222,
+    "paheal": 438,
+    "yandere": 624,
+    "konachan": 165
+   },
+   "total": 14074,
+   "image": {
+    "site": "danbooru",
+    "postId": "7330652",
+    "url": "https://cdn.donmai.us/sample/4f/ee/sample-4fee2c99db9477efdac564d05a661cf8.jpg",
+    "w": 850,
+    "h": 1275
+   }
+  },
+  {
+   "id": "oma_kokichi",
+   "name": "Oma Kokichi",
+   "franchise": "danganronpa_(series)",
+   "counts": {
+    "danbooru": 9783,
+    "safebooru": 3616,
+    "e621": 27,
+    "paheal": 547
+   },
+   "total": 13973,
+   "image": {
+    "site": "danbooru",
+    "postId": "6262990",
+    "url": "https://cdn.donmai.us/sample/c6/e5/sample-c6e551b4f3cbc6bffbcb59d3c48150e9.jpg",
+    "w": 850,
+    "h": 1063
+   }
+  },
+  {
+   "id": "komaeda_nagito",
+   "name": "Komaeda Nagito",
+   "franchise": "danganronpa_(series)",
+   "counts": {
+    "danbooru": 7706,
+    "safebooru": 5532,
+    "e621": 36,
+    "paheal": 490,
+    "yandere": 9,
+    "konachan": 32
+   },
+   "total": 13805,
+   "image": {
+    "site": "danbooru",
+    "postId": "7067417",
+    "url": "https://cdn.donmai.us/sample/50/70/sample-507042b5feec1e2318b1b622cb968777.jpg",
+    "w": 850,
+    "h": 1010
+   }
+  },
+  {
+   "id": "suletta_mercury",
+   "name": "Suletta Mercury",
+   "franchise": "gundam",
+   "counts": {
+    "danbooru": 8109,
+    "safebooru": 4328,
+    "e621": 48,
+    "paheal": 1112,
+    "yandere": 81,
+    "konachan": 8
+   },
+   "total": 13686,
+   "image": {
+    "site": "danbooru",
+    "postId": "5772365",
+    "url": "https://cdn.donmai.us/sample/b5/b9/sample-b5b99b603254e77cab986271bdc5462d.jpg",
+    "w": 850,
+    "h": 1152
+   }
+  },
+  {
+   "id": "watanabe_you",
+   "name": "Watanabe You",
+   "franchise": "love_live!",
+   "counts": {
+    "danbooru": 6785,
+    "safebooru": 5002,
+    "e621": 1,
+    "paheal": 470,
+    "yandere": 1156,
+    "konachan": 180
+   },
+   "total": 13594,
+   "image": {
+    "site": "danbooru",
+    "postId": "5537642",
+    "url": "https://cdn.donmai.us/sample/93/02/sample-930206ef48e73ee8c97f9dcc4f1537ae.jpg",
+    "w": 850,
+    "h": 1202
+   }
+  },
+  {
+   "id": "misumi_uika",
+   "name": "Misumi Uika",
+   "franchise": "bang_dream!",
+   "counts": {
+    "danbooru": 8121,
+    "safebooru": 5344,
+    "e621": 5,
+    "paheal": 1,
+    "yandere": 39,
+    "konachan": 13
+   },
+   "total": 13523,
+   "image": {
+    "site": "danbooru",
+    "postId": "8771281",
+    "url": "https://cdn.donmai.us/sample/a8/73/sample-a873bb483241868eede7c4092845250b.jpg",
+    "w": 850,
+    "h": 1588
+   }
+  },
+  {
+   "id": "fern_(sousou_no_frieren)",
+   "name": "Fern",
+   "franchise": "sousou_no_frieren",
+   "counts": {
+    "danbooru": 9869,
+    "safebooru": 3392,
+    "konachan": 172
+   },
+   "total": 13433,
+   "image": {
+    "site": "danbooru",
+    "postId": "7396843",
+    "url": "https://cdn.donmai.us/sample/4e/ae/sample-4eaeda917522e04f8660bea75e7fdfb3.jpg",
+    "w": 850,
+    "h": 1402
+   }
+  },
+  {
+   "id": "shiina_taki",
+   "name": "Shiina Taki",
+   "franchise": "bang_dream!",
+   "counts": {
+    "danbooru": 8016,
+    "safebooru": 5135,
+    "paheal": 135,
+    "yandere": 55,
+    "konachan": 6
+   },
+   "total": 13347,
+   "image": {
+    "site": "danbooru",
+    "postId": "11729578",
+    "url": "https://cdn.donmai.us/sample/dd/32/sample-dd3214c22360422c957f9aa9c987bafb.jpg",
+    "w": 850,
+    "h": 1190
+   }
+  },
+  {
+   "id": "kurodani_yamame",
+   "name": "Kurodani Yamame",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 7155,
+    "safebooru": 5260,
+    "e621": 28,
+    "paheal": 522,
+    "yandere": 133,
+    "konachan": 124
+   },
+   "total": 13222,
+   "image": {
+    "site": "danbooru",
+    "postId": "5267069",
+    "url": "https://cdn.donmai.us/sample/43/66/sample-436612fef92e9a09a1ac5b3ed4f509a1.jpg",
+    "w": 850,
+    "h": 1156
+   }
+  },
+  {
+   "id": "mona_(genshin_impact)",
+   "name": "Mona",
+   "franchise": "genshin_impact",
+   "counts": {
+    "danbooru": 10020,
+    "safebooru": 3090,
+    "paheal": 1,
+    "konachan": 5
+   },
+   "total": 13116,
+   "image": {
+    "site": "danbooru",
+    "postId": "5344104",
+    "url": "https://cdn.donmai.us/sample/98/ba/sample-98bad93c6bc632f64d684e86e454e61b.jpg",
+    "w": 850,
+    "h": 1253
+   }
+  },
+  {
+   "id": "daiwa_scarlet_(umamusume)",
+   "name": "Daiwa Scarlet",
+   "franchise": "umamusume",
+   "counts": {
+    "danbooru": 9128,
+    "safebooru": 2979,
+    "paheal": 273,
+    "yandere": 652,
+    "konachan": 41
+   },
+   "total": 13073,
+   "image": {
+    "site": "danbooru",
+    "postId": "4950867",
+    "url": "https://cdn.donmai.us/sample/a4/6e/sample-a46ede0049454fa9398b6d115326d4e0.jpg",
+    "w": 850,
+    "h": 1050
+   }
+  },
+  {
+   "id": "kumoi_ichirin",
+   "name": "Kumoi Ichirin",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 7164,
+    "safebooru": 5347,
+    "e621": 3,
+    "paheal": 268,
+    "yandere": 117,
+    "konachan": 114
+   },
+   "total": 13013,
+   "image": {
+    "site": "danbooru",
+    "postId": "518740",
+    "url": "https://cdn.donmai.us/sample/e6/d9/sample-e6d9f5d2894cf8520bb51e634365748e.jpg",
+    "w": 850,
+    "h": 454
+   }
+  },
+  {
+   "id": "kujo_jotaro",
+   "name": "Kujo Jotaro",
+   "franchise": "jojo_no_kimyou_na_bouken",
+   "counts": {
+    "danbooru": 7731,
+    "safebooru": 2113,
+    "e621": 237,
+    "paheal": 2908
+   },
+   "total": 12989,
+   "image": {
+    "site": "danbooru",
+    "postId": "8930571",
+    "url": "https://cdn.donmai.us/sample/cc/76/sample-cc7609ffaf47d68567f68010d05b16a0.jpg",
+    "w": 850,
+    "h": 1202
+   }
+  },
+  {
+   "id": "ikazuchi_(kancolle)",
+   "name": "Ikazuchi",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 11461,
+    "safebooru": 753,
+    "e621": 2,
+    "yandere": 371,
+    "konachan": 238
+   },
+   "total": 12825,
+   "image": {
+    "site": "danbooru",
+    "postId": "3025828",
+    "url": "https://cdn.donmai.us/720x720/47/60/4760c7c8ef1404545d2dd45b7cb402cb.webp",
+    "w": 522,
+    "h": 720
+   }
+  },
+  {
+   "id": "kitagawa_marin",
+   "name": "Kitagawa Marin",
+   "franchise": "sono_bisque_doll_wa_koi_wo_suru",
+   "counts": {
+    "danbooru": 6573,
+    "safebooru": 1436,
+    "e621": 19,
+    "paheal": 2617,
+    "yandere": 1968,
+    "konachan": 126
+   },
+   "total": 12739,
+   "image": {
+    "site": "danbooru",
+    "postId": "5102029",
+    "url": "https://cdn.donmai.us/sample/1d/70/sample-1d7020192938be0fa735c29109f11318.jpg",
+    "w": 850,
+    "h": 1414
+   }
+  },
+  {
+   "id": "junko_(touhou)",
+   "name": "Junko",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 7325,
+    "safebooru": 5267,
+    "e621": 17
+   },
+   "total": 12609,
+   "image": {
+    "site": "danbooru",
+    "postId": "6589612",
+    "url": "https://cdn.donmai.us/sample/19/30/sample-19300d7e55b3e682664de8a66b490a59.jpg",
+    "w": 850,
+    "h": 837
+   }
+  },
+  {
+   "id": "haruna_(kancolle)",
+   "name": "Haruna",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 10501,
+    "safebooru": 905,
+    "e621": 3,
+    "yandere": 758,
+    "konachan": 343
+   },
+   "total": 12510,
+   "image": {
+    "site": "danbooru",
+    "postId": "1956474",
+    "url": "https://cdn.donmai.us/sample/a7/ae/sample-a7ae8bdfa72452aa2659d1bd2e750d4f.jpg",
+    "w": 850,
+    "h": 600
+   }
+  },
+  {
+   "id": "aki_minoriko",
+   "name": "Aki Minoriko",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 6688,
+    "safebooru": 4831,
+    "e621": 12,
+    "paheal": 628,
+    "yandere": 142,
+    "konachan": 179
+   },
+   "total": 12480,
+   "image": {
+    "site": "danbooru",
+    "postId": "1554138",
+    "url": "https://cdn.donmai.us/sample/c3/e8/sample-c3e840d0ccab4f42f8bf67b9e6429188.jpg",
+    "w": 850,
+    "h": 1169
+   }
+  },
+  {
+   "id": "murano_sayaka",
+   "name": "Murano Sayaka",
+   "franchise": "love_live!",
+   "counts": {
+    "danbooru": 7140,
+    "safebooru": 5211,
+    "paheal": 3,
+    "yandere": 115,
+    "konachan": 2
+   },
+   "total": 12471,
+   "image": {
+    "site": "danbooru",
+    "postId": "6256338",
+    "url": "https://cdn.donmai.us/sample/63/2e/sample-632e8af7f1d9bd64470393c381b3c199.jpg",
+    "w": 850,
+    "h": 1348
+   }
+  },
+  {
+   "id": "lappland_(arknights)",
+   "name": "Lappland",
+   "franchise": "arknights",
+   "counts": {
+    "danbooru": 7327,
+    "safebooru": 4385,
+    "e621": 241,
+    "yandere": 366,
+    "konachan": 117
+   },
+   "total": 12436,
+   "image": {
+    "site": "danbooru",
+    "postId": "5911718",
+    "url": "https://cdn.donmai.us/sample/ab/66/sample-ab6606c5726a7764fe4cdeaea01cb568.jpg",
+    "w": 850,
+    "h": 1134
+   }
+  },
+  {
+   "id": "oozora_subaru",
+   "name": "Oozora Subaru",
+   "franchise": "hololive",
+   "counts": {
+    "danbooru": 8061,
+    "safebooru": 3201,
+    "e621": 26,
+    "paheal": 435,
+    "yandere": 545,
+    "konachan": 99
+   },
+   "total": 12367,
+   "image": {
+    "site": "danbooru",
+    "postId": "5730026",
+    "url": "https://cdn.donmai.us/sample/4e/77/sample-4e775227743a491819285ac6be90ca9f.jpg",
+    "w": 850,
+    "h": 1202
+   }
+  },
+  {
+   "id": "kaito_(vocaloid)",
+   "name": "Kaito",
+   "franchise": "vocaloid",
+   "counts": {
+    "danbooru": 9096,
+    "safebooru": 3167,
+    "e621": 40
+   },
+   "total": 12303,
+   "image": {
+    "site": "danbooru",
+    "postId": "5581899",
+    "url": "https://cdn.donmai.us/sample/5e/e3/sample-5ee310d0f29edeb46231dbeb5993482d.jpg",
+    "w": 850,
+    "h": 1034
+   }
+  },
+  {
+   "id": "hinata_hajime",
+   "name": "Hinata Hajime",
+   "franchise": "danganronpa_(series)",
+   "counts": {
+    "danbooru": 6824,
+    "safebooru": 4596,
+    "e621": 37,
+    "paheal": 771,
+    "yandere": 7,
+    "konachan": 30
+   },
+   "total": 12265,
+   "image": {
+    "site": "danbooru",
+    "postId": "7067417",
+    "url": "https://cdn.donmai.us/sample/50/70/sample-507042b5feec1e2318b1b622cb968777.jpg",
+    "w": 850,
+    "h": 1010
+   }
+  },
+  {
+   "id": "yukihana_lamy",
+   "name": "Yukihana Lamy",
+   "franchise": "hololive",
+   "counts": {
+    "danbooru": 7743,
+    "safebooru": 2175,
+    "e621": 33,
+    "paheal": 312,
+    "yandere": 1701,
+    "konachan": 224
+   },
+   "total": 12188,
+   "image": {
+    "site": "danbooru",
+    "postId": "6106568",
+    "url": "https://cdn.donmai.us/sample/28/cb/sample-28cb27d7a5d9d8bd7aaa53066afd44d7.jpg",
+    "w": 850,
+    "h": 1016
+   }
+  },
+  {
+   "id": "yahata_umiri",
+   "name": "Yahata Umiri",
+   "franchise": "bang_dream!",
+   "counts": {
+    "danbooru": 7301,
+    "safebooru": 4745,
+    "e621": 5,
+    "paheal": 36,
+    "yandere": 25,
+    "konachan": 5
+   },
+   "total": 12117,
+   "image": {
+    "site": "danbooru",
+    "postId": "7103152",
+    "url": "https://cdn.donmai.us/sample/44/20/sample-44201bc5c56dd90334971d9326e43ace.jpg",
+    "w": 850,
+    "h": 1015
+   }
+  },
+  {
+   "id": "hilda_(pokemon)",
+   "name": "Hilda",
+   "franchise": "pokemon",
+   "counts": {
+    "danbooru": 8268,
+    "safebooru": 2645,
+    "e621": 1109
+   },
+   "total": 12022,
+   "image": {
+    "site": "danbooru",
+    "postId": "3435526",
+    "url": "https://cdn.donmai.us/720x720/34/4e/344e0ca493e61f3e88bb8863f43d793d.webp",
+    "w": 600,
+    "h": 720
+   }
+  },
+  {
+   "id": "red_(pokemon)",
+   "name": "Red",
+   "franchise": "pokemon",
+   "counts": {
+    "danbooru": 6367,
+    "safebooru": 4944,
+    "e621": 596,
+    "yandere": 22,
+    "konachan": 78
+   },
+   "total": 12007,
+   "image": {
+    "site": "danbooru",
+    "postId": "466659",
+    "url": "https://cdn.donmai.us/720x720/e2/02/e2027662c5543f907fd3cd824463180c.webp",
+    "w": 513,
+    "h": 720
+   }
+  },
+  {
+   "id": "aubrey_(omori)",
+   "name": "Aubrey",
+   "franchise": "omori",
+   "counts": {
+    "danbooru": 6568,
+    "safebooru": 5277,
+    "e621": 22
+   },
+   "total": 11867,
+   "image": {
+    "site": "danbooru",
+    "postId": "4848452",
+    "url": "https://cdn.donmai.us/sample/a9/8f/sample-a98f4d859be9f67cb1f447612c7dcfab.jpg",
+    "w": 850,
+    "h": 1187
+   }
+  },
+  {
+   "id": "keqing_(genshin_impact)",
+   "name": "Keqing",
+   "franchise": "genshin_impact",
+   "counts": {
+    "danbooru": 8467,
+    "safebooru": 2780,
+    "e621": 59,
+    "konachan": 487
+   },
+   "total": 11793,
+   "image": {
+    "site": "danbooru",
+    "postId": "7030315",
+    "url": "https://cdn.donmai.us/sample/30/cb/sample-30cb4a22d62c18487adf3fad97eee7d7.jpg",
+    "w": 850,
+    "h": 1133
+   }
+  },
+  {
+   "id": "marcille_donato",
+   "name": "Marcille Donato",
+   "franchise": "dungeon_meshi",
+   "counts": {
+    "danbooru": 5961,
+    "safebooru": 2788,
+    "e621": 702,
+    "paheal": 2235,
+    "yandere": 43,
+    "konachan": 10
+   },
+   "total": 11739,
+   "image": {
+    "site": "danbooru",
+    "postId": "9027622",
+    "url": "https://cdn.donmai.us/sample/2e/b8/sample-2eb8fa1c2afb9772263dfd0559b32489.jpg",
+    "w": 850,
+    "h": 1204
+   }
+  },
+  {
+   "id": "shinosawa_hiro",
+   "name": "Shinosawa Hiro",
+   "franchise": "gakuen_idolmaster",
+   "counts": {
+    "danbooru": 7199,
+    "safebooru": 4146,
+    "paheal": 44,
+    "yandere": 212,
+    "konachan": 22
+   },
+   "total": 11623,
+   "image": {
+    "site": "danbooru",
+    "postId": "8473476",
+    "url": "https://cdn.donmai.us/sample/54/ad/sample-54ade2e22466224a1f0e0839bee9525c.jpg",
+    "w": 850,
+    "h": 1734
+   }
+  },
+  {
+   "id": "scathach_(fate)",
+   "name": "Scathach",
+   "franchise": "fate/grand_order",
+   "counts": {
+    "danbooru": 9551,
+    "safebooru": 354,
+    "e621": 12,
+    "yandere": 1645
+   },
+   "total": 11562,
+   "image": {
+    "site": "danbooru",
+    "postId": "7399927",
+    "url": "https://cdn.donmai.us/720x720/f5/93/f593cf56d575cddb3013665e85534037.webp",
+    "w": 319,
+    "h": 720
+   }
+  },
+  {
+   "id": "suzuya_(kancolle)",
+   "name": "Suzuya",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 9647,
+    "safebooru": 948,
+    "e621": 2,
+    "yandere": 654,
+    "konachan": 177
+   },
+   "total": 11428,
+   "image": {
+    "site": "danbooru",
+    "postId": "5339680",
+    "url": "https://cdn.donmai.us/sample/01/88/sample-01885204de1cc5dc10f4a52624ad76a3.jpg",
+    "w": 850,
+    "h": 1201
+   }
+  },
+  {
+   "id": "marnie_(pokemon)",
+   "name": "Marnie",
+   "franchise": "pokemon",
+   "counts": {
+    "danbooru": 8240,
+    "safebooru": 2873,
+    "e621": 221
+   },
+   "total": 11334,
+   "image": {
+    "site": "danbooru",
+    "postId": "5793571",
+    "url": "https://cdn.donmai.us/sample/b2/84/sample-b2842266fe90cd584751d477d0984298.jpg",
+    "w": 850,
+    "h": 1214
+   }
+  },
+  {
+   "id": "inoue_takina",
+   "name": "Inoue Takina",
+   "franchise": "lycoris_recoil",
+   "counts": {
+    "danbooru": 6912,
+    "safebooru": 3460,
+    "e621": 4,
+    "paheal": 367,
+    "yandere": 435,
+    "konachan": 80
+   },
+   "total": 11258,
+   "image": {
+    "site": "danbooru",
+    "postId": "5768302",
+    "url": "https://cdn.donmai.us/sample/e8/e3/sample-e8e33821b2566d506f3dd93303c4e091.jpg",
+    "w": 850,
+    "h": 478
+   }
+  },
+  {
+   "id": "oguri_cap_(umamusume)",
+   "name": "Oguri Cap",
+   "franchise": "umamusume",
+   "counts": {
+    "danbooru": 6971,
+    "safebooru": 3947,
+    "paheal": 97,
+    "yandere": 135,
+    "konachan": 8
+   },
+   "total": 11158,
+   "image": {
+    "site": "danbooru",
+    "postId": "9555651",
+    "url": "https://cdn.donmai.us/sample/34/6d/sample-346d3ca90addfb9c6f007c743b74971c.jpg",
+    "w": 850,
+    "h": 1202
+   }
+  },
+  {
+   "id": "nagato_(kancolle)",
+   "name": "Nagato",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 9839,
+    "safebooru": 653,
+    "e621": 10,
+    "yandere": 390,
+    "konachan": 177
+   },
+   "total": 11069,
+   "image": {
+    "site": "danbooru",
+    "postId": "5322595",
+    "url": "https://cdn.donmai.us/720x720/26/f2/26f2dc23dad781a7f07099b193986315.webp",
+    "w": 439,
+    "h": 720
+   }
+  },
+  {
+   "id": "sukuna_shinmyoumaru",
+   "name": "Sukuna Shinmyoumaru",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 5942,
+    "safebooru": 4595,
+    "e621": 9,
+    "paheal": 340,
+    "yandere": 80,
+    "konachan": 63
+   },
+   "total": 11029,
+   "image": {
+    "site": "danbooru",
+    "postId": "1890382",
+    "url": "https://cdn.donmai.us/sample/bd/9a/sample-bd9ad1861f221c89f82c109c2291e642.jpg",
+    "w": 850,
+    "h": 1607
+   }
+  },
+  {
+   "id": "shijou_takane",
+   "name": "Shijou Takane",
+   "franchise": "idolmaster",
+   "counts": {
+    "danbooru": 5661,
+    "safebooru": 3184,
+    "e621": 10,
+    "paheal": 1283,
+    "yandere": 573,
+    "konachan": 234
+   },
+   "total": 10945,
+   "image": {
+    "site": "danbooru",
+    "postId": "7294950",
+    "url": "https://cdn.donmai.us/sample/34/cb/sample-34cbdbde334f429d341c7d61ca1c40f8.jpg",
+    "w": 850,
+    "h": 1136
+   }
+  },
+  {
+   "id": "futatsuiwa_mamizou",
+   "name": "Futatsuiwa Mamizou",
+   "franchise": "touhou",
+   "counts": {
+    "danbooru": 5837,
+    "safebooru": 4153,
+    "e621": 155,
+    "paheal": 606,
+    "yandere": 65,
+    "konachan": 78
+   },
+   "total": 10894,
+   "image": {
+    "site": "danbooru",
+    "postId": "6080811",
+    "url": "https://cdn.donmai.us/sample/b4/00/sample-b400dc2f91313cb369bb02fada2a3dd9.jpg",
+    "w": 850,
+    "h": 981
+   }
+  },
+  {
+   "id": "oyama_mahiro",
+   "name": "Oyama Mahiro",
+   "franchise": "onii-chan_wa_oshimai!",
+   "counts": {
+    "danbooru": 8005,
+    "safebooru": 2281,
+    "e621": 5,
+    "paheal": 289,
+    "yandere": 108,
+    "konachan": 25
+   },
+   "total": 10713,
+   "image": {
+    "site": "danbooru",
+    "postId": "6142388",
+    "url": "https://cdn.donmai.us/sample/dd/18/sample-dd186272b0f63c37e557538186432fce.jpg",
+    "w": 850,
+    "h": 1063
+   }
+  },
+  {
+   "id": "power_(chainsaw_man)",
+   "name": "Power",
+   "franchise": "chainsaw_man",
+   "counts": {
+    "danbooru": 6795,
+    "safebooru": 3325,
+    "e621": 291,
+    "yandere": 218,
+    "konachan": 22
+   },
+   "total": 10651,
+   "image": {
+    "site": "danbooru",
+    "postId": "6116768",
+    "url": "https://cdn.donmai.us/sample/0d/fe/sample-0dfed0e0c6785fbf0e2dc0bbb70898d5.jpg",
+    "w": 850,
+    "h": 833
+   }
+  },
+  {
+   "id": "sephiroth",
+   "name": "Sephiroth",
+   "franchise": "final_fantasy",
+   "counts": {
+    "danbooru": 5935,
+    "safebooru": 3713,
+    "paheal": 794,
+    "yandere": 34,
+    "konachan": 28
+   },
+   "total": 10504,
+   "image": {
+    "site": "danbooru",
+    "postId": "5653829",
+    "url": "https://cdn.donmai.us/sample/c7/55/sample-c75500e5382389aa7d136070248f0b4c.jpg",
+    "w": 850,
+    "h": 520
+   }
+  },
+  {
+   "id": "silence_suzuka_(umamusume)",
+   "name": "Silence Suzuka",
+   "franchise": "umamusume",
+   "counts": {
+    "danbooru": 6525,
+    "safebooru": 3409,
+    "paheal": 137,
+    "yandere": 300,
+    "konachan": 23
+   },
+   "total": 10394,
+   "image": {
+    "site": "danbooru",
+    "postId": "9145295",
+    "url": "https://cdn.donmai.us/sample/d8/17/sample-d817853c9720023dd4492bba4efd81a9.jpg",
+    "w": 850,
+    "h": 1845
+   }
+  },
+  {
+   "id": "sparkle_(honkai:_star_rail)",
+   "name": "Sparkle",
+   "franchise": "honkai:_star_rail",
+   "counts": {
+    "danbooru": 8079,
+    "safebooru": 2066,
+    "e621": 4,
+    "konachan": 150
+   },
+   "total": 10299,
+   "image": {
+    "site": "danbooru",
+    "postId": "7842485",
+    "url": "https://cdn.donmai.us/sample/6f/0f/sample-6f0ff27b849c6a84ceffe846d39e23ce.jpg",
+    "w": 850,
+    "h": 1312
+   }
+  },
+  {
+   "id": "caesar_anthonio_zeppeli",
+   "name": "Caesar Anthonio Zeppeli",
+   "franchise": "jojo_no_kimyou_na_bouken",
+   "counts": {
+    "danbooru": 5471,
+    "safebooru": 4770,
+    "yandere": 7
+   },
+   "total": 10248,
+   "image": {
+    "site": "danbooru",
+    "postId": "6194926",
+    "url": "https://cdn.donmai.us/sample/b0/d3/sample-b0d369d9bafbf5a732e3ab2e51603967.jpg",
+    "w": 850,
+    "h": 982
+   }
+  },
+  {
+   "id": "angelina_(arknights)",
+   "name": "Angelina",
+   "franchise": "arknights",
+   "counts": {
+    "danbooru": 6177,
+    "safebooru": 3596,
+    "e621": 35,
+    "yandere": 293,
+    "konachan": 85
+   },
+   "total": 10186,
+   "image": {
+    "site": "danbooru",
+    "postId": "7400381",
+    "url": "https://cdn.donmai.us/sample/3c/0a/sample-3c0a7564db5596b61b8c6eeef1c4adff.jpg",
+    "w": 850,
+    "h": 770
+   }
+  },
+  {
+   "id": "taihou_(azur_lane)",
+   "name": "Taihou",
+   "franchise": "azur_lane",
+   "counts": {
+    "danbooru": 6489,
+    "safebooru": 587,
+    "e621": 10,
+    "yandere": 2382,
+    "konachan": 558
+   },
+   "total": 10026,
+   "image": {
+    "site": "danbooru",
+    "postId": "6936901",
+    "url": "https://cdn.donmai.us/sample/d8/2b/sample-d82bca7345f532ae276d566f339c6955.jpg",
+    "w": 850,
+    "h": 1179
+   }
+  },
+  {
+   "id": "baobhan_sith_(fate)",
+   "name": "Baobhan Sith",
+   "franchise": "fate/grand_order",
+   "counts": {
+    "danbooru": 7899,
+    "safebooru": 1322,
+    "e621": 11,
+    "paheal": 552,
+    "yandere": 150,
+    "konachan": 30
+   },
+   "total": 9964,
+   "image": {
+    "site": "danbooru",
+    "postId": "5826650",
+    "url": "https://cdn.donmai.us/720x720/62/01/6201b3cbed52bbd8ce98381512f36966.webp",
+    "w": 470,
+    "h": 720
+   }
+  },
+  {
+   "id": "ange_katrina",
+   "name": "Ange Katrina",
+   "franchise": "nijisanji",
+   "counts": {
+    "danbooru": 5743,
+    "safebooru": 3746,
+    "e621": 1,
+    "paheal": 142,
+    "yandere": 195,
+    "konachan": 71
+   },
+   "total": 9898,
+   "image": {
+    "site": "danbooru",
+    "postId": "5710094",
+    "url": "https://cdn.donmai.us/sample/57/b3/sample-57b3bd7e01548515b3b49df6bc40c022.jpg",
+    "w": 850,
+    "h": 1174
+   }
+  },
+  {
+   "id": "nakiri_ayame",
+   "name": "Nakiri Ayame",
+   "franchise": "hololive",
+   "counts": {
+    "danbooru": 5595,
+    "safebooru": 3017,
+    "e621": 10,
+    "paheal": 138,
+    "yandere": 875,
+    "konachan": 129
+   },
+   "total": 9764,
+   "image": {
+    "site": "danbooru",
+    "postId": "4915780",
+    "url": "https://cdn.donmai.us/sample/b1/b2/sample-b1b2ced17806cdcfc12e9cdd0d5b8d38.jpg",
+    "w": 850,
+    "h": 1352
+   }
+  },
+  {
+   "id": "yumemi_riamu",
+   "name": "Yumemi Riamu",
+   "franchise": "idolmaster",
+   "counts": {
+    "danbooru": 5612,
+    "safebooru": 2511,
+    "e621": 9,
+    "paheal": 731,
+    "yandere": 731,
+    "konachan": 129
+   },
+   "total": 9723,
+   "image": {
+    "site": "danbooru",
+    "postId": "6240599",
+    "url": "https://cdn.donmai.us/sample/63/91/sample-6391ab82da01e2606ac62baf4e909f5e.jpg",
+    "w": 850,
+    "h": 1177
+   }
+  },
+  {
+   "id": "kaban_(kemono_friends)",
+   "name": "Kaban",
+   "franchise": "kemono_friends",
+   "counts": {
+    "danbooru": 5913,
+    "safebooru": 3482,
+    "yandere": 128
+   },
+   "total": 9523,
+   "image": {
+    "site": "danbooru",
+    "postId": "2626380",
+    "url": "https://cdn.donmai.us/sample/30/df/sample-30df719dbdaf6dd8e676f323fafcbeaf.jpg",
+    "w": 850,
+    "h": 478
+   }
+  },
+  {
+   "id": "houshou_(kancolle)",
+   "name": "Houshou",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 8365,
+    "safebooru": 869,
+    "yandere": 110,
+    "konachan": 50
+   },
+   "total": 9394,
+   "image": {
+    "site": "danbooru",
+    "postId": "7571060",
+    "url": "https://cdn.donmai.us/sample/b6/3c/sample-b63c9afac52827d8638019447460e4b3.jpg",
+    "w": 850,
+    "h": 1750
+   }
+  },
+  {
+   "id": "tendou_akane",
+   "name": "Tendou Akane",
+   "franchise": "ranma_1/2",
+   "counts": {
+    "danbooru": 5416,
+    "safebooru": 3844,
+    "e621": 1,
+    "yandere": 29
+   },
+   "total": 9290,
+   "image": {
+    "site": "danbooru",
+    "postId": "7799224",
+    "url": "https://cdn.donmai.us/sample/08/81/sample-0881050a343b74da981433f340ea49ee.jpg",
+    "w": 850,
+    "h": 1400
+   }
+  },
+  {
+   "id": "raiden_mei",
+   "name": "Raiden Mei",
+   "franchise": "honkai_(series)",
+   "counts": {
+    "danbooru": 5941,
+    "safebooru": 2038,
+    "e621": 1,
+    "paheal": 482,
+    "yandere": 499,
+    "konachan": 185
+   },
+   "total": 9146,
+   "image": {
+    "site": "danbooru",
+    "postId": "6012081",
+    "url": "https://cdn.donmai.us/sample/44/39/sample-4439777b93822561c3de23bdc47ad154.jpg",
+    "w": 850,
+    "h": 1357
+   }
+  },
+  {
+   "id": "nozomi_(blue_archive)",
+   "name": "Nozomi",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 6952,
+    "safebooru": 2006,
+    "e621": 114
+   },
+   "total": 9072,
+   "image": {
+    "site": "danbooru",
+    "postId": "8897898",
+    "url": "https://cdn.donmai.us/sample/1e/51/sample-1e517887ebe2084a3aed554236cb5750.jpg",
+    "w": 850,
+    "h": 601
+   }
+  },
+  {
+   "id": "fuwawa_abyssgard",
+   "name": "Fuwawa Abyssgard",
+   "franchise": "hololive",
+   "counts": {
+    "danbooru": 6393,
+    "safebooru": 1689,
+    "e621": 132,
+    "paheal": 176,
+    "yandere": 358,
+    "konachan": 117
+   },
+   "total": 8865,
+   "image": {
+    "site": "safebooru",
+    "postId": "7244870",
+    "url": "https://safebooru.org/images/597/7ff2e6282eeca0848c75c1059e1782b153231517.jpg",
+    "w": 854,
+    "h": 1200
+   }
+  },
+  {
+   "id": "yuuki_makoto_(persona_3)",
+   "name": "Yuuki Makoto",
+   "franchise": "persona",
+   "counts": {
+    "danbooru": 5953,
+    "safebooru": 2792,
+    "paheal": 3
+   },
+   "total": 8748,
+   "image": {
+    "site": "danbooru",
+    "postId": "8256561",
+    "url": "https://cdn.donmai.us/sample/9a/e8/sample-9ae8de82dc9d6a0293563f650e18da3e.jpg",
+    "w": 850,
+    "h": 593
+   }
+  },
+  {
+   "id": "senketsu",
+   "name": "Senketsu",
+   "franchise": "kill_la_kill",
+   "counts": {
+    "danbooru": 5477,
+    "safebooru": 2812,
+    "e621": 147,
+    "paheal": 120,
+    "yandere": 112,
+    "konachan": 10
+   },
+   "total": 8678,
+   "image": {
+    "site": "danbooru",
+    "postId": "5141633",
+    "url": "https://cdn.donmai.us/sample/c0/83/sample-c083eef872c40846ff798e18a3195a46.jpg",
+    "w": 850,
+    "h": 1192
+   }
+  },
+  {
+   "id": "ushio_(kancolle)",
+   "name": "Ushio",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 7453,
+    "safebooru": 710,
+    "e621": 5,
+    "yandere": 307,
+    "konachan": 119
+   },
+   "total": 8594,
+   "image": {
+    "site": "danbooru",
+    "postId": "5779648",
+    "url": "https://cdn.donmai.us/sample/86/cf/sample-86cf741761800a64ac2b325a63f991c6.jpg",
+    "w": 850,
+    "h": 601
+   }
+  },
+  {
+   "id": "meiko_(vocaloid)",
+   "name": "Meiko",
+   "franchise": "vocaloid",
+   "counts": {
+    "danbooru": 7087,
+    "safebooru": 1348,
+    "e621": 33
+   },
+   "total": 8468,
+   "image": {
+    "site": "danbooru",
+    "postId": "511418",
+    "url": "https://cdn.donmai.us/sample/8b/d7/sample-8bd78eb76620ab3d283774cd9b8250ea.jpg",
+    "w": 850,
+    "h": 638
+   }
+  },
+  {
+   "id": "hanako_(blue_archive)",
+   "name": "Hanako",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 7678,
+    "safebooru": 734,
+    "e621": 2
+   },
+   "total": 8414,
+   "image": {
+    "site": "danbooru",
+    "postId": "7098499",
+    "url": "https://cdn.donmai.us/sample/b2/f3/sample-b2f3669c5220498440a9c12fe0424283.jpg",
+    "w": 850,
+    "h": 1301
+   }
+  },
+  {
+   "id": "stocking_(psg)",
+   "name": "Stocking",
+   "franchise": "panty_&_stocking_with_garterbelt",
+   "counts": {
+    "danbooru": 5597,
+    "safebooru": 2664
+   },
+   "total": 8261,
+   "image": {
+    "site": "danbooru",
+    "postId": "5500512",
+    "url": "https://cdn.donmai.us/sample/34/c2/sample-34c21827976050eaf64664d4204beb51.jpg",
+    "w": 850,
+    "h": 1812
+   }
+  },
+  {
+   "id": "gojo_satoru",
+   "name": "Gojo Satoru",
+   "franchise": "jujutsu_kaisen",
+   "counts": {
+    "danbooru": 6182,
+    "safebooru": 457,
+    "e621": 86,
+    "paheal": 1489
+   },
+   "total": 8214,
+   "image": {
+    "site": "danbooru",
+    "postId": "6920999",
+    "url": "https://cdn.donmai.us/sample/09/75/sample-0975518f6bda8ef62aaa7419385e43e8.jpg",
+    "w": 850,
+    "h": 1166
+   }
+  },
+  {
+   "id": "tojo_nozomi",
+   "name": "Tojo Nozomi",
+   "franchise": "love_live!",
+   "counts": {
+    "danbooru": 7836,
+    "safebooru": 297
+   },
+   "total": 8133,
+   "image": {
+    "site": "danbooru",
+    "postId": "5417976",
+    "url": "https://cdn.donmai.us/sample/00/13/sample-0013bc7a2663a253c9e362b876a73719.jpg",
+    "w": 850,
+    "h": 1202
+   }
+  },
+  {
+   "id": "shoukaku_(kancolle)",
+   "name": "Shoukaku",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 6990,
+    "safebooru": 537,
+    "yandere": 344,
+    "konachan": 181
+   },
+   "total": 8052,
+   "image": {
+    "site": "danbooru",
+    "postId": "4998797",
+    "url": "https://cdn.donmai.us/sample/09/35/sample-0935a2187e99dcce771c39c712f979ba.jpg",
+    "w": 850,
+    "h": 332
+   }
+  },
+  {
+   "id": "ako_(blue_archive)",
+   "name": "Ako",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 7141,
+    "safebooru": 720,
+    "e621": 6
+   },
+   "total": 7867,
+   "image": {
+    "site": "danbooru",
+    "postId": "7072496",
+    "url": "https://cdn.donmai.us/sample/56/29/sample-56293a2c84cee160a34139e5e40d440c.jpg",
+    "w": 850,
+    "h": 2104
+   }
+  },
+  {
+   "id": "hasumi_(blue_archive)",
+   "name": "Hasumi",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 7109,
+    "safebooru": 444,
+    "e621": 57,
+    "konachan": 1
+   },
+   "total": 7611,
+   "image": {
+    "site": "danbooru",
+    "postId": "7616543",
+    "url": "https://cdn.donmai.us/sample/36/e6/sample-36e6bc1f79972af08393ebe8a86bdc2e.jpg",
+    "w": 850,
+    "h": 875
+   }
+  },
+  {
+   "id": "robin_(honkai:_star_rail)",
+   "name": "Robin",
+   "franchise": "honkai:_star_rail",
+   "counts": {
+    "danbooru": 5657,
+    "safebooru": 1786,
+    "e621": 5,
+    "konachan": 110
+   },
+   "total": 7558,
+   "image": {
+    "site": "danbooru",
+    "postId": "7289473",
+    "url": "https://cdn.donmai.us/720x720/36/12/3612f10491cc770062604c699643b841.webp",
+    "w": 720,
+    "h": 720
+   }
+  },
+  {
+   "id": "neru_(blue_archive)",
+   "name": "Neru",
+   "franchise": "blue_archive",
+   "counts": {
+    "danbooru": 6052,
+    "safebooru": 1470
+   },
+   "total": 7522,
+   "image": {
+    "site": "danbooru",
+    "postId": "9140675",
+    "url": "https://cdn.donmai.us/sample/77/e0/sample-77e0b03b21a4097caabac7be1799c92e.jpg",
+    "w": 850,
+    "h": 1263
+   }
+  },
+  {
+   "id": "boo_tao_(genshin_impact)",
+   "name": "Boo Tao",
+   "franchise": "genshin_impact",
+   "counts": {
+    "danbooru": 5837,
+    "safebooru": 1503
+   },
+   "total": 7340,
+   "image": {
+    "site": "danbooru",
+    "postId": "5288549",
+    "url": "https://cdn.donmai.us/sample/51/bb/sample-51bb44d69b338dbcffdd681685ce87a6.jpg",
+    "w": 850,
+    "h": 1454
+   }
+  },
+  {
+   "id": "okita_souji_(koha-ace)",
+   "name": "Okita Souji (Koha-Ace)",
+   "franchise": "fate_(series)",
+   "counts": {
+    "danbooru": 5610,
+    "safebooru": 452,
+    "paheal": 1037,
+    "yandere": 25,
+    "konachan": 9
+   },
+   "total": 7133,
+   "image": {
+    "site": "danbooru",
+    "postId": "8435283",
+    "url": "https://cdn.donmai.us/sample/69/e8/sample-69e849d4c6fbfd535ab30f3c545103ca.jpg",
+    "w": 850,
+    "h": 1242
+   }
+  },
+  {
+   "id": "medusa_(fate)",
+   "name": "Medusa",
+   "franchise": "fate_(series)",
+   "counts": {
+    "danbooru": 5878,
+    "safebooru": 501,
+    "e621": 32,
+    "yandere": 547
+   },
+   "total": 6958,
+   "image": {
+    "site": "danbooru",
+    "postId": "7340751",
+    "url": "https://cdn.donmai.us/sample/e1/29/sample-e129fc3446aa7e51ad23efffb217c2a2.jpg",
+    "w": 850,
+    "h": 582
+   }
+  },
+  {
+   "id": "northern_ocean_princess",
+   "name": "Northern Ocean Princess",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 6766,
+    "safebooru": 144,
+    "e621": 8
+   },
+   "total": 6918,
+   "image": {
+    "site": "danbooru",
+    "postId": "1945566",
+    "url": "https://cdn.donmai.us/sample/0a/35/sample-0a35c6891830f4e9ffabaaf5e25d7437.jpg",
+    "w": 850,
+    "h": 791
+   }
+  },
+  {
+   "id": "sendai_(kancolle)",
+   "name": "Sendai",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 5629,
+    "safebooru": 696,
+    "yandere": 187,
+    "konachan": 108
+   },
+   "total": 6620,
+   "image": {
+    "site": "danbooru",
+    "postId": "9676646",
+    "url": "https://cdn.donmai.us/sample/53/6e/sample-536eee7e83cc614fc142b0016146ef33.jpg",
+    "w": 850,
+    "h": 638
+   }
+  },
+  {
+   "id": "ooi_(kancolle)",
+   "name": "Ooi",
+   "franchise": "kantai_collection",
+   "counts": {
+    "danbooru": 5645,
+    "safebooru": 469,
+    "e621": 1,
+    "yandere": 107,
+    "konachan": 76
+   },
+   "total": 6298,
+   "image": {
+    "site": "danbooru",
+    "postId": "5771503",
+    "url": "https://cdn.donmai.us/sample/59/ce/sample-59ce76ff400574c0ec5358b67ac71da1.jpg",
+    "w": 850,
+    "h": 1072
+   }
+  }
+ ],
+ "franchises": [
+  {
+   "id": "touhou",
+   "name": "Touhou Project",
+   "total": 2158711,
+   "counts": {
+    "danbooru": 1110312,
+    "safebooru": 810046,
+    "e621": 6836,
+    "paheal": 178562,
+    "yandere": 31362,
+    "konachan": 21593
+   },
+   "fallback": [],
+   "characters": [
+    "flandre_scarlet",
+    "komeiji_koishi",
+    "patchouli_knowledge",
+    "yakumo_yukari",
+    "hong_meiling",
+    "kaenbyou_rin",
+    "kamishirasawa_keine",
+    "ibuki_suika",
+    "koakuma",
+    "hijiri_byakuren",
+    "kagiyama_hina",
+    "toyosatomimi_no_miko",
+    "onozuka_komachi",
+    "toramaru_shou",
+    "murasa_minamitsu",
+    "ibaraki_kasen",
+    "miyako_yoshika",
+    "kurodani_yamame",
+    "kumoi_ichirin",
+    "junko_(touhou)",
+    "aki_minoriko",
+    "sukuna_shinmyoumaru",
+    "futatsuiwa_mamizou"
+   ]
+  },
+  {
+   "id": "pokemon",
+   "name": "Pokémon",
+   "total": 1875512,
+   "counts": {
+    "danbooru": 418778,
+    "safebooru": 286403,
+    "e621": 671430,
+    "paheal": 491619,
+    "yandere": 4875,
+    "konachan": 2407
+   },
+   "fallback": [],
+   "characters": [
+    "pikachu",
+    "hilda_(pokemon)",
+    "red_(pokemon)",
+    "marnie_(pokemon)"
+   ]
+  },
+  {
+   "id": "kantai_collection",
+   "name": "Kantai Collection",
+   "total": 971261,
+   "counts": {
+    "danbooru": 547348,
+    "safebooru": 357569,
+    "e621": 398,
+    "paheal": 32451,
+    "yandere": 25137,
+    "konachan": 8358
+   },
+   "fallback": [],
+   "characters": [
+    "admiral_(kancolle)",
+    "shigure_(kancolle)",
+    "akagi_(kancolle)",
+    "ikazuchi_(kancolle)",
+    "haruna_(kancolle)",
+    "suzuya_(kancolle)",
+    "nagato_(kancolle)",
+    "houshou_(kancolle)",
+    "ushio_(kancolle)",
+    "shoukaku_(kancolle)",
+    "northern_ocean_princess",
+    "sendai_(kancolle)",
+    "ooi_(kancolle)"
+   ]
+  },
+  {
+   "id": "fate_(series)",
+   "name": "Fate",
+   "total": 776604,
+   "counts": {
+    "danbooru": 412142,
+    "safebooru": 216500,
+    "e621": 3046,
+    "paheal": 116589,
+    "yandere": 18095,
+    "konachan": 10232
+   },
+   "fallback": [
+    "yandere"
+   ],
+   "characters": [
+    "saber_(fate)",
+    "matou_sakura",
+    "nero_claudius_(fate)",
+    "jeanne_d'arc_alter_(fate)",
+    "okita_souji_(koha-ace)",
+    "medusa_(fate)"
+   ]
+  },
+  {
+   "id": "blue_archive",
+   "name": "Blue Archive",
+   "total": 668004,
+   "counts": {
+    "danbooru": 467105,
+    "safebooru": 124940,
+    "e621": 862,
+    "paheal": 20032,
+    "yandere": 47855,
+    "konachan": 7210
+   },
+   "fallback": [],
+   "characters": [
+    "sensei_(blue_archive)",
+    "doodle_sensei_(blue_archive)",
+    "aris_(blue_archive)",
+    "rio_(blue_archive)",
+    "kayoko_(blue_archive)",
+    "kazusa_(blue_archive)",
+    "shiroko_(blue_archive)",
+    "nozomi_(blue_archive)",
+    "hanako_(blue_archive)",
+    "ako_(blue_archive)",
+    "hasumi_(blue_archive)",
+    "neru_(blue_archive)"
+   ]
+  },
+  {
+   "id": "genshin_impact",
+   "name": "Genshin Impact",
+   "total": 635930,
+   "counts": {
+    "danbooru": 321122,
+    "safebooru": 147783,
+    "e621": 3055,
+    "paheal": 115353,
+    "yandere": 42755,
+    "konachan": 5862
+   },
+   "fallback": [],
+   "characters": [
+    "ganyu_(genshin_impact)",
+    "furina_(genshin_impact)",
+    "aether_(genshin_impact)",
+    "columbina_(genshin_impact)",
+    "mona_(genshin_impact)",
+    "keqing_(genshin_impact)",
+    "boo_tao_(genshin_impact)"
+   ]
+  },
+  {
+   "id": "fate/grand_order",
+   "name": "Fate/Grand Order",
+   "total": 567735,
+   "counts": {
+    "danbooru": 309015,
+    "safebooru": 149555,
+    "e621": 148,
+    "paheal": 70322,
+    "yandere": 31424,
+    "konachan": 7271
+   },
+   "fallback": [
+    "e621"
+   ],
+   "characters": [
+    "mash_kyrielight",
+    "scathach_(fate)",
+    "baobhan_sith_(fate)"
+   ]
+  },
+  {
+   "id": "hololive",
+   "name": "Hololive",
+   "total": 525917,
+   "counts": {
+    "danbooru": 334511,
+    "safebooru": 123832,
+    "e621": 2593,
+    "paheal": 23184,
+    "yandere": 36348,
+    "konachan": 5449
+   },
+   "fallback": [],
+   "characters": [
+    "shirakami_fubuki",
+    "ouro_kronii",
+    "minato_aqua",
+    "sakura_miko",
+    "ookami_mio",
+    "oozora_subaru",
+    "yukihana_lamy",
+    "nakiri_ayame",
+    "fuwawa_abyssgard"
+   ]
+  },
+  {
+   "id": "idolmaster",
+   "name": "The Idolmaster",
+   "total": 500292,
+   "counts": {
+    "danbooru": 289519,
+    "safebooru": 165573,
+    "e621": 428,
+    "paheal": 32582,
+    "yandere": 6093,
+    "konachan": 6097
+   },
+   "fallback": [
+    "yandere"
+   ],
+   "characters": [
+    "producer_(idolmaster)",
+    "shijou_takane",
+    "yumemi_riamu"
+   ]
+  },
+  {
+   "id": "vocaloid",
+   "name": "Vocaloid",
+   "total": 441989,
+   "counts": {
+    "danbooru": 212747,
+    "safebooru": 165984,
+    "e621": 1883,
+    "paheal": 22163,
+    "yandere": 16351,
+    "konachan": 22861
+   },
+   "fallback": [],
+   "characters": [
+    "hatsune_miku",
+    "megurine_luka",
+    "kaito_(vocaloid)",
+    "meiko_(vocaloid)"
+   ]
+  },
+  {
+   "id": "arknights",
+   "name": "Arknights",
+   "total": 404461,
+   "counts": {
+    "danbooru": 235475,
+    "safebooru": 127179,
+    "e621": 8548,
+    "paheal": 13225,
+    "yandere": 16312,
+    "konachan": 3722
+   },
+   "fallback": [],
+   "characters": [
+    "doctor_(arknights)",
+    "lappland_(arknights)",
+    "angelina_(arknights)"
+   ]
+  },
+  {
+   "id": "umamusume",
+   "name": "Umamusume",
+   "total": 370785,
+   "counts": {
+    "danbooru": 243457,
+    "safebooru": 121143,
+    "paheal": 1816,
+    "yandere": 4066,
+    "konachan": 303
+   },
+   "fallback": [
+    "e621",
+    "paheal",
+    "yandere",
+    "konachan"
+   ],
+   "characters": [
+    "daiwa_scarlet_(umamusume)",
+    "oguri_cap_(umamusume)",
+    "silence_suzuka_(umamusume)"
+   ]
+  },
+  {
+   "id": "azur_lane",
+   "name": "Azur Lane",
+   "total": 287102,
+   "counts": {
+    "danbooru": 159071,
+    "safebooru": 44454,
+    "e621": 818,
+    "paheal": 27688,
+    "yandere": 44571,
+    "konachan": 10500
+   },
+   "fallback": [],
+   "characters": [
+    "taihou_(azur_lane)"
+   ]
+  },
+  {
+   "id": "honkai_(series)",
+   "name": "Honkai",
+   "total": 274314,
+   "counts": {
+    "danbooru": 194136,
+    "safebooru": 75198,
+    "e621": 39,
+    "paheal": 754,
+    "yandere": 1111,
+    "konachan": 3076
+   },
+   "fallback": [
+    "paheal",
+    "yandere"
+   ],
+   "characters": [
+    "elysia_(honkai_impact)",
+    "raiden_mei"
+   ]
+  },
+  {
+   "id": "final_fantasy",
+   "name": "Final Fantasy",
+   "total": 230696,
+   "counts": {
+    "danbooru": 110448,
+    "safebooru": 63829,
+    "e621": 21465,
+    "paheal": 29682,
+    "yandere": 3910,
+    "konachan": 1362
+   },
+   "fallback": [
+    "paheal"
+   ],
+   "characters": [
+    "tifa_lockhart",
+    "sephiroth"
+   ]
+  },
+  {
+   "id": "love_live!",
+   "name": "Love Live!",
+   "total": 210406,
+   "counts": {
+    "danbooru": 130196,
+    "safebooru": 70729,
+    "e621": 73,
+    "paheal": 4161,
+    "yandere": 5237,
+    "konachan": 10
+   },
+   "fallback": [
+    "paheal"
+   ],
+   "characters": [
+    "nishikino_maki",
+    "hinoshita_kaho",
+    "watanabe_you",
+    "murano_sayaka",
+    "tojo_nozomi"
+   ]
+  },
+  {
+   "id": "honkai:_star_rail",
+   "name": "Honkai: Star Rail",
+   "total": 208671,
+   "counts": {
+    "danbooru": 137290,
+    "safebooru": 54278,
+    "e621": 914,
+    "paheal": 6973,
+    "yandere": 7167,
+    "konachan": 2049
+   },
+   "fallback": [],
+   "characters": [
+    "trailblazer_(honkai:_star_rail)",
+    "firefly_(honkai:_star_rail)",
+    "stelle_(honkai:_star_rail)",
+    "sparkle_(honkai:_star_rail)",
+    "robin_(honkai:_star_rail)"
+   ]
+  },
+  {
+   "id": "zenless_zone_zero",
+   "name": "Zenless Zone Zero",
+   "total": 205032,
+   "counts": {
+    "danbooru": 123359,
+    "safebooru": 33471,
+    "e621": 11023,
+    "paheal": 32306,
+    "yandere": 3620,
+    "konachan": 1253
+   },
+   "fallback": [],
+   "characters": [
+    "hoshimi_miyabi"
+   ]
+  },
+  {
+   "id": "mahou_shoujo_madoka_magica",
+   "name": "Puella Magi Madoka Magica",
+   "total": 177076,
+   "counts": {
+    "danbooru": 85452,
+    "safebooru": 65916,
+    "e621": 725,
+    "paheal": 18117,
+    "yandere": 3973,
+    "konachan": 2893
+   },
+   "fallback": [
+    "e621",
+    "paheal"
+   ],
+   "characters": [
+    "kaname_madoka",
+    "akemi_homura",
+    "tomoe_mami_(magical_girl)"
+   ]
+  },
+  {
+   "id": "nijisanji",
+   "name": "Nijisanji",
+   "total": 160891,
+   "counts": {
+    "danbooru": 93482,
+    "safebooru": 53685,
+    "e621": 658,
+    "paheal": 6215,
+    "yandere": 5840,
+    "konachan": 1011
+   },
+   "fallback": [],
+   "characters": [
+    "ange_katrina"
+   ]
+  },
+  {
+   "id": "gundam",
+   "name": "Gundam",
+   "total": 150267,
+   "counts": {
+    "danbooru": 72372,
+    "safebooru": 49560,
+    "e621": 1052,
+    "paheal": 23398,
+    "yandere": 3864,
+    "konachan": 21
+   },
+   "fallback": [
+    "konachan"
+   ],
+   "characters": [
+    "suletta_mercury"
+   ]
+  },
+  {
+   "id": "boku_no_hero_academia",
+   "name": "Boku no Hero Academia",
+   "total": 139801,
+   "counts": {
+    "danbooru": 45842,
+    "safebooru": 18349,
+    "e621": 1351,
+    "paheal": 72310,
+    "yandere": 1680,
+    "konachan": 269
+   },
+   "fallback": [
+    "e621"
+   ],
+   "characters": [
+    "midoriya_izuku"
+   ]
+  },
+  {
+   "id": "girls_und_panzer",
+   "name": "Girls und Panzer",
+   "total": 135979,
+   "counts": {
+    "danbooru": 74277,
+    "safebooru": 43326,
+    "e621": 71,
+    "paheal": 14256,
+    "yandere": 3542,
+    "konachan": 507
+   },
+   "fallback": [],
+   "characters": [
+    "nishizumi_miho"
+   ]
+  },
+  {
+   "id": "danganronpa_(series)",
+   "name": "Danganronpa",
+   "total": 113801,
+   "counts": {
+    "danbooru": 69875,
+    "safebooru": 40172,
+    "e621": 153,
+    "paheal": 3346,
+    "yandere": 124,
+    "konachan": 131
+   },
+   "fallback": [
+    "e621",
+    "paheal",
+    "yandere",
+    "konachan"
+   ],
+   "characters": [
+    "oma_kokichi",
+    "komaeda_nagito",
+    "hinata_hajime"
+   ]
+  },
+  {
+   "id": "jojo_no_kimyou_na_bouken",
+   "name": "JoJo's Bizarre Adventure",
+   "total": 112572,
+   "counts": {
+    "danbooru": 55801,
+    "safebooru": 45121,
+    "e621": 599,
+    "paheal": 10766,
+    "yandere": 188,
+    "konachan": 97
+   },
+   "fallback": [
+    "e621",
+    "paheal"
+   ],
+   "characters": [
+    "joseph_joestar_(young)",
+    "kujo_jotaro",
+    "caesar_anthonio_zeppeli"
+   ]
+  },
+  {
+   "id": "bang_dream!",
+   "name": "Bang Dream!",
+   "total": 111352,
+   "counts": {
+    "danbooru": 60163,
+    "safebooru": 44708,
+    "e621": 26,
+    "paheal": 3517,
+    "yandere": 2610,
+    "konachan": 328
+   },
+   "fallback": [],
+   "characters": [
+    "togawa_sakiko",
+    "misumi_uika",
+    "shiina_taki",
+    "yahata_umiri"
+   ]
+  },
+  {
+   "id": "kemono_friends",
+   "name": "Kemono Friends",
+   "total": 104184,
+   "counts": {
+    "danbooru": 58634,
+    "safebooru": 35935,
+    "e621": 2689,
+    "paheal": 5390,
+    "yandere": 1099,
+    "konachan": 437
+   },
+   "fallback": [],
+   "characters": [
+    "serval_(kemono_friends)",
+    "kaban_(kemono_friends)"
+   ]
+  },
+  {
+   "id": "chainsaw_man",
+   "name": "Chainsaw Man",
+   "total": 101248,
+   "counts": {
+    "danbooru": 47023,
+    "safebooru": 24444,
+    "e621": 798,
+    "paheal": 27852,
+    "yandere": 985,
+    "konachan": 146
+   },
+   "fallback": [],
+   "characters": [
+    "makima_(chainsaw_man)",
+    "power_(chainsaw_man)"
+   ]
+  },
+  {
+   "id": "persona",
+   "name": "Persona",
+   "total": 96498,
+   "counts": {
+    "danbooru": 50924,
+    "safebooru": 35852,
+    "e621": 178,
+    "paheal": 8029,
+    "yandere": 1038,
+    "konachan": 477
+   },
+   "fallback": [
+    "e621"
+   ],
+   "characters": [
+    "yuuki_makoto_(persona_3)"
+   ]
+  },
+  {
+   "id": "naruto_(series)",
+   "name": "Naruto",
+   "total": 80183,
+   "counts": {
+    "danbooru": 27472,
+    "safebooru": 9840,
+    "e621": 109,
+    "paheal": 42132,
+    "yandere": 628,
+    "konachan": 2
+   },
+   "fallback": [
+    "paheal",
+    "yandere"
+   ],
+   "characters": [
+    "uzumaki_naruto",
+    "haruno_sakura"
+   ]
+  },
+  {
+   "id": "mario_(series)",
+   "name": "Mario",
+   "total": 73496,
+   "counts": {
+    "danbooru": 31660,
+    "safebooru": 9594,
+    "e621": 4058,
+    "paheal": 27795,
+    "yandere": 60,
+    "konachan": 329
+   },
+   "fallback": [
+    "e621",
+    "paheal",
+    "konachan"
+   ],
+   "characters": [
+    "princess_peach"
+   ]
+  },
+  {
+   "id": "dragon_ball",
+   "name": "Dragon Ball",
+   "total": 69075,
+   "counts": {
+    "danbooru": 30711,
+    "safebooru": 19475,
+    "e621": 9104,
+    "paheal": 9150,
+    "yandere": 623,
+    "konachan": 12
+   },
+   "fallback": [
+    "paheal"
+   ],
+   "characters": [
+    "son_goku"
+   ]
+  },
+  {
+   "id": "k-on!",
+   "name": "K-On!",
+   "total": 65853,
+   "counts": {
+    "danbooru": 27570,
+    "safebooru": 22601,
+    "e621": 45,
+    "paheal": 9203,
+    "yandere": 3678,
+    "konachan": 2756
+   },
+   "fallback": [],
+   "characters": [
+    "tainaka_ritsu"
+   ]
+  },
+  {
+   "id": "bocchi_the_rock!",
+   "name": "Bocchi the Rock!",
+   "total": 54896,
+   "counts": {
+    "danbooru": 32220,
+    "safebooru": 16926,
+    "e621": 2,
+    "paheal": 3622,
+    "yandere": 1946,
+    "konachan": 180
+   },
+   "fallback": [
+    "e621"
+   ],
+   "characters": [
+    "gotoh_hitori"
+   ]
+  },
+  {
+   "id": "suzumiya_haruhi_no_yuuutsu",
+   "name": "Suzumiya Haruhi no Yuuutsu",
+   "total": 52759,
+   "counts": {
+    "danbooru": 25737,
+    "safebooru": 19163,
+    "e621": 39,
+    "paheal": 4018,
+    "yandere": 2148,
+    "konachan": 1654
+   },
+   "fallback": [
+    "e621",
+    "paheal",
+    "konachan"
+   ],
+   "characters": [
+    "suzumiya_haruhi"
+   ]
+  },
+  {
+   "id": "lyrical_nanoha",
+   "name": "Lyrical Nanoha",
+   "total": 51257,
+   "counts": {
+    "danbooru": 25925,
+    "safebooru": 9937,
+    "e621": 4,
+    "paheal": 11454,
+    "yandere": 3936,
+    "konachan": 1
+   },
+   "fallback": [
+    "yandere"
+   ],
+   "characters": [
+    "fate_testarossa"
+   ]
+  },
+  {
+   "id": "sousou_no_frieren",
+   "name": "Sousou no Frieren",
+   "total": 48852,
+   "counts": {
+    "danbooru": 27587,
+    "safebooru": 12209,
+    "e621": 1,
+    "paheal": 7434,
+    "yandere": 1262,
+    "konachan": 359
+   },
+   "fallback": [],
+   "characters": [
+    "fern_(sousou_no_frieren)"
+   ]
+  },
+  {
+   "id": "jujutsu_kaisen",
+   "name": "Jujutsu Kaisen",
+   "total": 48030,
+   "counts": {
+    "danbooru": 25201,
+    "safebooru": 14585,
+    "e621": 571,
+    "paheal": 7466,
+    "yandere": 192,
+    "konachan": 15
+   },
+   "fallback": [],
+   "characters": [
+    "gojo_satoru"
+   ]
+  },
+  {
+   "id": "omori",
+   "name": "Omori",
+   "total": 46892,
+   "counts": {
+    "danbooru": 24557,
+    "safebooru": 19988,
+    "e621": 3,
+    "paheal": 2344
+   },
+   "fallback": [
+    "yandere",
+    "konachan"
+   ],
+   "characters": [
+    "aubrey_(omori)"
+   ]
+  },
+  {
+   "id": "gakuen_idolmaster",
+   "name": "Gakuen Idolmaster",
+   "total": 42192,
+   "counts": {
+    "danbooru": 28382,
+    "safebooru": 13080,
+    "paheal": 393,
+    "yandere": 212,
+    "konachan": 125
+   },
+   "fallback": [
+    "e621",
+    "yandere"
+   ],
+   "characters": [
+    "shinosawa_hiro"
+   ]
+  },
+  {
+   "id": "bishoujo_senshi_sailor_moon",
+   "name": "Bishoujo Senshi Sailor Moon",
+   "total": 41304,
+   "counts": {
+    "danbooru": 19667,
+    "safebooru": 14416,
+    "e621": 1,
+    "paheal": 6008,
+    "yandere": 1026,
+    "konachan": 186
+   },
+   "fallback": [
+    "paheal",
+    "konachan"
+   ],
+   "characters": [
+    "tsukino_usagi"
+   ]
+  },
+  {
+   "id": "kill_la_kill",
+   "name": "Kill La Kill",
+   "total": 38723,
+   "counts": {
+    "danbooru": 16487,
+    "safebooru": 9766,
+    "e621": 516,
+    "paheal": 11117,
+    "yandere": 550,
+    "konachan": 287
+   },
+   "fallback": [],
+   "characters": [
+    "senketsu"
+   ]
+  },
+  {
+   "id": "toaru_majutsu_no_index",
+   "name": "Toaru Majutsu no Index",
+   "total": 38383,
+   "counts": {
+    "danbooru": 28226,
+    "safebooru": 4624,
+    "e621": 20,
+    "paheal": 2457,
+    "yandere": 2483,
+    "konachan": 573
+   },
+   "fallback": [
+    "e621",
+    "paheal",
+    "konachan"
+   ],
+   "characters": [
+    "misaka_mikoto"
+   ]
+  },
+  {
+   "id": "ranma_1/2",
+   "name": "Ranma 1/2",
+   "total": 33818,
+   "counts": {
+    "danbooru": 13786,
+    "safebooru": 9042,
+    "e621": 198,
+    "paheal": 10672,
+    "yandere": 98,
+    "konachan": 22
+   },
+   "fallback": [
+    "yandere",
+    "konachan"
+   ],
+   "characters": [
+    "tendou_akane"
+   ]
+  },
+  {
+   "id": "dungeon_meshi",
+   "name": "Dungeon Meshi",
+   "total": 28698,
+   "counts": {
+    "danbooru": 14811,
+    "safebooru": 7640,
+    "e621": 702,
+    "paheal": 5466,
+    "yandere": 64,
+    "konachan": 15
+   },
+   "fallback": [
+    "e621"
+   ],
+   "characters": [
+    "marcille_donato"
+   ]
+  },
+  {
+   "id": "fatal_fury",
+   "name": "Fatal Fury",
+   "total": 20568,
+   "counts": {
+    "danbooru": 8090,
+    "safebooru": 1900,
+    "e621": 364,
+    "paheal": 10080,
+    "yandere": 100,
+    "konachan": 34
+   },
+   "fallback": [],
+   "characters": [
+    "shiranui_mai"
+   ]
+  },
+  {
+   "id": "panty_&_stocking_with_garterbelt",
+   "name": "Panty & Stocking With Garterbelt",
+   "total": 20085,
+   "counts": {
+    "danbooru": 9201,
+    "safebooru": 2664,
+    "e621": 1,
+    "paheal": 7521,
+    "yandere": 381,
+    "konachan": 317
+   },
+   "fallback": [
+    "safebooru"
+   ],
+   "characters": [
+    "stocking_(psg)"
+   ]
+  },
+  {
+   "id": "lycoris_recoil",
+   "name": "Lycoris Recoil",
+   "total": 16945,
+   "counts": {
+    "danbooru": 10559,
+    "safebooru": 4660,
+    "e621": 8,
+    "paheal": 883,
+    "yandere": 733,
+    "konachan": 102
+   },
+   "fallback": [],
+   "characters": [
+    "inoue_takina"
+   ]
+  },
+  {
+   "id": "sono_bisque_doll_wa_koi_wo_suru",
+   "name": "Sono Bisque Doll wa Koi Wo Suru",
+   "total": 15258,
+   "counts": {
+    "danbooru": 8175,
+    "safebooru": 1705,
+    "e621": 19,
+    "paheal": 2913,
+    "yandere": 2306,
+    "konachan": 140
+   },
+   "fallback": [
+    "e621"
+   ],
+   "characters": [
+    "kitagawa_marin"
+   ]
+  },
+  {
+   "id": "onii-chan_wa_oshimai!",
+   "name": "Onii-Chan wa Oshimai!",
+   "total": 14758,
+   "counts": {
+    "danbooru": 11204,
+    "safebooru": 3085,
+    "e621": 5,
+    "paheal": 289,
+    "yandere": 148,
+    "konachan": 27
+   },
+   "fallback": [
+    "e621",
+    "paheal"
+   ],
+   "characters": [
+    "oyama_mahiro"
+   ]
+  }
+ ]
+}

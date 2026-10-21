@@ -17,7 +17,11 @@ const ORDER = ['vx-sakura-handheld', 'vx-magical-compact', 'vx-mecha-hud', 'vx-c
   'vx-chateau-gilt', 'vx-nouveau-bloom', 'vx-marble-atrium', 'vx-hanging-scroll',
   'vx-elven-arch', 'vx-dwarven-gate', 'vx-gothic-reliquary', 'vx-demon-crown',
   'vx-terrarium', 'vx-great-wave', 'vx-analog-synth', 'vx-pipe-organ',
-  'vx-shark-diver', 'vx-apothecary', 'vx-chalkboard-club', 'vx-samurai-brocade'];
+  'vx-shark-diver', 'vx-apothecary', 'vx-chalkboard-club', 'vx-samurai-brocade',
+  // Atelier Noir, Midnight Atelier
+  'vx-art-deco-noir', 'vx-maki-e-lacquer', 'vx-horology', 'vx-stained-glass',
+  'vx-ink-dragon', 'vx-biomech', 'vx-botanical-engraving', 'vx-obsidian-throne',
+  'vx-sakura-classic'];
 // Coin prices per id (shells not listed are level rewards in src/catalog/levels.json).
 const coinPrice = (c) => (Number.isInteger(c) && c > 0 ? { coins: c } : null);
 const PRICES = (() => { try { return require('../shells/pricing.json'); } catch { return {}; } })();
