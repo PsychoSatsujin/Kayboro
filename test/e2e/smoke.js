@@ -549,8 +549,8 @@ const CHECKS = [
     ctx.frames = await R(async () => (await import('./frames/frames.js')).STARTERS.map((f) => ({ id: f.id, name: f.name, hole: f.hole, aspect: f.aspect })));
     const st = await R(async () => ({
       api: ['listSources', 'detectSteamGame', 'getDisplays', 'moveWindowToDisplay', 'startPlay', 'stopPlay', 'onCursor', 'onPlayState',
-        'onHotkey', 'pickFile', 'listScenes', 'loadScene', 'saveScene', 'deleteScene', 'setFullscreen'].filter((k) => typeof window.ror?.[k] !== 'function'),
-      shellApi: ['getState', 'listCatalog', 'listDevelopers', 'purchase', 'equip', 'setActiveWallpaper', 'setWallpaperPreset', 'buyWallpaperPreset',
+        'onHotkey', 'pickFile', 'listSetups', 'loadSetup', 'saveSetup', 'deleteSetup', 'setupForGame', 'setFullscreen'].filter((k) => typeof window.ror?.[k] !== 'function'),
+      shellApi: ['getState', 'listCatalog', 'listDevelopers', 'purchase', 'equip', 'setActiveWallpaper', 'buyPresetSlot', 'savePreset', 'getPreset',
         'listLocalWallpapers', 'sessionStart', 'sessionStop', 'openLink', 'getSettings', 'setSettings', 'getIntegrity', 'getMods', 'reloadMods',
         'openModsFolder', 'submitDeveloper', 'listSubmissions', 'exportPayoutSheet', 'onState', 'onUnlock', 'onLevelUp', 'onGameLaunched', 'onCatalog']
         .filter((k) => typeof window.shell?.[k] !== 'function'),
@@ -572,7 +572,7 @@ const CHECKS = [
     assert(st.catalogFrames === st.allFrames && st.allFrames > ctx.frames.length, `frame list has ${st.allFrames} frames, catalog ${st.catalogFrames}`);
     assert(st.frameTiles === st.allFrames + 1, `expected ${st.allFrames + 1} frame tiles, got ${st.frameTiles}`);
     assert(st.chips === 8, `expected 8 aspect chips, got ${st.chips}`);
-    assert(st.tabs.join() === 'Stage,Shop,Profile,Devs', `tabs: ${st.tabs.join(', ')}`);
+    assert(st.tabs.join() === 'Stage,Kaybo,Arcade,Shop,Profile,Devs', `tabs: ${st.tabs.join(', ')}`);
     assert(rendererErrors.length === 0, `renderer errors during load: ${brief(rendererErrors, 400)}`);
     return `window ${st.size.join('x')}, ${st.frameTiles} frame tiles (${st.allFrames} frames), ${st.chips} aspect chips, tabs ${st.tabs.join('/')}, no renderer errors`;
   } },
@@ -1084,35 +1084,40 @@ const CHECKS = [
     return `${n0} -> +2 (Add x2, new one selected, inside stage) -> Remove -> Delete key -> ${c.n}, originals intact`;
   } },
 
-  { name: 'scenes-roundtrip', timeout: 20000, async fn() {
-    const name = 'smoke scene';
-    const scenesFile = path.join(USER_DATA, 'scenes.json');
+  { name: 'setups-roundtrip', timeout: 20000, async fn() {
+    const name = 'smoke setup';
+    const file = path.join(USER_DATA, 'setups.json');
     const before = await R(() => ({ n: __smoke.screens().length, r: __smoke.selRect(), bg: document.getElementById('bg').style.backgroundColor }));
     const t = await R(() => Date.now());
-    assert(await R(() => __smoke.openSection('Scenes')), 'could not expand the Scenes section');
-    await typeInto('#sceneName', name);
-    await R(() => __smoke.click('#sceneSave'));
-    await waitFor('the scene to appear in the list', () => R((n, t) => ({ ok: [...document.querySelectorAll('#scenes option')].some((o) => o.value === n) &&
-      document.getElementById('scenes').value === n && __smoke.toastSince(t, '^Saved'), toast: __smoke.lastToast() }), name, t), 3000);
-    const saved = JSON.parse(fs.readFileSync(scenesFile, 'utf8'))[name];
-    assert(saved && Array.isArray(saved.screens) && saved.screens.length === before.n, `scenes.json entry wrong: ${brief(saved, 300)}`);
-    const ss = saved.screens.find((s) => s.id === saved.selectedId);
+    assert(await R(() => __smoke.openSection('Setups')), 'could not expand the Setups section');
+    await typeInto('#setupName', name);
+    await R(() => __smoke.click('#setupSave'));
+    await waitFor('the setup to appear in the list', () => R((n, t) => ({ ok: [...document.querySelectorAll('#setupList .setup-name')].some((o) => o.textContent === n) &&
+      __smoke.toastSince(t, '^Saved'), toast: __smoke.lastToast() }), name, t), 3000);
+    const saved = JSON.parse(fs.readFileSync(file, 'utf8')).find((s) => s.name === name);
+    const sc = saved && saved.config.scene;
+    assert(sc && Array.isArray(sc.screens) && sc.screens.length === before.n && saved.game === null, `setups.json entry wrong: ${brief(saved, 300)}`);
+    assert(sc.screens.every((s) => s.sourceId === null && s.hwnd === null), 'live game windows are not saved');
+    assert(saved.config.fx && typeof saved.config.fx.glass === 'boolean', `effects not saved: ${brief(saved.config.fx)}`);
+    const ss = sc.screens.find((s) => s.id === sc.selectedId);
     assert(ss && sameRect(ss.rect, before.r, 0.01), `saved selected rect ${brief(ss && ss.rect)} != on-screen ${fmtRect(before.r)}`);
-    // Change the scene, then load the saved one back.
+    // Change the stage and the effects, then load the setup back.
+    const glass = await R(() => document.getElementById('fxGlass').checked);
     await R(() => __smoke.click('#scrAdd'));
     await R(() => __smoke.setValue('#bgColor', '#654321', 'input'));
-    await waitFor('the scene to change', () => R(() => __smoke.screens().length).then((k) => ({ ok: k === before.n + 1, k })), 3000);
+    await R(() => __smoke.click('#fxGlass'));
+    await waitFor('the stage to change', () => R(() => __smoke.screens().length).then((k) => ({ ok: k === before.n + 1, k })), 3000);
     const t2 = await R(() => Date.now());
-    await R((n) => { document.getElementById('scenes').value = n; return __smoke.click('#sceneLoad'); }, name);
-    const l = await waitFor('Load to restore the scene', () => R((t) => ({ n: __smoke.screens().length, r: __smoke.selRect(), bg: document.getElementById('bg').style.backgroundColor, loaded: __smoke.toastSince(t, '^Loaded') }), t2)
-      .then((s) => ({ ok: s.n === before.n && sameRect(s.r, before.r, 0.01) && s.bg === before.bg && s.loaded, ...s })), 3000);
-    await R(() => __smoke.click('#sceneDelete'));
-    await waitFor('Delete to remove the scene', () => R((n) => ({ ok: ![...document.querySelectorAll('#scenes option')].some((o) => o.value === n) }), name), 3000);
-    const disk = JSON.parse(fs.readFileSync(scenesFile, 'utf8'));
-    assert(!(name in disk), 'scene still in scenes.json after Delete');
-    const api = await R(async (n) => ({ load: await window.ror.loadScene(n), list: await window.ror.listScenes() }), name);
-    assert(api.load === null && !api.list.includes(name), `after delete: loadScene=${brief(api.load)}, listScenes=${brief(api.list)}`);
-    return `saved "${name}" (${saved.screens.length} screen, rect ${fmtRect(ss.rect)}), changed, loaded back (${l.n} screen, bg ${l.bg}), deleted from list + scenes.json`;
+    await R((n) => [...document.querySelectorAll('#setupList .setup-load')].find((b) => b.querySelector('.setup-name').textContent === n).click(), name);
+    const l = await waitFor('Load to restore the setup', () => R((t) => ({ n: __smoke.screens().length, r: __smoke.selRect(), bg: document.getElementById('bg').style.backgroundColor,
+      glass: document.getElementById('fxGlass').checked, loaded: __smoke.toastSince(t, '^Loaded') }), t2)
+      .then((s) => ({ ok: s.n === before.n && sameRect(s.r, before.r, 0.01) && s.bg === before.bg && s.glass === glass && s.loaded, ...s })), 3000);
+    await R((n) => [...document.querySelectorAll('#setupList .setup')].find((b) => b.querySelector('.setup-name').textContent === n).querySelector('.danger').click(), name);
+    await waitFor('Delete to remove the setup', () => R((n) => ({ ok: ![...document.querySelectorAll('#setupList .setup-name')].some((o) => o.textContent === n) }), name), 3000);
+    assert(!JSON.parse(fs.readFileSync(file, 'utf8')).some((s) => s.name === name), 'setup still in setups.json after Delete');
+    const api = await R(async (id) => ({ load: await window.ror.loadSetup(id), list: await window.ror.listSetups() }), saved.id);
+    assert(api.load === null && !api.list.some((s) => s.id === saved.id), `after delete: loadSetup=${brief(api.load)}, listSetups=${brief(api.list)}`);
+    return `saved "${name}" (${sc.screens.length} screen, rect ${fmtRect(ss.rect)}, effects), changed, loaded back (${l.n} screen, bg ${l.bg}, glass ${l.glass}), deleted from list + setups.json`;
   } },
 
   // ---- Windows only ----
@@ -1536,34 +1541,40 @@ const CHECKS = [
     return `gallery ${brief(counts.n)}; hover preview + restore; free on the stage: ${steps.join(', ')} (rendered ${hex(px.c)}, ${hex(fpx.c)}); scene -> hint; shell fill ${fill.img}; no coins spent`;
   } },
 
-  { name: 'wallpaper-presets', timeout: 20000, shot: true, async fn() {
+  { name: 'presets', timeout: 20000, shot: true, async fn() {
     const s0 = await R(() => window.shell.getState());
-    assert(s0.wallpaperPresets.length === 0 && s0.coins >= 200, `start: ${s0.wallpaperPresets.length} presets, ${s0.coins} coins`);
+    assert(s0.presets.length === 0 && s0.coins >= 200, `start: ${s0.presets.length} presets, ${s0.coins} coins`);
     await R(() => __smoke.click('#panel-shop .sc-preset.is-buy'));
     await R(() => __smoke.click('#panel-shop .sc-preset.is-buy.is-confirm'));
-    const s1 = await waitFor('a preset slot to be bought', () => R(async () => { const st = await window.shell.getState(); return { ok: st.wallpaperPresets.length === 1, st }; }), 3000).then((r) => r.st);
+    const s1 = await waitFor('a preset slot to be bought', () => R(async () => { const st = await window.shell.getState(); return { ok: st.presets.length === 1, st }; }), 3000).then((r) => r.st);
     const pre = history().filter((e) => e.type === 'preset');
     assert(pre.length === 1 && pre[0].coins === -200 && s0.coins - s1.coins >= 199 && s0.coins - s1.coins <= 200, `preset slot: ${brief(pre)}, coins ${s0.coins} -> ${s1.coins}`);
     const cur = s1.activeWallpaper.stage;
+    const before = await R(() => ({ n: __smoke.screens().length, r: __smoke.selRect(), bgImg: document.getElementById('bg').style.backgroundImage }));
     await waitFor('the empty preset tile', () => R(() => ({ ok: !!document.querySelector('#panel-shop .sc-preset.is-empty') })), 3000);
     await R(() => __smoke.click('#panel-shop .sc-preset.is-empty'));
-    const s2 = await waitFor('the preset to store the wallpaper', () => R(async () => { const st = await window.shell.getState(); return { ok: !!st.wallpaperPresets[0]?.wallpaper, st }; }), 3000).then((r) => r.st);
-    assert(JSON.stringify(s2.wallpaperPresets[0].wallpaper) === JSON.stringify(cur), `preset holds ${brief(s2.wallpaperPresets[0].wallpaper)}, stage shows ${brief(cur)}`);
-    // Switch away, then one click on the preset swaps back (free).
+    const s2 = await waitFor('the preset to store the whole setup', () => R(async () => { const st = await window.shell.getState(); return { ok: st.presets[0] && !st.presets[0].empty, st }; }), 3000).then((r) => r.st);
+    const full = await R(() => window.shell.getPreset(0));
+    assert(full && full.config.scene.screens.length === before.n && JSON.stringify(full.config.scene.background.ref) === JSON.stringify(cur),
+      `preset holds ${brief(full && full.config.scene.background)}, ${full && full.config.scene.screens.length} screens; stage shows ${brief(cur)}, ${before.n} screens`);
+    // Change the stage (another wallpaper, another screen), then one click on the preset loads it all back (free).
     await R(() => __smoke.click('#panel-shop .sc-wp:not(.is-add)[title^="Nebula Drift"]'));
     await waitFor('Nebula Drift on the stage', () => R(async () => ({ ok: (await window.shell.getState()).activeWallpaper.stage?.id === 'wp-nebula-drift' })), 3000);
-    await R(() => __smoke.click('#panel-shop .sc-preset.is-filled .sc-preset-pick'));
-    const s3 = await waitFor('the preset to swap the stage back', () => R(async (want) => {
-      const st = await window.shell.getState();
-      return { ok: JSON.stringify(st.activeWallpaper.stage) === want && document.getElementById('bg').style.backgroundImage.includes('wallpaper.png'), st };
-    }, JSON.stringify(cur)), 3000).then((r) => r.st);
-    assert(s3.coins >= s2.coins && history().filter((e) => e.type === 'preset').length === 1, `swapping presets cost ${s2.coins - s3.coins} coins`);
-    // Stage > Background lists it too.
     await showTab('stage');
-    const pane = await R(() => ({ type: __smoke.radio('bgType'), slots: [...document.querySelectorAll('#bgSlots .slot .name')].map((n) => n.textContent) }));
-    assert(pane.type === 'wallpaper' && pane.slots.some((n) => /^1\. /.test(n)), `Stage > Background: ${brief(pane)}`);
+    await R(() => __smoke.click('#scrAdd'));
     await showTab('shop');
-    return `bought slot 1 for 200 coins, saved ${cur.source} wallpaper, swapped away and back for free; Stage > Background lists ${brief(pane.slots)}`;
+    await R(() => __smoke.click('#panel-shop .sc-preset.is-filled .sc-preset-pick'));
+    const s3 = await waitFor('the preset to load the setup back', () => R(async (b) => {
+      const st = await window.shell.getState();
+      return { ok: __smoke.screens().length === b.n && document.getElementById('bg').style.backgroundImage === b.bgImg && __smoke.toastSince(0, '^Loaded preset 1'), st };
+    }, before), 3000).then((r) => r.st);
+    assert(s3.coins >= s2.coins && history().filter((e) => e.type === 'preset').length === 1, `loading presets cost ${s2.coins - s3.coins} coins`);
+    // Stage > Setups lists it as a quick chip.
+    await showTab('stage');
+    const chips = await R(() => ({ hidden: document.getElementById('presetChipsRow').hidden, chips: [...document.querySelectorAll('#presetChips .chip')].map((c) => c.textContent.trim()) }));
+    assert(!chips.hidden && chips.chips.length === 1 && /^1 /.test(chips.chips[0]), `Stage > Setups presets: ${brief(chips)}`);
+    await showTab('shop');
+    return `bought slot 1 for 200 coins, saved the whole setup (${before.n} screen(s), ${cur ? cur.source : 'no'} wallpaper), changed it, loaded back for free; Stage chip ${brief(chips.chips)}`;
   } },
 
   { name: 'takedowns-integrity', timeout: 40000, shot: true, async fn() {

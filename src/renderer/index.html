@@ -138,6 +138,10 @@
       <div class="sec">
         <div class="label-row"><span class="label">Frame</span><span id="framesMeta" class="meta"></span></div>
         <div id="frames" class="frames" aria-label="Frames"></div>
+        <div id="skinRow" hidden>
+          <div class="label-row"><span class="label">Skin</span><span id="skinMeta" class="meta"></span></div>
+          <div id="skins" class="skins" role="group" aria-label="Skin"></div>
+        </div>
         <button id="frameCustom" type="button" class="btn ghost wide" data-needs-sel><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg>Custom Frame…</button>
         <div class="label-row"><span class="label">Finish</span></div>
         <div id="finishes" class="swatches" aria-label="Finish"></div>
@@ -221,17 +225,19 @@
     </details>
 
     <details>
-      <summary><svg class="i" aria-hidden="true"><use href="#i-save"/></svg>Scenes<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+      <summary><svg class="i" aria-hidden="true"><use href="#i-save"/></svg>Setups<svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
       <div class="sec">
-        <div class="row">
-          <input id="sceneName" name="sceneName" aria-label="Scene name" placeholder="Scene name, e.g. Cozy CRT…" autocomplete="off" spellcheck="false">
-          <button id="sceneSave" type="button" class="btn"><svg class="i" aria-hidden="true"><use href="#i-save"/></svg>Save</button>
+        <div id="presetChipsRow" class="preset-chips-row" hidden>
+          <div class="label-row"><span class="label">Presets</span><button id="setupPresets" type="button" class="link-btn">Manage</button></div>
+          <div id="presetChips" class="chips"></div>
         </div>
+        <p class="hint">A setup saves everything: every screen with its shell, skin, colour, finish and fill, the layout, the background and the effects.</p>
         <div class="row">
-          <select id="scenes" aria-label="Saved scenes"></select>
-          <button id="sceneLoad" type="button" class="btn"><svg class="i" aria-hidden="true"><use href="#i-folder"/></svg>Load</button>
-          <button id="sceneDelete" type="button" class="icon-btn danger" aria-label="Delete scene" title="Delete scene"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
+          <input id="setupName" name="setupName" aria-label="Setup name" placeholder="Setup name, e.g. Cozy CRT…" autocomplete="off" spellcheck="false">
+          <button id="setupSave" type="button" class="btn"><svg class="i" aria-hidden="true"><use href="#i-save"/></svg>Save</button>
         </div>
+        <label id="setupLinkRow" class="switch" hidden><input type="checkbox" id="setupLink" role="switch"><span class="track" aria-hidden="true"></span><span id="setupLinkText"></span></label>
+        <div id="setupList" class="setup-list" role="list" aria-label="Saved setups"></div>
       </div>
     </details>
   </section>

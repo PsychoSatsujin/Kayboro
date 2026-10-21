@@ -264,6 +264,12 @@ option { background: var(--panel-2); color: var(--text); }
 .ftile img { width: 84%; height: 84%; object-fit: contain; filter: drop-shadow(0 4px 6px rgb(0 0 0 / .45)); transition: transform var(--t) var(--ease); }
 .ftile:hover img { transform: scale(1.05); }
 .ftile .thumb > .none { width: 22px; height: 22px; color: var(--faint); }
+/* Skin row: the selected shell's original art + its skins, as small tiles (locked ones link to the Shop). */
+.skins { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 2px; margin: -2px; }
+.skins .ftile { padding: 4px 4px 6px; }
+.skins .ftile .name { font-size: 10.5px; }
+.skins .ftile .badge { top: 6px; right: 6px; height: 16px; padding: 0 5px; font-size: 10px; }
+.skins .ftile.is-pixel img { image-rendering: pixelated; }
 .ftile .name { font-size: 11px; text-align: center; display: block; }
 .ftile.locked { cursor: help; }
 .ftile.locked img { opacity: .5; filter: grayscale(.55) drop-shadow(0 4px 6px rgb(0 0 0 / .45)); }
@@ -311,6 +317,20 @@ option { background: var(--panel-2); color: var(--text); }
 .slot .thumb { display: grid; place-items: center; width: 64px; height: 36px; flex: none; overflow: hidden; border-radius: 6px; background: var(--bg); color: var(--faint); }
 .slot .thumb img { width: 100%; height: 100%; object-fit: cover; }
 .slot .name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* Setups: saved configurations (preset chips on top, then the free game setups) */
+.preset-chips-row { display: grid; gap: 6px; }
+.preset-chips-row .chip b { color: var(--accent-2); }
+.link-btn { padding: 0; border: 0; background: none; color: var(--accent-2); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.link-btn:hover { text-decoration: underline; }
+.setup-list { display: grid; gap: 4px; }
+.setup { display: flex; align-items: center; gap: 6px; padding: 2px 2px 2px 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel-2); }
+.setup.on { border-color: var(--accent); }
+.setup-load { display: grid; flex: 1; min-width: 0; gap: 1px; padding: 6px 10px; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; }
+.setup-load:hover .setup-name { color: var(--accent-2); }
+.setup-name { overflow: hidden; font-size: 13px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.setup-meta { display: flex; align-items: center; gap: 3px; overflow: hidden; color: var(--muted); font-size: 11px; white-space: nowrap; text-overflow: ellipsis; }
+.setup-meta .i { width: 11px; height: 11px; flex: none; color: var(--accent-2); }
 
 /* Screens list */
 .list { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }

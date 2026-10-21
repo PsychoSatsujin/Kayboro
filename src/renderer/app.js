@@ -5,8 +5,9 @@ import './legacy-storage.js'; // first: copies pre-rename settings before any mo
 import { Stage } from './stage.js';
 import { initUI } from './ui.js';
 import { parseAspect, scaleRect, frameOuterRect, clampZoom, clampPan, isZoomed } from './layout.js';
-import { frameById, setCatalogFrames, STARTERS } from './frames/frames.js';
+import { frameById, setCatalogFrames, STARTERS, frameForScreen, skinsFor } from './frames/frames.js';
 import { buildGallery, resolveRef, normRef } from './panels/logic.js';
+import { captureConfig, sceneFromConfig } from './setups.js';
 
 const ror = window.ror || makeRorStub();
 const shell = window.shell || makeShellStub();
@@ -32,9 +33,12 @@ const app = {
 
   get(id) { return this.scene.screens.find(s => s.id === id) || null; },
   sel() { return this.get(this.scene.selectedId); },
+  // The shell a screen shows: custom frame, else its frame wearing its skin (when owned and made for it).
   frameOf(s) {
-    return s.customFrame?.url ? { aspect: s.customFrame.hole.w / s.customFrame.hole.h, holeRadius: 0, translucent: false, ...s.customFrame } : frameById(s.frame);
+    return frameForScreen(s, { skins: this.catalog.skins, owns: id => this.owns(id) });
   },
+  // Skins made for a screen's shell (owned or not), for the Skin row.
+  skinsOf(s = this.sel()) { return s && !s.customFrame?.url ? skinsFor(s.frame, this.catalog.skins) : []; },
   // Effective lock ratio: explicit preset, else the frame opening, else the captured source.
   aspectOf(s) {
     if (s.aspect === 'free') return null;
@@ -128,8 +132,15 @@ const app = {
   fillShown(s = this.sel()) { return !!s && !!stage?.views.get(s.id)?.fillShown; },
   gameZoomed(s = this.sel()) { return !!s && !!this.frameOf(s) && isZoomed(s); },
   // Picking a frame snaps the screen to the frame opening's native aspect and keeps the whole shell on the stage.
-  setFrame(frameId) { this.update(s => { Object.assign(s, { frame: frameId, customFrame: null, aspect: 'source' }); this.applyAspect(s); if (this.frameOf(s)) this.fitShell(s); }); },
-  setCustomFrame(cf) { this.update(s => { Object.assign(s, { frame: null, customFrame: cf, aspect: 'source' }); this.applyAspect(s); this.fitShell(s); }); },
+  setFrame(frameId) { this.update(s => { Object.assign(s, { frame: frameId, customFrame: null, skin: null, aspect: 'source' }); this.applyAspect(s); if (this.frameOf(s)) this.fitShell(s); }); },
+  // A skin for the selected screen's shell (null = the original art). Same geometry, so nothing moves.
+  setSkin(id) {
+    const s = this.sel();
+    if (!s) return;
+    if (id != null && !(this.skinsOf(s).some(k => k.id === id) && this.owns(id))) return;
+    if ((s.skin ?? null) !== (id ?? null)) this.update(x => { x.skin = id ?? null; });
+  },
+  setCustomFrame(cf) { this.update(s => { Object.assign(s, { frame: null, customFrame: cf, skin: null, aspect: 'source' }); this.applyAspect(s); this.fitShell(s); }); },
   // Scales a screen down and nudges it so its whole shell (or the bare screen) sits on the visible stage.
   fitShell(s, m = 16) {
     const f = this.frameOf(s), a = stageArea(), hole = f?.hole || { x: 0, y: 0, w: 1, h: 1 };
@@ -243,6 +254,40 @@ const app = {
     if (sc) { this.scene = sc; this.changed(); this.reopenPopouts(); }
     return !!sc;
   },
+  // ---- Saved configurations (preset slots and game setups, see setups.js) ----
+  currentConfig() { return captureConfig(this.scene, this.fxPrefs); },
+  // Loads a saved configuration exactly, keeping the games on screen now (they move into the saved screens).
+  applyConfig(config, opts) {
+    if (config && !config.scene && config.wallpaper) { this.setWallpaper(config.wallpaper, 'stage'); return true; } // a wallpaper-only preset from before
+    const sc = sceneFromConfig(config, this.scene, this.hosted?.id, opts);
+    if (!sc) return false;
+    const kept = this.hosted && sc.screens.find(s => s.hwnd && s.hwnd === this.hosted.hwnd);
+    if (kept) this.hosted.id = String(kept.id); // still the same game session
+    if (config.fx) {
+      this.fxPrefs = { ...config.fx };
+      try { localStorage.setItem(FX_KEY, JSON.stringify(this.fxPrefs)); } catch {}
+    }
+    return this.loadScene(sc);
+  },
+  async loadPreset(slot) {
+    const p = await shell.getPreset?.(slot).catch(() => null);
+    if (!p || !this.applyConfig(p.config)) return this.toast({ title: 'Could not load the preset', body: 'Please try again.', kind: 'error' }), false;
+    this.toast(`Loaded preset ${slot + 1}: ${p.name}`);
+    return true;
+  },
+  // A game launched: its linked setup loads, then the game goes into the setup's selected screen.
+  async onGameLaunched(ev) {
+    const setup = await ror.setupForGame?.(ev).catch(() => null);
+    if (setup && this.applyConfig(setup.config, { reserveSelected: true })) {
+      this.toast({ title: `${ev.name} launched`, body: `Loaded your “${setup.name}” setup.`, kind: 'info' });
+      await this.adoptGame(ev, true);
+      return;
+    }
+    this.toast({
+      title: `${ev.name} launched`, body: 'Host it in Kayboro to earn XP and coins while you play.', kind: 'info',
+      action: { label: 'Put it in a shell', onClick: () => this.adoptGame(ev) },
+    });
+  },
 
   // ---- Hosted-game session: the game on the screen it was last assigned to ----
   async host(s) {
@@ -250,6 +295,7 @@ const app = {
     ui?.render();
     const r = await shell.sessionStart({ hwnd: s.hwnd, exePath: s.exePath || null, sourceName: s.sourceName || '' }).catch(() => null);
     if (r?.appid != null && this.hosted?.hwnd === s.hwnd) {
+      this.hosted.appid = r.appid; // links a game setup by Steam app id too
       this.toast({ title: `Hosting ${r.name}`, kind: 'info',
         body: this.state?.settings?.rewards?.achievements ? 'Achievements you unlock now earn coins.' : 'Your play time here counts toward its developer.' });
     }
@@ -261,11 +307,12 @@ const app = {
     shell.sessionStop().catch(() => {});
   },
   // "Put it in a shell" for a game that just launched.
-  async adoptGame(ev) {
+  // into = true: the selected screen takes it even if it already shows something (a game setup just loaded).
+  async adoptGame(ev, into = false) {
     const list = await ror.listSources().catch(() => []);
     const src = list.find(x => ev.hwnd && String(x.hwnd) === String(ev.hwnd)) || await ror.detectSteamGame().catch(() => null);
     if (!src) return this.toast({ title: `Could not find the ${ev.name} window`, body: 'Keep the game open, then pick it under Sources.' });
-    this.assignSource(src, !!this.sel()?.sourceId);
+    this.assignSource(src, !into && !!this.sel()?.sourceId);
     this.showTab('stage');
   },
 
@@ -404,7 +451,7 @@ const clamp01 = v => Math.min(1, Math.max(0, Number(v) || 0));
 function blankScreen() {
   const eq = app.equipped();
   return { id: uid(), sourceId: null, sourceName: '', hwnd: null, exePath: null, rect: { x: 80, y: 80, w: 480, h: 270 },
-    aspect: 'source', fit: 'contain', ...NO_ZOOM(), fillClarity: 0, frame: null, customFrame: null, z: 1, visible: true,
+    aspect: 'source', fit: 'contain', ...NO_ZOOM(), fillClarity: 0, frame: null, skin: null, customFrame: null, z: 1, visible: true,
     finish: eq.finish ?? 'none', colorway: eq.colorway ?? 'default', fill: app.state?.activeWallpaper?.fill || eq.fill || null };
 }
 
@@ -435,7 +482,8 @@ function normalizeScene(sc) {
   const screens = sc.screens.filter(s => s && s.rect && [s.rect.x, s.rect.y, s.rect.w, s.rect.h].every(Number.isFinite))
     .map((s, i) => ({ ...blankScreen(), ...s, id: String(s.id || uid()), z: Number.isFinite(s.z) ? s.z : i + 1 }))
     .map(s => (s.fill && typeof s.fill === 'object' ? { ...s, fill: normRef(s.fill) } : s))
-    .map(s => ({ ...s, zoom: clampZoom(s.zoom), pan: { x: clampPan(s.pan?.x), y: clampPan(s.pan?.y) }, fillClarity: clamp01(s.fillClarity) }));
+    .map(s => ({ ...s, zoom: clampZoom(s.zoom), pan: { x: clampPan(s.pan?.x), y: clampPan(s.pan?.y) }, fillClarity: clamp01(s.fillClarity),
+      skin: typeof s.skin === 'string' && s.skin ? s.skin : null }));
   const background = { ...defaultBackground(), ...sc.background };
   background.ref = normRef(background.ref);
   if (background.type === 'wallpaper' && !background.ref) background.type = 'color'; // old backdrop-slot scenes
@@ -444,14 +492,15 @@ function normalizeScene(sc) {
 }
 
 function emptyCatalog() {
-  return { frames: [], finishes: [], colorways: [], fills: [], wallpapers: [], levels: [], takedowns: [] };
+  return { frames: [], finishes: [], colorways: [], fills: [], skins: [], wallpapers: [], levels: [], takedowns: [] };
 }
 
 // Plain-browser fallback so the UI still works without the Electron preload.
 function makeRorStub() {
-  const KEY = 'ror.scenes', none = async () => null, empty = async () => [], no = async () => false, off = () => () => {};
-  const all = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
-  const put = o => { try { localStorage.setItem(KEY, JSON.stringify(o)); return true; } catch { return false; } };
+  const KEY = 'kayboro.setups', none = async () => null, empty = async () => [], no = async () => false, off = () => () => {};
+  const all = () => { try { const a = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(a) ? a : []; } catch { return []; } };
+  const put = a => { try { localStorage.setItem(KEY, JSON.stringify(a)); return true; } catch { return false; } };
+  const meta = s => ({ id: s.id, name: s.name, game: s.game, savedAt: s.savedAt, summary: { screens: s.config.scene.screens.length, frames: [...new Set(s.config.scene.screens.map(x => x.frame).filter(Boolean))], wallpaperOnly: false } });
   const accept = { image: 'image/*', video: 'video/*', media: 'image/*,video/*', frame: 'image/png,image/webp,image/svg+xml' };
   return {
     stub: true, listSources: empty, detectSteamGame: none, getDisplays: empty,
@@ -463,10 +512,15 @@ function makeRorStub() {
       i.oncancel = () => res(null);
       i.click();
     }),
-    listScenes: async () => Object.keys(all()),
-    loadScene: async n => all()[n] ?? null,
-    saveScene: async (n, o) => put({ ...all(), [n]: o }),
-    deleteScene: async n => { const o = all(); delete o[n]; return put(o); },
+    listSetups: async () => all().map(meta).sort((a, b) => a.name.localeCompare(b.name)),
+    loadSetup: async id => all().find(s => s.id === id) ?? null,
+    saveSetup: async ({ id, name, game, config }) => {
+      const a = all(), i = a.findIndex(s => s.id === id || s.name === name), s = { id: i >= 0 ? a[i].id : uid(), name, game: game || null, savedAt: Date.now(), config };
+      if (i >= 0) a[i] = s; else a.push(s);
+      return put(a) ? meta(s) : null;
+    },
+    deleteSetup: async id => put(all().filter(s => s.id !== id)),
+    setupForGame: none,
     setFullscreen: async on => {
       try { if (on) await document.documentElement.requestFullscreen(); else if (document.fullscreenElement) await document.exitFullscreen(); return true; }
       catch { return false; }
@@ -485,13 +539,13 @@ function makeShellStub() {
   };
   const state = {
     coins: 0, xp: 0, level: 1, xpIntoLevel: 0, xpForNext: 60, inventory: [...STARTERS.map(f => f.id), 'none', 'default'],
-    equipped: { finish: 'none', colorway: 'default', fill: null }, wallpaperPresets: [], activeWallpaper: { stage: null, fill: null },
+    equipped: { finish: 'none', colorway: 'default', fill: null }, presets: [], activeWallpaper: { stage: null, fill: null },
     stats: { totalPlaySeconds: 0, achievements: 0, perApp: {} }, session: null, settings: { rewards: { achievements: false } },
   };
   const get = async () => structuredClone(state), off = () => () => {}, offline = async () => ({ ok: false, reason: 'offline', state: await get() });
   return {
     stub: true, getState: get, listCatalog: async () => structuredClone(catalog), listDevelopers: async () => [],
-    purchase: offline, buyWallpaperPreset: offline, setWallpaperPreset: offline,
+    purchase: offline, buyPresetSlot: offline, savePreset: offline, getPreset: async () => null,
     equip: async (slot, id) => { if (slot in state.equipped && (id === null || state.inventory.includes(id))) state.equipped[slot] = id; return { ok: true, state: await get() }; },
     setActiveWallpaper: async (ref, target = 'stage') => { if (target in state.activeWallpaper) state.activeWallpaper[target] = ref || null; return { ok: true, state: await get() }; },
     listLocalWallpapers: async () => [], sessionStart: async () => null, sessionStop: async () => false, openLink: async () => false,
@@ -557,10 +611,7 @@ if (POP) {
   shell.onCatalog?.(c => app.refreshCatalog(c));
   shell.onUnlock(e => app.toast(e, 'achievement'));
   shell.onLevelUp(e => app.toast(e, 'levelUp'));
-  shell.onGameLaunched(ev => app.toast({
-    title: `${ev.name} launched`, body: 'Host it in Kayboro to earn XP and coins while you play.', kind: 'info',
-    action: { label: 'Put it in a shell', onClick: () => app.adoptGame(ev) },
-  }));
+  shell.onGameLaunched(ev => app.onGameLaunched(ev));
   // First run: show the most recently started Steam game if nothing is captured yet.
   if (!app.scene.screens.some(s => s.sourceId)) {
     ror.detectSteamGame().then(g => { if (g) { app.assignSource(g); app.toast(`Showing ${g.name}`); } }).catch(() => {});

@@ -7,7 +7,9 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const CONTRACT = {
   finishes: ['none', 'matte', 'gloss', 'holo', 'pearl', 'glitter'],
-  fills: ['starfield', 'bubbles', 'plasma', 'pixel-rain', 'sakura-petals', 'aurora'],
+  fills: ['starfield', 'bubbles', 'plasma', 'pixel-rain', 'sakura-petals', 'aurora',
+    'px-env-firefly-forest', 'px-env-neon-rain', 'px-env-kelp-reef', 'px-env-snow-village', 'px-env-dune-caravan', 'px-env-star-window',
+    'px-env-lantern-lane', 'px-env-ember-cavern'],
   colorways: ['default', 'berry', 'mint', 'midnight', 'sunset', 'mono', 'gold', 'clear'],
 };
 const catalog = name => {

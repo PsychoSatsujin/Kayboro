@@ -271,3 +271,6 @@ export default {
     return cv.punch(...HOLE, HR);
   },
 };
+
+// Palette arrays by name, for skins (tools/pixelart/skins) that redraw this shell in other colors.
+export const PALETTES = { E, Hr, Gl, Sk, Ey, Sw };

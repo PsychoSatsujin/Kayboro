@@ -113,9 +113,11 @@ test('wallpapers: four sources in one gallery, references, presets', () => {
   assert.equal(L.resolveRef({ source: 'we', id: 'gone' }, g), null);
   assert.equal(L.normRef({ source: 'nope', id: 'a' }), null);
 
-  assert.deepEqual(L.presetsOf({ wallpaperPresets: [{ slot: 0, wallpaper: { source: 'mod', id: 'm1' } }, { slot: 1, wallpaper: null }] }),
-    [{ slot: 0, wallpaper: { source: 'mod', id: 'm1' } }, { slot: 1, wallpaper: null }]);
-  assert.deepEqual(L.presetsOf({ backdropSlots: [{ slot: 0, wallpaperId: '42' }] }), [{ slot: 0, wallpaper: { source: 'we', id: '42' } }]);
+  const sum = { screens: 2, frames: ['px-crt'], background: 'color', wallpaperOnly: false };
+  assert.deepEqual(L.presetsOf({ presets: [{ slot: 0, empty: false, name: 'Cozy', summary: sum, wallpaper: null }, { slot: 1, empty: true }, { slot: 'x' }] }),
+    [{ slot: 0, empty: false, name: 'Cozy', summary: sum, wallpaper: null }, { slot: 1, empty: true, name: null, summary: null, wallpaper: null }]);
+  assert.deepEqual(L.presetsOf({ presets: [{ slot: 0, name: 'Wallpaper', summary: { wallpaperOnly: true }, wallpaper: { source: 'mod', id: 'm1' } }] })[0].wallpaper, { source: 'mod', id: 'm1' });
+  assert.deepEqual(L.presetsOf({}), []);
   assert.deepEqual(L.activeRef({ activeWallpaper: { stage: { source: 'we', id: '42' }, fill: null } }, 'stage'), { source: 'we', id: '42' });
   assert.equal(L.activeRef({ activeWallpaper: { stage: null, fill: null } }, 'fill'), null);
   assert.deepEqual(L.activeRef({ activeWallpaper: { source: 'file', url: 'file:///a.png' } }, 'stage'), { source: 'file', url: 'file:///a.png' });

@@ -1,11 +1,11 @@
 'use strict';
-// Weekly bundles (pure): a set of shells and looks sold together at a discount for one ISO week.
+// Weekly bundles (pure): a set of shells, skins and looks sold together at a discount for one ISO week.
 // A developer curates a week in the app's Bundle Studio, which saves a bundle file; tools/bundles/publish.mjs
 // adds it to src/catalog/bundles.json. Any week nobody curated gets an automatic bundle, built from the
 // week number so every player sees the same one.
 const RARITY_VALUE = { common: 150, rare: 300, epic: 550, legendary: 1000 };
 const WEEK = /^(\d{4})-W(\d{2})$/;
-const KINDS = ['frames', 'finishes', 'colorways', 'fills'];
+const KINDS = ['frames', 'finishes', 'colorways', 'fills', 'skins'];
 const DEFAULT_DISCOUNT = 0.3;
 
 /** ISO 8601 week of a date, as 'YYYY-Www'. */

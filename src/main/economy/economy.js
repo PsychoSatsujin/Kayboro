@@ -8,11 +8,12 @@ const { EventEmitter } = require('events');
 const progression = require('./progression');
 const catalogLib = require('./catalog');
 const bundles = require('./bundles');
+const setups = require('../setups');
 
 const RULES = {
   time: { coinsPerMinute: 1, xpPerMinute: 10, maxTickSeconds: 3600 }, // while Kayboro is visible or in play mode
   achievement: { coins: 50, xp: 120 }, // only with settings.rewards.achievements on
-  preset: { price: 200 }, // each extra wallpaper preset slot; no maximum
+  preset: { price: 200 }, // each preset slot (a whole saved configuration); no maximum
   // Coin bets (Fandom Clash): the stake is held in escrow until settled; open tickets are refunded on the next load.
   bet: { min: 1, max: 500, maxShare: 0.25, maxMultiplier: 5, maxOpen: 5 },
 };
@@ -35,6 +36,24 @@ function wallpaperRef(w) {
     return typeof w.url === 'string' && w.url.length <= 4096 && /^file:\/\//i.test(w.url) && !/[\u0000-\u001f]/.test(w.url) ? { source: 'file', url: w.url } : null;
   }
   return typeof w.id === 'string' && REF_ID.test(w.id) ? { source: w.source, id: w.id } : null;
+}
+
+// A saved preset { name, savedAt, config }, or null. Wallpaper-only presets from before full configurations
+// (a bare wallpaper reference) carry over as { config: { version: 1, wallpaper } }: loading one sets the wallpaper.
+function presetEntry(v) {
+  if (wallpaperRef(v)) return { name: 'Wallpaper', savedAt: 0, config: { version: 1, wallpaper: wallpaperRef(v) } };
+  if (!v || typeof v !== 'object') return null;
+  const config = setups.cleanConfig(v.config);
+  if (!config) return null;
+  if (config.wallpaper && !(config.wallpaper = wallpaperRef(config.wallpaper))) return null;
+  const name = typeof v.name === 'string' && v.name.trim() ? v.name.trim().slice(0, 60) : 'Preset';
+  return { name, savedAt: Number(v.savedAt) || 0, config };
+}
+
+// A slot as the renderer sees it (no configuration: getPreset(slot) fetches that when it is loaded).
+function presetMeta(slot, pr, live) {
+  if (!pr) return { slot, empty: true, name: null, savedAt: null, summary: null, wallpaper: null };
+  return { slot, empty: false, name: pr.name, savedAt: pr.savedAt, summary: setups.summarize(pr.config), wallpaper: pr.config.wallpaper ? live(pr.config.wallpaper) : null };
 }
 
 class Economy extends EventEmitter {
@@ -63,7 +82,7 @@ class Economy extends EventEmitter {
       if (Number.isSafeInteger(Number(id)) && a) perApp[id] = { name: String(a.name || ''), playSeconds: Math.max(0, Number(a.playSeconds) || 0), achievements: int(a.achievements) };
     }
     const presets = {};
-    for (const [k, w] of Object.entries(p.presets || {})) if (wallpaperRef(w)) presets[k] = wallpaperRef(w);
+    for (const [k, v] of Object.entries(p.presets || {})) { const pr = presetEntry(v); if (pr) presets[k] = pr; }
     this.s = {
       coins: int(p.coins), xp: int(p.xp), activeSeconds: Math.max(0, Number(p.activeSeconds) || 0), levelRewarded: int(p.levelRewarded, 1),
       items: new Set(arr(p.items)), presetSlots: int(p.presetSlots), presets,
@@ -184,7 +203,7 @@ class Economy extends EventEmitter {
     return {
       coins: this.s.coins, xp: this.s.xp, level: p.level, xpIntoLevel: p.xpIntoLevel, xpForNext: p.xpForNext,
       inventory: [...inventory], equipped,
-      wallpaperPresets: Array.from({ length: this.s.presetSlots }, (_, i) => ({ slot: i, wallpaper: live(this.s.presets[i]) })),
+      presets: Array.from({ length: this.s.presetSlots }, (_, i) => presetMeta(i, this.s.presets[i], live)),
       activeWallpaper: { stage: live(this.s.active.stage), fill: live(this.s.active.fill) },
       stats: { totalPlaySeconds: Math.floor(this.s.activeSeconds), achievements: this.s.achievements, perApp },
       session: this.session ? { ...this.session } : null,
@@ -245,7 +264,7 @@ class Economy extends EventEmitter {
   _ok() { this._changed(); return { ok: true, state: this.getState() }; }
 
   purchase(itemId) {
-    if (itemId === 'wallpaper-preset') return this.buyWallpaperPreset();
+    if (itemId === 'preset-slot' || itemId === 'wallpaper-preset') return this.buyPresetSlot();
     const item = catalogLib.index(this.catalog()).get(itemId);
     if (!item) return this._fail('unknown');
     if (this.owns(item)) return this._fail('owned');
@@ -283,7 +302,7 @@ class Economy extends EventEmitter {
     return this._ok();
   }
 
-  buyWallpaperPreset() {
+  buyPresetSlot() {
     if (this.s.coins < RULES.preset.price) return this._fail('insufficient');
     this.s.coins -= RULES.preset.price;
     this.s.presetSlots++;
@@ -291,13 +310,20 @@ class Economy extends EventEmitter {
     return this._ok();
   }
 
-  setWallpaperPreset(slot, wallpaper) {
+  // Saves a whole configuration ({ name, config }, see setups.js) in a bought slot; null empties the slot.
+  savePreset(slot, preset) {
     if (!Number.isInteger(slot) || slot < 0 || slot >= this.s.presetSlots) return this._fail('slot');
-    const ref = wallpaper == null ? null : wallpaperRef(wallpaper);
-    if (wallpaper != null && !ref) return this._fail('invalid');
-    if (ref) this.s.presets[slot] = ref;
-    else delete this.s.presets[slot];
+    if (preset == null) { delete this.s.presets[slot]; return this._ok(); }
+    const pr = preset && typeof preset === 'object' ? presetEntry({ name: preset.name, config: preset.config, savedAt: this.now() }) : null;
+    if (!pr || !pr.config.scene) return this._fail('invalid');
+    this.s.presets[slot] = pr;
     return this._ok();
+  }
+
+  // The configuration saved in a slot ({ slot, name, savedAt, config }), or null.
+  getPreset(slot) {
+    const pr = Number.isInteger(slot) && slot >= 0 && slot < this.s.presetSlots ? this.s.presets[slot] : null;
+    return pr ? { slot, ...clone(pr) } : null;
   }
 
   // The one free active wallpaper, as the stage backdrop or the shell fill. Any wallpaper, any time.

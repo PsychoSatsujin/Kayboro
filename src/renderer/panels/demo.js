@@ -67,10 +67,10 @@ let state = {
   coins: q.has('poor') ? 90 : fresh ? 0 : 1240, xp: fresh ? 0 : 2410, level: fresh ? 1 : 12, xpIntoLevel: fresh ? 0 : 340, xpForNext: fresh ? 50 : 600,
   inventory: [...STARTERS.map(f => f.id), 'none', 'default', 'starfield', ...(fresh ? [] : ['px-pocket', 'matte', 'vx-cozy-wood-tv', 'berry', 'px-crt', 'bubbles', 'gloss', 'px-pet-egg', 'mint'])],
   equipped: { finish: fresh ? 'none' : 'gloss', colorway: 'default', fill: 'starfield' },
-  wallpaperPresets: fresh ? [] : [
-    { slot: 0, wallpaper: { source: 'kayboro', id: 'wp-nebula-drift' } },
-    { slot: 1, wallpaper: { source: 'we', id: '2814' } },
-    { slot: 2, wallpaper: null },
+  presets: fresh ? [] : [
+    { slot: 0, empty: false, name: 'Pixel CRT +1', summary: { screens: 2, frames: ['px-crt', 'handheld'], background: 'wallpaper', wallpaperOnly: false }, wallpaper: null },
+    { slot: 1, empty: false, name: 'Wallpaper', summary: { screens: 0, frames: [], background: 'wallpaper', wallpaperOnly: true }, wallpaper: { source: 'we', id: '2814' } },
+    { slot: 2, empty: true, name: null, summary: null, wallpaper: null },
   ],
   activeWallpaper: { stage: fresh ? null : { source: 'kayboro', id: 'wp-petal-drift' }, fill: null },
   stats: fresh ? { totalPlaySeconds: 0, achievements: 0, perApp: {} } : {
@@ -114,11 +114,17 @@ window.shell = {
     state.coins -= it.price.coins; state.inventory.push(id); emit(); return ok();
   },
   equip: async (slot, id) => { state.equipped[slot] = id; emit(); return ok(); },
-  buyWallpaperPreset: async () => {
-    if (state.coins < 200) return { ok: false, reason: 'coins', state: clone(state) };
-    state.coins -= 200; state.wallpaperPresets.push({ slot: state.wallpaperPresets.length, wallpaper: null }); emit(); return ok();
+  buyPresetSlot: async () => {
+    if (state.coins < 200) return { ok: false, reason: 'insufficient', state: clone(state) };
+    state.coins -= 200; state.presets.push({ slot: state.presets.length, empty: true, name: null, summary: null, wallpaper: null }); emit(); return ok();
   },
-  setWallpaperPreset: async (slot, wallpaper) => { const p = state.wallpaperPresets.find(x => x.slot === slot); if (p) p.wallpaper = wallpaper; emit(); return ok(); },
+  savePreset: async (slot, p) => {
+    const i = state.presets.findIndex(x => x.slot === slot);
+    if (i >= 0) state.presets[i] = p ? { slot, empty: false, name: p.name, summary: { screens: p.config.scene.screens.length, frames: p.config.scene.screens.map(s => s.frame).filter(Boolean), background: p.config.scene.background?.type, wallpaperOnly: false }, wallpaper: null }
+      : { slot, empty: true, name: null, summary: null, wallpaper: null };
+    emit(); return ok();
+  },
+  getPreset: async () => null,
   setActiveWallpaper: async (wallpaper, target) => { state.activeWallpaper[target] = wallpaper; emit(); return ok(); },
   listLocalWallpapers: async () => clone(WE),
   sessionStart: async () => null, sessionStop: async () => true,

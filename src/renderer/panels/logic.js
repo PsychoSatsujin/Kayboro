@@ -1,7 +1,7 @@
 // Pure helpers shared by the panels (no DOM): item status, shop filtering and sorting, the reward
 // track, wallpapers and presets, the developer form, formatting. Unit tested in test/panels.test.js.
 export const RARITIES = ['common', 'rare', 'epic', 'legendary'];
-export const SHOP_KINDS = { frames: 'frame', finishes: 'finish', colorways: 'colorway', fills: 'fill' };
+export const SHOP_KINDS = { frames: 'frame', skins: 'skin', finishes: 'finish', colorways: 'colorway', fills: 'fill' };
 export const EQUIP_SLOTS = ['finish', 'colorway', 'fill']; // item.kind === slot name
 export const MAX_LEVEL = 100;
 export const PRESET_PRICE = 200;
@@ -45,10 +45,10 @@ export function sortItems(items, sort = 'featured', st = null) {
   return list.sort((a, b) => cmp(a, b) || byName(a, b));
 }
 
-// Every catalog item by id (frames, finishes, colorways, fills, wallpapers).
+// Every catalog item by id (frames, skins, finishes, colorways, fills, wallpapers).
 export function indexCatalog(cat) {
   const m = new Map();
-  for (const k of ['frames', 'finishes', 'colorways', 'fills', 'wallpapers', 'backdrops']) for (const it of cat?.[k] || []) if (it?.id) m.set(it.id, it);
+  for (const k of ['frames', 'skins', 'finishes', 'colorways', 'fills', 'wallpapers', 'backdrops']) for (const it of cat?.[k] || []) if (it?.id) m.set(it.id, it);
   return m;
 }
 
@@ -219,13 +219,13 @@ export function filterGallery(list, source = 'all', query = '') {
 
 export const countBySource = list => Object.fromEntries(['all', ...WP_SOURCES].map(s => [s, s === 'all' ? (list || []).length : (list || []).filter(w => w.source === s).length]));
 
-// Saved wallpaper presets as [{ slot, wallpaper: ref|null }], from wallpaperPresets (or legacy backdropSlots).
+// Preset slots, each a whole saved configuration: [{ slot, empty, name, summary, wallpaper }]. summary is
+// { screens, frames, background, wallpaperOnly }; wallpaper is set only on a wallpaper-only preset from before.
 export function presetsOf(st) {
-  if (Array.isArray(st?.wallpaperPresets)) {
-    return st.wallpaperPresets.filter(p => p && Number.isInteger(p.slot)).map(p => ({ slot: p.slot, wallpaper: normRef(p.wallpaper) }));
-  }
-  return (st?.backdropSlots || []).filter(p => p && Number.isInteger(p.slot))
-    .map(p => ({ slot: p.slot, wallpaper: p.wallpaperId ? { source: 'we', id: String(p.wallpaperId) } : null }));
+  return (Array.isArray(st?.presets) ? st.presets : []).filter(p => p && Number.isInteger(p.slot)).map(p => ({
+    slot: p.slot, empty: !!p.empty || !p.name, name: p.empty ? null : String(p.name || ''),
+    summary: p.empty ? null : p.summary || null, wallpaper: normRef(p.wallpaper),
+  }));
 }
 
 // The active wallpaper for 'stage' or 'fill' when the state carries one.

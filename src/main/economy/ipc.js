@@ -100,8 +100,8 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
   session.on('gameLaunched', (e) => send('gameLaunched', e));
 
   const listCatalog = () => {
-    const { frames, finishes, colorways, fills, wallpapers, levels, takedowns } = cat();
-    return { frames, finishes, colorways, fills, wallpapers, levels, takedowns };
+    const { frames, finishes, colorways, fills, skins, wallpapers, levels, takedowns } = cat();
+    return { frames, finishes, colorways, fills, skins, wallpapers, levels, takedowns };
   };
   const devHosts = () => new Set(cat().developers.map((d) => d.links.website && hostOf(d.links.website)).filter(Boolean));
 
@@ -119,8 +119,9 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
     listDevelopers: () => cat().developers,
     purchase: (itemId) => economy.purchase(itemId),
     equip: (slot, itemId) => economy.equip(slot, itemId),
-    buyWallpaperPreset: () => economy.buyWallpaperPreset(),
-    setWallpaperPreset: (slot, wallpaper) => economy.setWallpaperPreset(Number(slot), wallpaper ?? null),
+    buyPresetSlot: () => economy.buyPresetSlot(),
+    savePreset: (slot, preset) => economy.savePreset(Number(slot), preset ?? null),
+    getPreset: (slot) => economy.getPreset(Number(slot)),
     setActiveWallpaper: (wallpaper, target) => economy.setActiveWallpaper(wallpaper ?? null, target ?? 'stage'),
     listLocalWallpapers: async () => {
       const gone = new Set(cat().takedowns);
@@ -218,7 +219,7 @@ function registerEconomyIpc({ ipcMain, getWindow, detectSteamGame, isPlaying = (
       return { before, state: economy.getState() };
     };
   }
-  const FALLBACK = { getState: null, listCatalog: { frames: [], finishes: [], colorways: [], fills: [], wallpapers: [], levels: [], takedowns: [] },
+  const FALLBACK = { getState: null, listCatalog: { frames: [], finishes: [], colorways: [], fills: [], skins: [], wallpapers: [], levels: [], takedowns: [] },
     listDevelopers: [], listLocalWallpapers: [], sessionStart: null, sessionStop: false, openLink: false, debugSimulateUnlock: null,
     getSettings: null, setSettings: null, getMods: [], reloadMods: [], openModsFolder: false, listSubmissions: [], exportPayoutSheet: null, betLimits: { min: 1, max: 0, maxMultiplier: 5, open: 0, maxOpen: 5 }, debugAdvanceTime: null,
     getIntegrity: { ok: true, checked: 0, mismatched: [], missing: [], skipped: true } };

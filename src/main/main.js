@@ -4,7 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
 const win32 = require('./win32');
-const store = require('./store');
+let setupStore = null; // game setups (src/main/setups.js), made after the sandbox picks userData
+const setups = () => (setupStore ||= require('./setups').create({ dir: app.getPath('userData') }));
 const { registerEconomyIpc } = require('./economy/ipc');
 const { migrateUserData } = require('./migrate');
 const popout = require('./popout');
@@ -108,6 +109,14 @@ async function listSources() {
 
 async function detectSteamGame() {
   const games = (await listSources()).filter((s) => s.isSteamGame);
+  games.sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0));
+  return games[0] || null;
+}
+
+// Launch detection: the most recently started Steam game, or program some game setup is linked to.
+async function detectLaunch() {
+  const exes = setups().exes(), name = require('./setups').exeName;
+  const games = (await listSources()).filter((s) => s.isSteamGame || (s.exePath && exes.has(name(s.exePath))));
   games.sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0));
   return games[0] || null;
 }
@@ -317,10 +326,12 @@ const HANDLERS = {
   startPlay,
   stopPlay: () => stopPlay(),
   pickFile,
-  listScenes: () => store.list(),
-  loadScene: (name) => store.load(name),
-  saveScene: (name, obj) => store.save(name, obj),
-  deleteScene: (name) => store.remove(name),
+  // Game setups: saved configurations, optionally linked to a game that loads them when it launches.
+  listSetups: () => setups().list(),
+  loadSetup: (id) => setups().load(String(id)),
+  saveSetup: (input) => setups().save(input),
+  deleteSetup: (id) => setups().remove(String(id)),
+  setupForGame: (ev) => setups().forGame(obj(ev)),
   setFullscreen,
   // Pop-outs: rect is the shell's outer rect in the main window's content (CSS px), or saved screen bounds.
   // `avoid`: the sidebar's rect (same units). A new pop-out opens clear of it, so it never lands under the
@@ -377,7 +388,7 @@ const HANDLERS = {
     return u ? shell.openExternal(u).then(() => true) : false;
   },
 };
-const FALLBACK = { listSources: [], getDisplays: [], listScenes: [] }; // everything else -> null/false
+const FALLBACK = { listSources: [], getDisplays: [], listSetups: [] }; // everything else -> null/false
 
 function registerIpc() {
   for (const [name, fn] of Object.entries(HANDLERS)) {
@@ -400,7 +411,7 @@ app.whenReady().then(() => {
   popout.register({ ipcMain, page: path.join(__dirname, '..', 'renderer', 'index.html'), preload: path.join(__dirname, '..', 'preload.js'),
     notify: (ev) => send('popout', ev), onPlayRequest: (id) => sendTo(popout.windowOf(id), 'popout', { type: 'playRequest', id }) });
   if (!sandbox.enabled) migrateUserData(app); // one-time copy of pre-rename (Shellcade) data; never throws. The sandbox starts fresh
-  economy = registerEconomyIpc({ ipcMain, getWindow: () => win, detectSteamGame, isPlaying: () => !!play, userDataDir: app.getPath('userData') });
+  economy = registerEconomyIpc({ ipcMain, getWindow: () => win, detectSteamGame: detectLaunch, isPlaying: () => !!play, userDataDir: app.getPath('userData') });
   createWindow();
   if (selftest) require('./selftest').run({ app, win, file: selftest.file, probe: () => economy.selfTestProbe() });
   // Global so they work while the game has focus; the renderer decides what to do.

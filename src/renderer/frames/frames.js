@@ -87,4 +87,33 @@ export function setCatalogFrames(items = []) {
 }
 
 export const frameById = id => FRAMES.find(f => f.id === id) || null;
+
+// ---- Skins: alternate artwork for one shell (src/catalog/skins.json). A skin keeps everything about
+// its frame (geometry, see-through-ness, particles, glass) and swaps only the image, so every effect
+// keyed by the frame URL (depth, finish, fill clarity, pop-out hit testing) follows it.
+
+/** Skin image URL (catalog `file` relative to src/renderer/), or null. */
+export const skinUrl = it => (it && SAFE.test(String(it.file || '')) ? new URL(`../${it.file}`, import.meta.url).href : null);
+
+/** The frame wearing `skin` (a catalog SkinItem): its url swapped, plus skin / skinName. Anything else -> the frame as is. */
+export function skinned(frame, skin) {
+  const url = skin && frame && skin.frame === frame.id ? skinUrl(skin) : null;
+  return url ? { ...frame, url, skin: skin.id, skinName: String(skin.name || skin.id) } : frame;
+}
+
+/** Skins made for `frameId` (catalog order). */
+export const skinsFor = (frameId, skins) => (frameId ? (skins || []).filter(k => k && k.frame === frameId && skinUrl(k)) : []);
+
+/**
+ * What a screen shows: its custom frame, else its catalog frame wearing s.skin when that skin exists,
+ * belongs to that frame and is owned. `owns(id)` decides ownership.
+ */
+export function frameForScreen(s, { skins = [], owns = () => false, byId = frameById } = {}) {
+  if (!s) return null;
+  if (s.customFrame?.url) return { aspect: s.customFrame.hole.w / s.customFrame.hole.h, holeRadius: 0, translucent: false, ...s.customFrame };
+  const f = byId(s.frame);
+  if (!f || !s.skin) return f;
+  const k = (skins || []).find(x => x && x.id === s.skin);
+  return k && k.frame === f.id && owns(k.id) ? skinned(f, k) : f;
+}
 export default FRAMES;

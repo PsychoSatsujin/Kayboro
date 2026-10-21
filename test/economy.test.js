@@ -86,7 +86,7 @@ test('levels.json: matches the curve, coins 20 -> 150, every frame unlocks once'
   const collections = new Set(shells.map((f) => f.collection).filter(Boolean));
   for (const c of collections) if (c !== 'fan-favorites') assert.ok(shells.some((f) => f.collection === c && at.has(f.id)), `${c} has a free level reward`);
   assert.equal(at.get('vx-gallery'), 100);
-  const known = new Set([...catalogLib.load().frames, ...finishes, ...colorways, ...fills].map((x) => x.id || x));
+  const known = new Set([...catalogLib.load().frames, ...finishes, ...colorways, ...fills, ...catalogLib.load().skins].map((x) => x.id || x));
   for (const id of at.keys()) assert.ok(known.has(id), `unknown reward ${id}`);
   for (const it of [...finishes, ...colorways, ...fills]) if (it.unlockLevel) assert.equal(at.get(it.id), it.unlockLevel, it.id);
 });
@@ -103,7 +103,18 @@ test('economy: shell coin sink is 55-80% of the coins earned by level 100', () =
 test('catalog: cosmetic ids, prices, wallpapers and the built-in starters', async () => {
   const cat = catalogLib.load();
   assert.deepEqual(cat.finishes.map((f) => f.id), ['none', 'matte', 'gloss', 'holo', 'pearl', 'glitter']);
-  assert.deepEqual(cat.fills.map((f) => f.id), ['starfield', 'bubbles', 'plasma', 'pixel-rain', 'sakura-petals', 'aurora']);
+  assert.deepEqual(cat.fills.map((f) => f.id), ['starfield', 'bubbles', 'plasma', 'pixel-rain', 'sakura-petals', 'aurora',
+    'px-env-firefly-forest', 'px-env-neon-rain', 'px-env-kelp-reef', 'px-env-snow-village', 'px-env-dune-caravan', 'px-env-star-window',
+    'px-env-lantern-lane', 'px-env-ember-cavern']);
+  assert.deepEqual(cat.fills.map((f) => f.id), catalogLib.SCREENSAVERS, 'every fill has a screensaver and vice versa');
+  // Pixel environments are level rewards on the levels that had no item, never coin items.
+  const envAt = new Map(cat.levels.flatMap((r) => r.rewards.items.filter((id) => id.startsWith('px-env-')).map((id) => [id, r.level])));
+  assert.deepEqual([...envAt.values()], [11, 19, 29, 37, 46, 58, 68, 74]);
+  for (const fl of cat.fills.filter((x) => x.id.startsWith('px-env-'))) {
+    assert.equal(fl.price, null, fl.id);
+    assert.equal(fl.unlockLevel, envAt.get(fl.id), fl.id);
+    assert.ok(fl.desc && !/—/.test(fl.desc) && fl.colors.length === 3, fl.id);
+  }
   assert.deepEqual(cat.colorways.map((f) => f.id).sort(), ['berry', 'clear', 'default', 'gold', 'midnight', 'mint', 'mono', 'sunset']);
   const f = Object.fromEntries(cat.finishes.map((x) => [x.id, x]));
   assert.deepEqual([f.matte.unlockLevel, f.gloss.unlockLevel, f.holo.unlockLevel], [3, 10, 25]);
@@ -129,7 +140,7 @@ test('catalog: cosmetic ids, prices, wallpapers and the built-in starters', asyn
     assert.ok(a && a.starter && a.price === null, id);
     assert.deepEqual(a.size, b.size); assert.deepEqual(a.hole, b.hole); assert.equal(a.aspect, b.aspect);
   }
-  const ids = ['frames', 'finishes', 'colorways', 'fills', 'wallpapers'].flatMap((k) => cat[k].map((x) => x.id));
+  const ids = ['frames', 'finishes', 'colorways', 'fills', 'skins', 'wallpapers'].flatMap((k) => cat[k].map((x) => x.id));
   assert.equal(new Set(ids).size, ids.length, 'item ids are unique across kinds');
 });
 
@@ -163,7 +174,7 @@ test('economy: fresh profile owns the starters and free items', () => {
   for (const id of [...STARTER_IDS, 'none', 'default', 'starfield']) assert.ok(s.inventory.includes(id), id);
   for (const id of ['matte', 'pearl', 'clear', 't-paid', 't-dlc', 't-epic']) assert.ok(!s.inventory.includes(id), id);
   assert.deepEqual(s.equipped, { finish: 'none', colorway: 'default', fill: 'starfield' });
-  assert.deepEqual(s.wallpaperPresets, []);
+  assert.deepEqual(s.presets, []);
   assert.deepEqual(s.activeWallpaper, { stage: null, fill: null });
   assert.deepEqual(s.stats, { totalPlaySeconds: 0, achievements: 0, perApp: {} });
   assert.deepEqual(s.settings, { rewards: { achievements: false } });
@@ -287,7 +298,7 @@ test('economy: equip checks slot, kind and ownership, and persists', () => {
   assert.equal(e.equip('finish', null).state.equipped.finish, 'none');
 });
 
-test('economy: wallpapers are free; presets cost 200 coins each with no maximum', () => {
+test('economy: wallpapers are free; preset slots cost 200 coins each with no maximum and hold whole setups', () => {
   const e = make();
   const we = { source: 'we', id: '2846051789' };
   const file = { source: 'file', url: 'file:///C:/Users/me/Videos/loop.mp4' };
@@ -303,35 +314,65 @@ test('economy: wallpapers are free; presets cost 200 coins each with no maximum'
   assert.equal(e.setActiveWallpaper(null).state.activeWallpaper.stage, null);
   assert.equal(e.getState().coins, 0, 'none of that cost anything');
 
-  assert.equal(e.buyWallpaperPreset().reason, 'insufficient');
-  assert.equal(e.setWallpaperPreset(0, we).reason, 'slot');
+  const config = { version: 1, scene: { version: 1, background: { type: 'wallpaper', ref: we }, selectedId: 'a',
+    screens: [{ id: 'a', frame: 'px-crt', skin: 'skin-px-crt-winter', colorway: 'berry', fill: 'starfield', fillClarity: 0.4, rect: { x: 1, y: 2, w: 300, h: 200 }, z: 1 },
+      { id: 'b', frame: 'handheld', rect: { x: 400, y: 2, w: 300, h: 200 }, z: 2 }] }, fx: { particles: false, glass: true, depth: true } };
+  assert.equal(e.buyPresetSlot().reason, 'insufficient');
+  assert.equal(e.savePreset(0, { name: 'x', config }).reason, 'slot');
   e.grant({ coins: 200 * 15 });
   const coins = e.getState().coins;
-  for (let i = 0; i < 15; i++) assert.equal(e.buyWallpaperPreset().ok, true, `slot ${i + 1}`);
-  assert.equal(e.purchase('wallpaper-preset').reason, 'insufficient', 'purchase() routes the preset product');
+  for (let i = 0; i < 14; i++) assert.equal(e.buyPresetSlot().ok, true, `slot ${i + 1}`);
+  assert.equal(e.purchase('preset-slot').ok, true, 'purchase() routes the preset product');
+  assert.equal(e.purchase('wallpaper-preset').reason, 'insufficient', 'and the old product name');
   const s = e.getState();
-  assert.equal(s.wallpaperPresets.length, 15);
+  assert.equal(s.presets.length, 15);
   assert.equal(s.coins, coins - 3000);
-  assert.equal(e.setWallpaperPreset(1, we).ok, true);
-  assert.equal(e.setWallpaperPreset(2, file).ok, true);
-  assert.equal(e.setWallpaperPreset(3, { source: 'mars', id: 'x' }).reason, 'invalid');
-  assert.equal(e.setWallpaperPreset(15, we).reason, 'slot');
-  assert.equal(e.setWallpaperPreset(1.5, we).reason, 'slot');
-  const p = make(clock(), e.dir).getState().wallpaperPresets;
-  assert.deepEqual(p.slice(0, 3), [{ slot: 0, wallpaper: null }, { slot: 1, wallpaper: we }, { slot: 2, wallpaper: file }], 'presets persist');
-  assert.equal(e.setWallpaperPreset(1, null).state.wallpaperPresets[1].wallpaper, null);
+  assert.deepEqual(s.presets[0], { slot: 0, empty: true, name: null, savedAt: null, summary: null, wallpaper: null });
+  assert.equal(e.savePreset(1, { name: '  Cozy CRT  ', config }).ok, true);
+  assert.equal(e.savePreset(2, { name: 'w', config: { version: 1, wallpaper: we } }).reason, 'invalid', 'new presets save a whole setup');
+  assert.equal(e.savePreset(3, { name: 'x', config: { scene: { screens: 'no' } } }).reason, 'invalid');
+  assert.equal(e.savePreset(3, { name: 'x', config: { scene: { screens: [{ big: 'x'.repeat(300 * 1024) }] } } }).reason, 'invalid', 'size limit');
+  assert.equal(e.savePreset(15, { name: 'x', config }).reason, 'slot');
+  assert.equal(e.savePreset(1.5, { name: 'x', config }).reason, 'slot');
+  const again = make(clock(), e.dir);
+  const p = again.getState().presets[1];
+  assert.equal(p.name, 'Cozy CRT');
+  assert.deepEqual(p.summary, { screens: 2, frames: ['px-crt', 'handheld'], background: 'wallpaper', wallpaperOnly: false });
+  assert.equal(JSON.stringify(again.getState()).includes('skin-px-crt-winter'), false, 'the state carries only a summary');
+  const full = again.getPreset(1);
+  assert.deepEqual(full.config.scene, config.scene, 'every screen setting comes back exactly');
+  assert.deepEqual(full.config.fx, config.fx);
+  assert.equal(again.getPreset(0), null);
+  assert.equal(again.getPreset(99), null);
+  assert.equal(e.savePreset(1, null).state.presets[1].empty, true);
+});
+
+test('economy: wallpaper-only presets from before carry over as wallpaper presets', () => {
+  const dir = freshDir();
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'state.json'), JSON.stringify({ v: 2, coins: 5, presetSlots: 3, presets: { 0: { source: 'we', id: '42' }, 2: { source: 'mars', id: 'x' } } }));
+  const e = make(clock(), dir);
+  const s = e.getState();
+  assert.equal(s.presets.length, 3);
+  assert.equal(s.presets[0].name, 'Wallpaper');
+  assert.deepEqual(s.presets[0].summary, { screens: 0, frames: [], background: 'wallpaper', wallpaperOnly: true });
+  assert.deepEqual(s.presets[0].wallpaper, { source: 'we', id: '42' });
+  assert.deepEqual(e.getPreset(0).config, { version: 1, wallpaper: { source: 'we', id: '42' } });
+  assert.equal(s.presets[1].empty, true);
+  assert.equal(s.presets[2].empty, true, 'a broken one is dropped');
 });
 
 test('economy: taken-down items disappear from inventory, equipped looks and wallpapers', () => {
   const dir = freshDir();
+  fs.mkdirSync(dir, { recursive: true }); // an old wallpaper-only preset
+  fs.writeFileSync(path.join(dir, 'state.json'), JSON.stringify({ v: 2, presetSlots: 1, presets: { 0: { source: 'kayboro', id: 'wp-deep-lagoon' } } }));
   const e = make(clock(), dir);
+  assert.deepEqual(e.getState().presets[0].wallpaper, { source: 'kayboro', id: 'wp-deep-lagoon' });
   e.grant({ coins: 2000 });
   e.purchase('pearl');
   e.purchase('plasma');
   e.equip('finish', 'pearl');
   e.equip('fill', 'plasma');
-  e.buyWallpaperPreset();
-  e.setWallpaperPreset(0, { source: 'kayboro', id: 'wp-deep-lagoon' });
   e.setActiveWallpaper({ source: 'kayboro', id: 'wp-deep-lagoon' }, 'stage');
   e.setActiveWallpaper({ source: 'we', id: '777' }, 'fill');
 
@@ -340,7 +381,7 @@ test('economy: taken-down items disappear from inventory, equipped looks and wal
   const s = make(clock(), dir, gone).getState();
   for (const id of ['pearl', 'plasma']) assert.ok(!s.inventory.includes(id), id);
   assert.deepEqual(s.equipped, { finish: 'none', colorway: 'default', fill: 'starfield' }, 'falls back to the defaults');
-  assert.deepEqual(s.wallpaperPresets, [{ slot: 0, wallpaper: null }]);
+  assert.equal(s.presets[0].wallpaper, null, 'a taken-down wallpaper drops out of an old preset');
   assert.deepEqual(s.activeWallpaper, { stage: null, fill: null });
 });
 

@@ -3,7 +3,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 const INVOKE = ['listSources', 'detectSteamGame', 'getDisplays', 'moveWindowToDisplay', 'startPlay', 'stopPlay',
-  'pickFile', 'listScenes', 'loadScene', 'saveScene', 'deleteScene', 'setFullscreen',
+  'pickFile', 'listSetups', 'loadSetup', 'saveSetup', 'deleteSetup', 'setupForGame', 'setFullscreen',
   'popOut', 'popoutUpdate', 'popoutClose', 'popoutPlay', 'popoutInfo', 'popoutHit', 'popoutDrag', 'popoutResize', 'popoutResizeDrag', 'popoutMenu', 'popoutFrame',
   'virtualScreenStatus', 'hideGame', 'showGame', 'installScreenDriver', 'kayboBrowse', 'kayboUse', 'kayboSave', 'kayboOpen',
   'clashStatus', 'clashCheck', 'clashSnapshot', 'clashSetName', 'clashSetServer', 'clashMatch', 'clashSubmitRun', 'clashCancel',

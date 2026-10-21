@@ -33,7 +33,7 @@ const CAT = {
   fills: [{ id: 'starfield', kind: 'fill' }],
   wallpapers: [], levels: [], takedowns: [],
 };
-const state = (p = {}) => ({ level: 1, inventory: [], equipped: { finish: 'none', colorway: 'default', fill: 'starfield' }, wallpaperPresets: [], stats: { totalPlaySeconds: 0 }, ...p });
+const state = (p = {}) => ({ level: 1, inventory: [], equipped: { finish: 'none', colorway: 'default', fill: 'starfield' }, presets: [], stats: { totalPlaySeconds: 0 }, ...p });
 
 // ---- steam/achievements.json <-> rules ------------------------------------------------------
 
@@ -83,7 +83,7 @@ test('earned: a coin purchase is read off the inventory or the preset slots', ()
   assert.ok(!K.earned(state({ inventory: ['px-b'], level: 30 }), CAT).includes('KB_FIRST_COIN'));
   assert.ok(K.earned(state({ inventory: ['gloss'] }), CAT).includes('KB_FIRST_COIN'));
   assert.ok(!K.earned(state({ inventory: ['lvl', 'modded', 'crt-tv'] }), CAT).includes('KB_FIRST_COIN'));
-  const preset = K.earned(state({ wallpaperPresets: [{ slot: 0, wallpaper: null }] }), CAT);
+  const preset = K.earned(state({ presets: [{ slot: 0, empty: true }] }), CAT);
   assert.deepEqual(preset, ['KB_FIRST_COIN', 'KB_FIRST_PRESET']);
 });
 
@@ -124,7 +124,7 @@ test('earned: the shipped catalog and a real economy state work together', () =>
   const got = K.earned(eco.getState(), catalogLib.load(), {});
   assert.ok(got.includes('KB_LEVEL_50') && got.includes('KB_FIRST_SHELL'), got.join());
   assert.ok(!got.includes('KB_FIRST_COIN'), 'level rewards are not purchases');
-  assert.ok(eco.buyWallpaperPreset().ok);
+  assert.ok(eco.buyPresetSlot().ok);
   assert.ok(K.earned(eco.getState(), catalogLib.load(), {}).includes('KB_FIRST_COIN'));
 });
 

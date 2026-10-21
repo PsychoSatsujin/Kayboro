@@ -1,21 +1,24 @@
-// Shop: Frames / Finishes / Colors / Fills as cards with live previews (rarity glow, owned, equipped,
+// Shop: Frames / Skins / Finishes / Colors / Fills as cards with live previews (rarity glow, owned, equipped,
 // level, DLC and price states, buy with confirm + coin flight), and Wallpapers: the free active
-// wallpaper, saved presets (coins buy more slots) and a gallery of every wallpaper the user has.
+// wallpaper, presets (coins buy slots; each saves the whole setup) and a gallery of every wallpaper the user has.
 import { h, icon, coinIcon, fmt, rarityName, reducedMotion, getShell, call, has, replay, coinFlight } from './kit.js';
 import { RARITIES, PRESET_PRICE, itemStatus, coinsShort, filterItems, sortItems, withoutTakedowns, withRewardLevels, buildGallery, filterGallery,
   countBySource, presetsOf, activeRef, refOf, sameRef, resolveRef, fromFile } from './logic.js';
 import { play } from './sound.js';
 import { frameById } from '../frames/frames.js';
+import { describe } from '../setups.js';
 
 const TABS = [
   { id: 'weekly', label: 'Weekly', icon: 'sparkles' },
   { id: 'frames', label: 'Frames', icon: 'tv', noun: ['frame', 'frames'] },
+  { id: 'skins', label: 'Skins', icon: 'brush', noun: ['skin', 'skins'] },
   { id: 'finishes', label: 'Finishes', icon: 'sparkles', noun: ['finish', 'finishes'] },
   { id: 'colorways', label: 'Colors', icon: 'palette', noun: ['colorway', 'colorways'] },
   { id: 'fills', label: 'Fills', icon: 'stars', noun: ['fill', 'fills'] },
   { id: 'wallpapers', label: 'Wallpapers', icon: 'wallpaper' },
 ];
-const KIND_LABEL = { frame: 'Frame', finish: 'Finish', colorway: 'Colorway', fill: 'Shell fill' };
+const KIND_LABEL = { frame: 'Frame', skin: 'Skin', finish: 'Finish', colorway: 'Colorway', fill: 'Shell fill' };
+const BUNDLE_KINDS = ['frames', 'skins', 'finishes', 'colorways', 'fills'];
 const SOURCES = [['all', 'All'], ['kayboro', 'Kayboro'], ['mod', 'Mods'], ['we', 'Wallpaper Engine'], ['file', 'Files']];
 const SOURCE_LABEL = { kayboro: 'Kayboro', mod: 'Mod', we: 'Wallpaper Engine', file: 'File' };
 const TYPE_LABEL = { video: 'Video', image: 'Image', gif: 'GIF', screensaver: 'Animated', scene: 'Scene', web: 'Web' };
@@ -106,6 +109,7 @@ export function mountShop(el, ctx = {}) {
     const foot = h('div', { className: 'sc-card-foot' });
     const c = h('article', { className: `sc-card r-${r} s-${status}`, 'data-id': it.id, title: it.desc || it.name },
       art, h('div', { className: 'sc-card-body' }, h('b', { className: 'sc-card-name', textContent: it.name }),
+        it.kind === 'skin' ? h('span', { className: 'sc-card-base', textContent: baseName(it) }) : null,
         h('span', { className: 'sc-card-sub' }, h('i', { className: 'sc-gem' }), `${rarityName(r)} ${KIND_LABEL[it.kind] || ''}`.trim())), foot);
     c._preview = art.firstChild._preview;
     foot.append(...action(it, status, c));
@@ -115,7 +119,7 @@ export function mountShop(el, ctx = {}) {
   // Live preview: frame art, a finish or colorway on a small shell, a fill's screensaver.
   function preview(it) {
     const box = h('div', { className: `sc-prev k-${it.kind}` });
-    if (it.kind === 'frame') {
+    if (it.kind === 'frame' || it.kind === 'skin') {
       box.classList.toggle('is-pixel', it.style === 'pixel');
       box.append(h('img', { src: it.url || new URL(`../${it.file}`, import.meta.url).href, alt: '', decoding: 'async', draggable: false }));
       return box;
@@ -165,6 +169,7 @@ export function mountShop(el, ctx = {}) {
       case 'equipped': return [btn('is-on', [icon('check'), 'Equipped'], null, { disabled: true })];
       case 'owned':
         if (it.kind === 'frame') return [btn('use', 'Use', () => useFrame(it))];
+        if (it.kind === 'skin') return [btn('use', 'Use', () => useSkin(it))];
         return [btn('use', 'Equip', () => equip(it))];
       case 'buy': return [btn('buy', [coinIcon('sc-coin'), fmt.format(it.price.coins)], () => confirmBuy(it, c), { 'aria-label': `Buy ${it.name} for ${fmt.format(it.price.coins)} coins` })];
       case 'short': return [btn('short', [coinIcon('sc-coin'), fmt.format(it.price.coins)], e => {
@@ -215,8 +220,9 @@ export function mountShop(el, ctx = {}) {
     setState(r.state);
     const fresh = body.querySelector(`.sc-card[data-id="${CSS.escape(it.id)}"]`);
     if (fresh) replay(fresh, 'sc-unlocked');
-    toast({ title: `${it.name} unlocked`, body: it.kind === 'frame' ? 'Find it under Stage > Shell.' : 'It is in your collection.', kind: 'ok',
-      action: it.kind === 'frame' ? { label: 'Use now', onClick: () => useFrame(it) } : { label: 'Equip', onClick: () => equip(it) } });
+    const use = it.kind === 'frame' ? () => useFrame(it) : it.kind === 'skin' ? () => useSkin(it) : null;
+    toast({ title: `${it.name} unlocked`, body: it.kind === 'frame' ? 'Find it under Stage > Shell.' : it.kind === 'skin' ? 'Find it under Stage > Shell > Skin.' : 'It is in your collection.', kind: 'ok',
+      action: use ? { label: 'Use now', onClick: use } : { label: 'Equip', onClick: () => equip(it) } });
   }
 
   async function equip(it) {
@@ -230,6 +236,22 @@ export function mountShop(el, ctx = {}) {
     app.setFrame?.(it.id);
     play('tap');
     toast({ title: `${it.name} is on your screen`, kind: 'ok' });
+  }
+
+  // ---- Skins: alternate art for one shell ----------------------------------------------------------
+  function baseName(it) { return (cat?.frames || []).find(f => f.id === it.frame)?.name || frameById(it.frame)?.name || it.frame; }
+  // Puts the skin on the selected screen, switching it to the skin's shell first (when you have that shell).
+  function useSkin(it) {
+    const s = app.sel?.(), f = frameById(it.frame), name = baseName(it);
+    if (!s) return toast({ title: 'Select a screen first', body: `Click a screen on the stage, then use ${it.name}.`, kind: 'info' });
+    if (!f) return toast({ title: `${name} is not available`, kind: 'error' });
+    if (!f.starter && !(app.owns ? app.owns(f.id) : st?.inventory?.includes(f.id))) {
+      return toast({ title: `${it.name} is a skin for ${name}`, body: f.unlockLevel ? `${name} unlocks at level ${f.unlockLevel}.` : `Get ${name} first.`, kind: 'info' });
+    }
+    if (s.frame !== f.id || s.customFrame) app.setFrame?.(f.id);
+    app.setSkin?.(it.id);
+    play('tap');
+    toast({ title: `${it.name} is on your ${name}`, kind: 'ok' });
   }
 
   // ---- Wallpapers --------------------------------------------------------------------------------
@@ -276,9 +298,9 @@ export function mountShop(el, ctx = {}) {
         h('input', { type: 'radio', name: 'sc-wp-target', value: v, checked: target === v, onchange: () => { prefs.target = v; save(PREFS_KEY, prefs); sig = ''; render(); } }),
         icon(ic), h('span', { textContent: t }))));
 
-    const tiles = presets.map(p => presetTile(p, all, target));
+    const tiles = presets.map(p => presetTile(p, all));
     tiles.push(h('button', { type: 'button', className: 'sc-preset is-buy', onclick: e => buyPreset(e.currentTarget),
-      'aria-label': `Buy a preset slot for ${presetPrice()} coins`, disabled: !has(shell, 'buyWallpaperPreset') },
+      'aria-label': `Buy a preset slot for ${presetPrice()} coins`, disabled: !has(shell, 'buyPresetSlot') },
     h('span', { className: 'sc-preset-art' }, icon('plus')), h('span', { className: 'sc-preset-name' }, 'Buy slot'),
     h('span', { className: 'sc-preset-price' }, coinIcon('sc-coin'), fmt.format(presetPrice()))));
 
@@ -286,9 +308,11 @@ export function mountShop(el, ctx = {}) {
       h('section', { className: 'sc-wp-now' }, hero, seg),
       h('section', { className: 'sc-wp-sec' },
         h('div', { className: 'sc-sec-head' }, h('h3', {}, icon('bookmark'), 'Presets'),
-          h('span', { className: 'meta', textContent: presets.length ? `${presets.filter(p => p.wallpaper).length} of ${presets.length} saved` : 'Quick swaps' })),
+          h('span', { className: 'meta', textContent: presets.length ? `${presets.filter(p => !p.empty).length} of ${presets.length} saved` : 'Whole setups' })),
         h('div', { className: 'sc-presets', role: 'list' }, tiles),
-        h('p', { className: 'hint', textContent: presets.length ? 'Click a preset to swap. Click an empty one to save what is showing now.' : `Save wallpapers for one-click swaps. Each preset slot costs ${presetPrice()} coins.` })),
+        h('p', { className: 'hint', textContent: presets.length
+          ? 'Click a preset to load it exactly. Click an empty one to save everything showing now: shells, skins, colours, fills, layout, background and effects.'
+          : `A preset saves your whole setup (every shell, skin, colour, fill, the layout, background and effects) and loads it in one click. Each slot costs ${presetPrice()} coins. Game setups under Stage › Setups are free.` })),
       h('section', { className: 'sc-wp-sec' },
         h('div', { className: 'sc-sec-head' }, h('h3', {}, icon('photo'), 'Gallery'),
           h('button', { type: 'button', className: 'icon-btn sm', title: 'Rescan Wallpaper Engine', 'aria-label': 'Rescan Wallpaper Engine', onclick: e => { e.currentTarget.classList.add('busy'); loadWallpapers(true); } }, icon('refresh')),
@@ -359,19 +383,21 @@ export function mountShop(el, ctx = {}) {
     return box;
   }
 
-  function presetTile(p, all, target) {
-    const w = p.wallpaper && resolveRef(p.wallpaper, all);
-    if (!p.wallpaper) {
-      return h('button', { type: 'button', role: 'listitem', className: 'sc-preset is-empty', onclick: () => savePreset(p.slot, target), 'aria-label': `Preset ${p.slot + 1} is empty. Save the current wallpaper here.` },
-        h('span', { className: 'sc-preset-art' }, icon('plus')), h('span', { className: 'sc-preset-name', textContent: 'Save current' }), h('span', { className: 'sc-preset-price', textContent: `Slot ${p.slot + 1}` }));
+  const shellName = id => (cat?.frames || []).find(f => f.id === id)?.name || frameById(id)?.name || id;
+  function presetTile(p, all) {
+    if (p.empty) {
+      return h('button', { type: 'button', role: 'listitem', className: 'sc-preset is-empty', onclick: () => savePreset(p.slot), 'aria-label': `Preset ${p.slot + 1} is empty. Save the whole setup showing now here.` },
+        h('span', { className: 'sc-preset-art' }, icon('plus')), h('span', { className: 'sc-preset-name', textContent: 'Save setup' }), h('span', { className: 'sc-preset-price', textContent: `Slot ${p.slot + 1}` }));
     }
-    const on = sameRef(p.wallpaper, currentRef(target));
-    const tile = h('div', { role: 'listitem', className: `sc-preset is-filled${on ? ' on' : ''}${w ? '' : ' is-missing'}` },
-      h('button', { type: 'button', className: 'sc-preset-pick', title: w ? `${w.name}: click to swap` : 'This wallpaper is gone', 'aria-pressed': String(on), disabled: !w?.usable,
-        onclick: () => apply(w, target) },
-      h('span', { className: 'sc-preset-art' }, wpArt(w)), h('span', { className: 'sc-preset-name', textContent: w ? w.name : 'Missing' }), h('span', { className: 'sc-preset-price', textContent: `Slot ${p.slot + 1}` })),
+    const about = describe(p.summary, shellName);
+    const f = p.summary?.frames?.[0] && frameById(p.summary.frames[0]);
+    const art = p.wallpaper ? wpArt(resolveRef(p.wallpaper, all)) : f?.url ? h('img', { src: f.url, alt: '', className: 'sc-preset-shell', draggable: false }) : icon('bookmark');
+    return h('div', { role: 'listitem', className: `sc-preset is-filled${p.summary?.wallpaperOnly ? ' is-legacy' : ''}` },
+      h('button', { type: 'button', className: 'sc-preset-pick', title: `${p.name}: ${about}. Click to load.`, onclick: () => loadPreset(p.slot) },
+        h('span', { className: 'sc-preset-art' }, art), h('span', { className: 'sc-preset-name', textContent: p.name }),
+        h('span', { className: 'sc-preset-price', textContent: `${p.slot + 1} · ${about}` })),
+      h('button', { type: 'button', className: 'sc-preset-x sc-preset-save', title: 'Save the setup showing now over this preset', 'aria-label': `Save over preset ${p.slot + 1}`, onclick: e => savePreset(p.slot, e.currentTarget) }, icon('save')),
       h('button', { type: 'button', className: 'sc-preset-x', title: 'Clear this preset', 'aria-label': `Clear preset ${p.slot + 1}`, onclick: () => clearPreset(p.slot) }, icon('x')));
-    return tile;
   }
 
   async function apply(w, target) {
@@ -394,17 +420,30 @@ export function mountShop(el, ctx = {}) {
     refreshBig();
   }
 
-  async function savePreset(slot, target) {
-    const ref = currentRef(target);
-    if (!ref) return toast({ title: 'Pick a wallpaper first', body: 'Choose one in the gallery, then save it to this preset.', kind: 'info' });
-    const r = await call(shell, 'setWallpaperPreset', slot, ref);
+  // Saves the whole setup showing now. Saving over a filled slot asks for a second click.
+  async function savePreset(slot, btn = null) {
+    if (!app.currentConfig) return;
+    if (btn && !btn.classList.contains('is-confirm')) {
+      btn.classList.add('is-confirm'); btn.title = 'Click again to replace this preset';
+      setTimeout(() => { if (btn.isConnected) { btn.classList.remove('is-confirm'); btn.title = 'Save the setup showing now over this preset'; } }, 3000);
+      return play('tap');
+    }
+    const sel = app.sel?.(), n = app.scene?.screens?.length || 0;
+    const shown = sel && (sel.customFrame ? 'Custom shell' : sel.frame ? shellName(sel.frame) : 'Bare screen');
+    const name = shown ? `${shown}${n > 1 ? ` +${n - 1}` : ''}` : `Preset ${slot + 1}`;
+    const r = await call(shell, 'savePreset', slot, { name, config: app.currentConfig() });
     if (!r?.ok) return toast({ title: 'Could not save the preset', body: 'Please try again.', kind: 'error' });
     play('coin');
     setState(r.state);
+    toast({ title: `Saved preset ${slot + 1}`, body: 'Click it any time to load this exact setup.', kind: 'ok' });
+  }
+  async function loadPreset(slot) {
+    play('tap');
+    if (app.loadPreset) await app.loadPreset(slot);
   }
 
   async function clearPreset(slot) {
-    const r = await call(shell, 'setWallpaperPreset', slot, null);
+    const r = await call(shell, 'savePreset', slot, null);
     if (r?.state) setState(r.state);
   }
 
@@ -421,12 +460,12 @@ export function mountShop(el, ctx = {}) {
       return play('tap');
     }
     btn.disabled = true;
-    const r = await call(shell, 'buyWallpaperPreset');
+    const r = await call(shell, 'buyPresetSlot');
     if (!r?.ok) { btn.disabled = false; play('error'); return toast({ title: 'Could not buy a preset slot', body: r?.reason === 'insufficient' ? 'Not enough coins.' : 'Please try again.', kind: 'error' }); }
     play('spend');
     coinFlight(document.querySelector('[data-hud-coin]') || wallet, btn);
     setState(r.state);
-    toast({ title: 'New preset slot', body: 'Click it to save the wallpaper showing now.', kind: 'ok' });
+    toast({ title: 'New preset slot', body: 'Click it to save your whole setup as it is now.', kind: 'ok' });
   }
 
   async function addFile() {
@@ -501,7 +540,7 @@ export function mountShop(el, ctx = {}) {
   function renderWeekly() {
     if (!weekly) { loadWeekly(); body.replaceChildren(h('p', { className: 'sc-foot-note', textContent: "Loading this week's bundle…" })); return; }
     const { bundle: b, price } = weekly;
-    const all = withRewardLevels(withoutTakedowns(['frames', 'finishes', 'colorways', 'fills'].flatMap(k => cat?.[k] || []), cat?.takedowns), cat?.levels);
+    const all = withRewardLevels(withoutTakedowns(BUNDLE_KINDS.flatMap(k => cat?.[k] || []), cat?.takedowns), cat?.levels);
     const byId = new Map(all.map(it => [it.id, it]));
     const list = b.items.map(id => byId.get(id)).filter(Boolean);
     const short = Math.max(0, price.coins - (st?.coins || 0)), off = Math.round(b.discount * 100);

@@ -1,7 +1,8 @@
 'use strict';
 // Loads the shop catalog from src/catalog/*.json, appends mod items and hides taken-down ids.
 // Frame lists are optional (missing/broken files are skipped); the built-in starter frames are
-// always present, free and owned. Wallpapers are never locked: they carry no price.
+// always present, free and owned. Wallpapers are never locked: they carry no price. Skins (skins.json)
+// are alternate artwork for one existing shell: their geometry always comes from that base frame.
 const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
@@ -10,11 +11,14 @@ const DIR = path.join(__dirname, '..', '..', 'catalog');
 const RENDERER = path.join(__dirname, '..', '..', 'renderer');
 const FILES = { frames: ['frames-pixel.json', 'frames-vector.json'], finishes: ['finishes.json'], colorways: ['colorways.json'],
   fills: ['fills.json'], wallpapers: ['wallpapers.json'], levels: ['levels.json'], developers: ['developers.json'], takedowns: ['takedowns.json'],
-  bundles: ['bundles.json'] };
-const KINDS = { frames: 'frame', finishes: 'finish', colorways: 'colorway', fills: 'fill' }; // ownable shop items
+  bundles: ['bundles.json'], skins: ['skins.json'] };
+const KINDS = { frames: 'frame', finishes: 'finish', colorways: 'colorway', fills: 'fill', skins: 'skin' }; // ownable shop items
 const ITEM_KEYS = [...Object.keys(KINDS), 'wallpapers'];
 const RARITY = ['common', 'rare', 'epic', 'legendary'];
-const SCREENSAVERS = ['starfield', 'bubbles', 'plasma', 'pixel-rain', 'sakura-petals', 'aurora'];
+// Mirrors SCREENSAVER_IDS in src/renderer/fx/screensavers.js (+ the pixel environments in pixel-envs.js).
+const SCREENSAVERS = ['starfield', 'bubbles', 'plasma', 'pixel-rain', 'sakura-petals', 'aurora',
+  'px-env-firefly-forest', 'px-env-neon-rain', 'px-env-kelp-reef', 'px-env-snow-village', 'px-env-dune-caravan', 'px-env-star-window',
+  'px-env-lantern-lane', 'px-env-ember-cavern'];
 const SAFE_FILE = /^frames\/(?:[\w-]+\/)*[\w-]+\.(?:svg|png|webp)$/;
 const WP_FILE = /^wallpapers\/(?:[\w-]+\/)*[\w-]+\.[a-z0-9]+$/i;
 const MEDIA = { video: /\.(?:mp4|webm|m4v)$/i, image: /\.(?:png|jpe?g|webp|svg)$/i, gif: /\.gif$/i, preview: /\.(?:png|jpe?g|webp|gif|svg)$/i };
@@ -83,6 +87,20 @@ function normItem(it, kind) {
   return out;
 }
 
+// A skin: alternate art for the shell `frame` (a catalog frame, not a mod's). It inherits the base's
+// size, opening, corner radius, aspect and see-through-ness, never its own, so it swaps in without
+// moving the console. Null when malformed or the base frame is unknown.
+function normSkin(it, frames) {
+  const out = normItem(it, 'skin'), base = it && frames.get(String(it.frame));
+  if (!out || !base || base.mod || !SAFE_FILE.test(String(it.file || ''))) return null;
+  delete out.fx;
+  return {
+    ...out, frame: base.id, style: base.style, starter: false, size: { ...base.size }, hole: { ...base.hole },
+    holeRadius: base.holeRadius, aspect: base.aspect, translucent: !!base.translucent,
+    tags: Array.isArray(it.tags) ? it.tags.filter((t) => typeof t === 'string') : [],
+  };
+}
+
 // A wallpaper item. `resolve(file, re)` turns a media/preview path into a URL (null when unusable).
 // Types: video, image, gif, or screensaver ({fill, palette?}: one of the fill animations).
 function normWallpaper(it, resolve) {
@@ -115,7 +133,8 @@ function build() {
   const out = {};
   for (const [key, kind] of Object.entries(KINDS)) {
     const raw = key === 'frames' ? [...STARTERS, ...FILES.frames.flatMap((f) => readList(f, 'frames'))] : readList(FILES[key][0], key);
-    out[key] = raw.map((it) => normItem(it, kind)).filter((it) => it && !seen.has(it.id) && seen.add(it.id));
+    const frames = key === 'skins' ? new Map(out.frames.map((f) => [f.id, f])) : null;
+    out[key] = raw.map((it) => (frames ? normSkin(it, frames) : normItem(it, kind))).filter((it) => it && !seen.has(it.id) && seen.add(it.id));
   }
   out.wallpapers = readList(FILES.wallpapers[0], 'wallpapers').map((it) => normWallpaper(it, rendererFile)).filter((it) => it && !seen.has(it.id) && seen.add(it.id));
   out.levels = readList(FILES.levels[0], 'levels').filter((r) => r && Number.isInteger(r.level))
@@ -145,12 +164,15 @@ function finish(base, mods, extraTakedowns = []) {
   const keep = (it) => it && !gone.has(it.id);
   const out = { ...base, takedowns: [...gone] };
   for (const k of ITEM_KEYS) out[k] = [...base[k], ...((mods && mods[k]) || [])].filter(keep);
+  const frameIds = new Set(out.frames.map((f) => f.id));
+  out.skins = out.skins.filter((k) => frameIds.has(k.frame)); // a taken-down shell takes its skins along
+  for (const k of base.skins) if (!frameIds.has(k.frame)) gone.add(k.id);
   out.levels = base.levels.map((r) => ({ ...r, rewards: { ...r.rewards, items: r.rewards.items.filter((id) => !gone.has(id)) } }));
   out.developers = base.developers.filter((d) => !gone.has(d.devId));
   return out;
 }
 
-// Map of every ownable item (frames, finishes, colorways, fills) by id.
+// Map of every ownable item (frames, finishes, colorways, fills, skins) by id.
 const index = (cat) => new Map(Object.keys(KINDS).flatMap((k) => cat[k] || []).map((it) => [it.id, it]));
 
 let base = null, baseKey = '', merged = null, mergedFor;
@@ -168,4 +190,4 @@ const reservedIds = () => {
   return new Set(ITEM_KEYS.flatMap((k) => c[k].map((it) => it.id)));
 };
 
-module.exports = { load, index, finish, normItem, normFx, PARTICLES, GLASS, normWallpaper, reservedIds, STARTERS, SCREENSAVERS, MEDIA, ID, HEX, DIR, RENDERER };
+module.exports = { load, index, finish, normItem, normSkin, normFx, PARTICLES, GLASS, normWallpaper, reservedIds, STARTERS, SCREENSAVERS, MEDIA, ID, HEX, DIR, RENDERER };

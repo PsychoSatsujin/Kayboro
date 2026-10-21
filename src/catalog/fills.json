@@ -11,6 +11,22 @@
     { "id": "sakura-petals", "name": "Sakura petals", "kind": "fill", "rarity": "epic", "price": { "coins": 500 }, "unlockLevel": null, "author": "Kayboro",
       "desc": "Cherry blossom petals tumbling in a breeze.", "colors": ["#2a1630", "#ffb7d5", "#ffe3ef"] },
     { "id": "aurora", "name": "Aurora", "kind": "fill", "rarity": "epic", "price": null, "unlockLevel": 50, "author": "Kayboro",
-      "desc": "Northern lights rippling across the shell.", "colors": ["#071522", "#6ee7a8", "#c58cff"] }
+      "desc": "Northern lights rippling across the shell.", "colors": ["#071522", "#6ee7a8", "#c58cff"] },
+    { "id": "px-env-firefly-forest", "name": "Firefly Forest", "kind": "fill", "rarity": "rare", "price": null, "unlockLevel": 11, "author": "Kayboro",
+      "desc": "Fireflies blink between misty pines while the moon keeps watch.", "colors": ["#0d1b22", "#4f9a6a", "#ffe27a"] },
+    { "id": "px-env-neon-rain", "name": "Neon Rain", "kind": "fill", "rarity": "rare", "price": null, "unlockLevel": 19, "author": "Kayboro",
+      "desc": "A rainy city night where every neon sign gets a puddle twin.", "colors": ["#120c2a", "#ff4fa3", "#3fe0ff"] },
+    { "id": "px-env-kelp-reef", "name": "Kelp Reef", "kind": "fill", "rarity": "rare", "price": null, "unlockLevel": 29, "author": "Kayboro",
+      "desc": "Kelp sways, little fish dart about and a jellyfish glows on its way up.", "colors": ["#06304a", "#3cbf8f", "#ff9f6b"] },
+    { "id": "px-env-snow-village", "name": "Snowy Village", "kind": "fill", "rarity": "epic", "price": null, "unlockLevel": 37, "author": "Kayboro",
+      "desc": "Chimneys puff away in a cozy mountain village as the snow keeps falling.", "colors": ["#161c3c", "#e6eeff", "#ffb45c"] },
+    { "id": "px-env-dune-caravan", "name": "Dune Caravan", "kind": "fill", "rarity": "epic", "price": null, "unlockLevel": 46, "author": "Kayboro",
+      "desc": "A camel caravan plods over the dunes under a striped sunset sun.", "colors": ["#2e1446", "#ff8a3d", "#ffd58a"] },
+    { "id": "px-env-star-window", "name": "Star Window", "kind": "fill", "rarity": "epic", "price": null, "unlockLevel": 58, "author": "Kayboro",
+      "desc": "Watch the stars stream past and planets drift by from the ship's lounge.", "colors": ["#06071a", "#8a7dff", "#56f0c8"] },
+    { "id": "px-env-lantern-lane", "name": "Lantern Lane", "kind": "fill", "rarity": "legendary", "price": null, "unlockLevel": 68, "author": "Kayboro",
+      "desc": "Paper lanterns sway over an old town street as petals ride the night breeze.", "colors": ["#1d1236", "#ff5a4a", "#ffd9a0"] },
+    { "id": "px-env-ember-cavern", "name": "Ember Cavern", "kind": "fill", "rarity": "legendary", "price": null, "unlockLevel": 74, "author": "Kayboro",
+      "desc": "Lava drips, the river glows and embers float up through the cave.", "colors": ["#1c0c10", "#ff5a1f", "#ffd23f"] }
   ]
 }

@@ -1,6 +1,6 @@
 # Kayboro Content License
 
-This file covers the art and media shipped with Kayboro: shells (frames), wallpapers, fills, colorways and finishes under `src/renderer/` and `src/catalog/`.
+This file covers the art and media shipped with Kayboro: shells (frames) and their skins, wallpapers, fills, colorways and finishes under `src/renderer/` and `src/catalog/`.
 
 ## Kayboro originals
 

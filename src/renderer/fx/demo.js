@@ -79,6 +79,23 @@ const views = {
     s.append(cv); c.append(s, make('span', 'lbl', id)); row.append(c);
     createScreensaver(id, cv);
   })),
+  // Pixel environments in a wide and a tall box (&ids=a,b to pick; &sw/&sh, &tw/&th to size; &frames=1 adds shells).
+  envs: () => {
+    const ids = q.get('ids')?.split(',') || SCREENSAVER_IDS.filter(id => id.startsWith('px-env-'));
+    section('Pixel environments · wide / tall', row => ids.forEach(id => {
+      for (const [w, h, tag] of [[+q.get('sw') || 420, +q.get('sh') || 190, 'wide'], [+q.get('tw') || 130, +q.get('th') || 300, 'tall']]) {
+        const c = make('div', 'cell'), s = make('div', 'saver'), cv = make('canvas');
+        Object.assign(s.style, { width: `${w}px`, height: `${h}px` });
+        s.append(cv); c.append(s, make('span', 'lbl', `${id.slice(7)} · ${tag}`)); row.append(c);
+        createScreensaver(id, cv, { seed: +q.get('seed') || 7 });
+      }
+    }));
+    if (q.has('frames')) section('Pixel environments · shell fills', row => ids.forEach((id, i) => {
+      const fr = ['handheld', 'vx-ufo-pet', 'px-pocket', 'vx-sakura-handheld'][i % 4];
+      cell(row, `${id.slice(7)} · ${fr}`, fr, H * (frameOf(fr)?.size.w > frameOf(fr)?.size.h ? 0.42 : 0.62),
+        { fill: { type: 'screensaver', id }, colorway: fr === 'handheld' ? 'clear' : 'default', finish: q.get('finish') || 'gloss' });
+    }));
+  },
   depth: () => {
     const ids = (q.get('frames') || 'crt-tv,handheld,px-crt,vx-neko-tv').split(','), h = H * 0.55;
     const fill = q.has('fillurl') ? { type: 'image', url: q.get('fillurl') } : { type: 'screensaver', id: q.get('saver') || 'aurora' };

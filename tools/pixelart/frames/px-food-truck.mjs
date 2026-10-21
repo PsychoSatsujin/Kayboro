@@ -247,3 +247,6 @@ function compose(base, cv) {
   });
   return cv.punch(...HOLE, HR);
 }
+
+// Palette arrays by name, for skins (tools/pixelart/skins) that redraw this shell in other colors.
+export const PALETTES = { Mt, Cr, Rd, Yl, St, Pk, Wf, Tr, Ck, Gl, BULB };

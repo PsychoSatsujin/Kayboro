@@ -40,6 +40,7 @@ const STROKE = {
   stars: S('M17.8 19.817l-2.172 1.138a.392 .392 0 0 1 -.568 -.41l.415 -2.411l-1.757 -1.707a.389 .389 0 0 1 .217 -.665l2.428 -.352l1.086 -2.193a.392 .392 0 0 1 .702 0l1.086 2.193l2.428 .352a.39 .39 0 0 1 .217 .665l-1.757 1.707l.414 2.41a.39 .39 0 0 1 -.567 .411l-2.172 -1.138z',
     'M6.2 19.817l-2.172 1.138a.392 .392 0 0 1 -.568 -.41l.415 -2.411l-1.757 -1.707a.389 .389 0 0 1 .217 -.665l2.428 -.352l1.086 -2.193a.392 .392 0 0 1 .702 0l1.086 2.193l2.428 .352a.39 .39 0 0 1 .217 .665l-1.757 1.707l.414 2.41a.39 .39 0 0 1 -.567 .411l-2.172 -1.138z',
     'M12 9.817l-2.172 1.138a.392 .392 0 0 1 -.568 -.41l.415 -2.411l-1.757 -1.707a.389 .389 0 0 1 .217 -.665l2.428 -.352l1.086 -2.193a.392 .392 0 0 1 .702 0l1.086 2.193l2.428 .352a.39 .39 0 0 1 .217 .665l-1.757 1.707l.414 2.41a.39 .39 0 0 1 -.567 .411l-2.172 -1.138z'),
+  brush: S('M3 21v-4a4 4 0 1 1 4 4h-4', 'M21 3a16 16 0 0 0 -12.8 10.2', 'M21 3a16 16 0 0 1 -10.2 12.8', 'M10.6 9a9 9 0 0 1 4.4 4.4'),
   wallpaper: S('M8 6h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-12', 'M4 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0', 'M8 18v-12a2 2 0 1 0 -4 0v12'),
   photo: S('M15 8h.01', 'M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z', 'M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5', 'M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3'),
   movie: S('M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z', 'M8 4l0 16', 'M16 4l0 16', 'M4 8l4 0', 'M4 16l4 0', 'M4 12l16 0', 'M16 8l4 0', 'M16 16l4 0'),
@@ -116,10 +117,10 @@ export function replay(el, cls) { el.classList.remove(cls); void el.offsetWidth;
 // Stable hue for a name or id (avatars).
 export const hueOf = s => [...String(s)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7);
 
-// A small visual for any catalog item: frame art, a swatch dot or the wallpaper glyph.
+// A small visual for any catalog item: frame or skin art, a swatch dot or the wallpaper glyph.
 export function itemThumb(it, cls = 'sc-ithumb') {
   if (!it) return h('span', { className: `${cls} sc-ithumb-x` }, icon('sparkles'));
-  if (it.kind === 'frame' && (it.url || it.file)) {
+  if ((it.kind === 'frame' || it.kind === 'skin') && (it.url || it.file)) {
     return h('span', { className: `${cls} is-frame${it.style === 'pixel' ? ' is-pixel' : ''}` },
       h('img', { src: it.url || assetUrl(it.file), alt: '', decoding: 'async', loading: 'lazy', draggable: false }));
   }

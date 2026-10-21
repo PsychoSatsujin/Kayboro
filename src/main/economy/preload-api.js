@@ -13,7 +13,7 @@ const on = (ch) => (cb) => {
 const api = {
   ...Object.fromEntries([
     'getState', 'listCatalog', 'listDevelopers', 'purchase', 'equip',
-    'setActiveWallpaper', 'setWallpaperPreset', 'buyWallpaperPreset', 'listLocalWallpapers',
+    'setActiveWallpaper', 'buyPresetSlot', 'savePreset', 'getPreset', 'listLocalWallpapers',
     'sessionStart', 'sessionStop', 'openLink', 'getSettings', 'setSettings', 'getIntegrity',
     'getMods', 'reloadMods', 'openModsFolder', 'submitDeveloper', 'listSubmissions', 'exportPayoutSheet',
     'getWeeklyBundle', 'buyBundle', 'exportBundle', 'betLimits', 'placeBet', 'settleBet',

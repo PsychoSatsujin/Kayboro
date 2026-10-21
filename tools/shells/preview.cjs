@@ -4,7 +4,7 @@
 //   npx electron tools/shells/preview.cjs [--out=DIR] [--crop=x,y,w,h] [--sheet] id [id ...]
 //
 // Each id is built from tools/vectorart/frames/<id>.js or tools/pixelart/frames/<id>.mjs exactly like the
-// real builds (tools/vectorart/build.js, tools/pixelart/build.mjs), linted against the rules the frame unit
+// real builds (tools/vectorart/build.js, tools/pixelart/build.mjs; skin-* ids: tools/shells/build-skins.mjs), linted against the rules the frame unit
 // tests enforce, then rasterized at 1x and checked: nothing opaque inside the opening, a solid ring around
 // it, and the transparent region around its center spans exactly the hole (the shell encloses the screen).
 // Writes to DIR (default <repo>/.preview/, git-ignored):
@@ -35,7 +35,12 @@ app.setPath('userData', path.join(OUT, 'electron-profile'));
 
 /** Build one shell the way the real build does: { style, svg, item, problems }. */
 async function build(id) {
-  const st = path.join(ROOT, 'tools', 'vectorart', 'starters', `${id}.js`);
+  if (id.startsWith('skin-')) { // shell skins (tools/shells/build-skins.mjs): the base's geometry, the skin's art
+    const sb = await import(pathToFileURL(path.join(ROOT, 'tools', 'shells', 'build-skins.mjs')).href);
+    const b = await sb.buildSkin(id);
+    return { style: b.style, skin: true, svg: b.svg, item: b.item, problems: b.problems };
+  }
+  const st =path.join(ROOT, 'tools', 'vectorart', 'starters', `${id}.js`);
   if (fs.existsSync(st)) { // built-in starter shells (tools/vectorart/build-starters.js)
     const sb = require('../vectorart/build-starters.js');
     const f = sb.load(id);
@@ -76,10 +81,10 @@ function catalogIds() {
 /** Static checks mirroring test/frames-vector.test.js and test/frames-pixel.test.js. */
 function lint(id, { style, svg, item: f }, known) {
   const problems = [], warnings = [], { w: W, h: H } = f.size, { x, y, w, h } = f.hole;
-  const starter = !!arguments[1].starter;
+  const starter = !!arguments[1].starter || !!arguments[1].skin; // skins: id and geometry rules are build-skins.mjs's
   if (!starter && (!/^(vx|px)-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) || id.length > 64)) problems.push(`id "${id}" must be vx-/px- + lowercase words`);
   if (style === 'vector' && !starter && !id.startsWith('vx-')) problems.push('vector shell ids start with vx-');
-  if (style === 'pixel' && !id.startsWith('px-')) problems.push('pixel shell ids start with px-');
+  if (style === 'pixel' && !starter && !id.startsWith('px-')) problems.push('pixel shell ids start with px-');
   if (!starter && known.has(id) && known.get(id) !== f.file) problems.push(`id clashes with ${known.get(id)}`);
   for (const k of ['name', 'theme']) if (!(typeof f[k] === 'string' && f[k])) problems.push(`missing ${k}`);
   if (!Array.isArray(f.tags) || !f.tags.length) problems.push('missing tags');

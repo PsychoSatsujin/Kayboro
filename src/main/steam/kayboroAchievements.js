@@ -35,7 +35,7 @@ function earned(state, cat, ctx) {
   if (catalogShells(cat || {}).some((f) => inv.has(f.id))) out.add('KB_FIRST_SHELL');
   if (ctx.played === true) out.add('KB_FIRST_PLAY');
   for (const [l, name] of Object.entries(LEVELS)) if (level >= Number(l)) out.add(name);
-  const slots = Array.isArray(state.wallpaperPresets) ? state.wallpaperPresets.length : 0;
+  const slots = Array.isArray(state.presets) ? state.presets.length : 0;
   if (slots > 0 || items.some((it) => boughtWithCoins(it, inv, level))) out.add('KB_FIRST_COIN');
   for (const [coll, ids] of Object.entries(byCollection(cat || {}))) {
     if (COLLECTIONS[coll] && ids.length && ids.every((id) => inv.has(id))) out.add(COLLECTIONS[coll]);

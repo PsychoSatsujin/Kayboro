@@ -1,8 +1,9 @@
 // Sidebar: tabs (Stage, Shop, Profile, Devs), the Stage controls (sources, screens, aspect & fit, shell,
 // background, displays, scenes), the HUD, toasts and the Play footer. Shop/Profile/Devs/HUD/toasts are
 // panel modules (app.mods); each gets a small built-in fallback so the app works without them.
-import { FRAMES } from './frames/frames.js';
+import { FRAMES, frameById, skinUrl } from './frames/frames.js';
 import { findHole, parseAspect } from './layout.js';
+import { gameOf, describe } from './setups.js';
 
 const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
@@ -223,6 +224,34 @@ export function initUI(app) {
     const n = FRAMES.filter(f => !ownsFrame(f)).length;
     $('framesMeta').textContent = n ? `${FRAMES.length - n} of ${FRAMES.length} unlocked` : `All ${FRAMES.length} unlocked`;
   }
+  // Skin row: the selected screen's shell in its original art plus every skin made for it. Owned skins
+  // swap in place; locked ones say how to get them and open the Shop's Skins section.
+  let skinBtns = [], skinKey = null;
+  function buildSkins(s) {
+    const f = s && !s.customFrame?.url ? frameById(s.frame) : null, list = f ? app.skinsOf(s) : [];
+    const key = f && list.length ? `${f.id}|${list.map(k => `${k.id}:${app.owns(k.id) ? 1 : 0}`).join()}` : '';
+    if (key === skinKey) return;
+    skinKey = key;
+    $('skinRow').hidden = !key;
+    if (!key) { skinBtns = []; $('skins').replaceChildren(); return; }
+    const owned = list.filter(k => app.owns(k.id)).length;
+    $('skinMeta').textContent = `${owned} of ${list.length} unlocked`;
+    const tile = (id, name, url, rarity, ok, k) => h('button', { type: 'button', className: `tile ftile skin r-${rarity || 'common'}${ok ? '' : ' locked'}${f.style === 'pixel' ? ' is-pixel' : ''}`,
+      'data-skin': id ?? '', title: k?.desc || name, 'aria-pressed': 'false',
+      'aria-label': ok ? name : `${name} skin, locked${k?.unlockLevel ? `, level ${k.unlockLevel}` : ''}`,
+      onclick: () => (ok ? app.setSkin(id) : lockedSkin(k)) },
+    h('span', { className: 'thumb' }, h('img', { src: url, alt: '', width: 64, height: 64, decoding: 'async', draggable: false })),
+    h('span', { className: 'name', textContent: name }),
+    ok ? null : k?.price?.coins ? h('span', { className: 'badge price' }, coin(), fmt.format(k.price.coins)) : h('span', { className: 'badge lvl' }, icon('lock'), k?.unlockLevel ? `Lv ${k.unlockLevel}` : ''));
+    skinBtns = [tile(null, 'Original', f.url, f.rarity, true), ...list.map(k => tile(k.id, k.name, skinUrl(k), k.rarity, app.owns(k.id), k))];
+    $('skins').replaceChildren(...skinBtns);
+  }
+  function lockedSkin(k) {
+    const st = app.state || {}, openShop = () => { showTab('shop'); mounted.shop?.showTab?.('skins'); };
+    app.toast(k.unlockLevel
+      ? { title: `${k.name} unlocks at level ${k.unlockLevel}`, body: `You are level ${st.level || 1}. See it in the Shop's Skins section.`, action: { label: 'Open Shop', onClick: openShop } }
+      : { title: `${k.name} is locked`, body: 'See it in the Shop.', action: { label: 'Open Shop', onClick: openShop } });
+  }
   on('frameCustom', async () => {
     const url = await ror.pickFile('frame').catch(() => null);
     if (url) await customFrameFrom(url);
@@ -288,7 +317,7 @@ export function initUI(app) {
     if (type === 'screensaver' && !b.id) b.id = app.catalog.fills.find(it => app.owns(it.id) && !it.media)?.id || null;
     if (type === 'wallpaper') {
       const st = app.state || {}, first = app.wallpaperGallery().find(w => w.usable);
-      const ref = b.ref || st.activeWallpaper?.stage || st.wallpaperPresets?.find(p => p.wallpaper)?.wallpaper || (first && { source: first.source, id: first.id });
+      const ref = b.ref || st.activeWallpaper?.stage || (first && { source: first.source, id: first.id });
       return app.setWallpaper(ref || null, 'stage');
     }
     app.setBackground({ type });
@@ -302,20 +331,14 @@ export function initUI(app) {
   }
   on('wpRefresh', () => app.refreshWallpapers());
   on('wpGallery', () => { showTab('shop'); mounted.shop?.showTab?.('wallpapers'); });
-  // The wallpaper on the stage, then the saved presets (one click swaps). Every wallpaper is free.
+  // The wallpaper on the stage. Every wallpaper is free; presets (Setups below, or the Shop) save it with the rest.
   function renderWallPane() {
     const b = app.scene.background, cur = b.type === 'wallpaper' ? app.wallpaperEntry(b.ref) : null;
-    const presets = (app.state?.wallpaperPresets || []).filter(p => p.wallpaper);
-    const tile = (w, ref, label, on) => h('button', { type: 'button', className: `slot${on ? ' on' : ''}`, 'aria-pressed': String(on), disabled: !w?.usable,
-      title: w ? w.name : 'This wallpaper is gone', onclick: () => app.setWallpaper(ref, 'stage') },
-    h('span', { className: 'thumb' }, w?.preview ? h('img', { src: w.preview, alt: '', width: 64, height: 36 }) : icon('wallpaper')),
-    h('span', { className: 'name', textContent: label }));
-    const same = (a, x) => !!a && !!x && a.source === x.source && (a.id ?? a.url) === (x.id ?? x.url);
-    const rows = [];
-    if (cur && !presets.some(p => same(p.wallpaper, b.ref))) rows.push(tile(cur, b.ref, cur.name, true));
-    for (const p of presets) { const w = app.wallpaperEntry(p.wallpaper); rows.push(tile(w, p.wallpaper, `${p.slot + 1}. ${w ? w.name : 'Missing wallpaper'}`, b.type === 'wallpaper' && same(p.wallpaper, b.ref))); }
-    if (!rows.length) rows.push(h('p', { className: 'empty', textContent: 'Pick any wallpaper in the gallery. They are all free. Coins buy preset slots for quick swaps.' }));
-    $('bgSlots').replaceChildren(...rows);
+    $('bgSlots').replaceChildren(cur
+      ? h('button', { type: 'button', className: 'slot on', 'aria-pressed': 'true', disabled: !cur.usable, title: cur.name, onclick: () => app.setWallpaper(b.ref, 'stage') },
+        h('span', { className: 'thumb' }, cur.preview ? h('img', { src: cur.preview, alt: '', width: 64, height: 36 }) : icon('wallpaper')),
+        h('span', { className: 'name', textContent: cur.name }))
+      : h('p', { className: 'empty', textContent: 'Pick any wallpaper in the gallery. They are all free.' }));
   }
 
   // ---- Displays ----
@@ -348,32 +371,58 @@ export function initUI(app) {
     app.toast(await ror.moveWindowToDisplay(s.hwnd, id).catch(() => false) ? 'Window moved.' : 'Could not move window.');
   });
 
-  // ---- Scenes ----
-  async function refreshScenes() {
-    const names = await ror.listScenes().catch(() => []);
-    $('scenes').replaceChildren(...names.map(n => h('option', { value: n, textContent: n })));
-    $('scenes').disabled = $('sceneLoad').disabled = $('sceneDelete').disabled = !names.length;
+  // ---- Setups: whole configurations. Preset slots (bought) load in one click; game setups (free, unlimited)
+  // can be linked to the game on the selected screen and load by themselves when it launches. ----
+  let setups = [], lastSetup = null; // lastSetup: id of the setup saved or loaded last (Ctrl+S saves over it)
+  const shellName = id => frameById(id)?.name || app.catalog.frames.find(f => f.id === id)?.name || id;
+  const linkGame = () => { const s = app.sel(); return s ? gameOf(s, app.hosted?.id === s.id ? app.hosted.appid : null) : null; };
+  async function refreshSetups() {
+    setups = await ror.listSetups().catch(() => []);
+    renderSetups();
+  }
+  let setupsKey = null;
+  function renderSetups() {
+    const g = linkGame(), presets = (app.state?.presets || []).filter(p => !p.empty);
+    const key = JSON.stringify([setups, lastSetup, g, presets]);
+    if (key === setupsKey) return;
+    setupsKey = key;
+    $('setupLinkRow').hidden = !g;
+    $('setupLinkText').textContent = g ? `Load when ${g.name} launches` : '';
+    $('setupList').replaceChildren(...(setups.length ? setups.map(st => h('div', { className: `setup${st.id === lastSetup ? ' on' : ''}`, role: 'listitem' },
+      h('button', { type: 'button', className: 'setup-load', title: `Load “${st.name}”`, onclick: () => loadSetup(st) },
+        h('span', { className: 'setup-name', textContent: st.name }),
+        h('span', { className: 'setup-meta' }, st.game ? [icon('play'), ` ${st.game.name} · `] : null, describe(st.summary, shellName))),
+      h('button', { type: 'button', className: 'icon-btn danger', title: `Delete “${st.name}”`, 'aria-label': `Delete setup ${st.name}`, onclick: () => deleteSetup(st) }, icon('trash'))))
+      : [h('p', { className: 'empty', textContent: 'Nothing saved yet. Setups are free: save as many as you like.' })]));
+    $('presetChipsRow').hidden = !presets.length;
+    $('presetChips').replaceChildren(...presets.map(p => h('button', { type: 'button', className: 'chip', title: `${p.name}: ${describe(p.summary, shellName)}`, onclick: () => app.loadPreset(p.slot) },
+      h('b', { textContent: String(p.slot + 1) }), ` ${p.name}`)));
   }
   async function saveScene() {
-    const name = $('sceneName').value.trim() || $('scenes').value || 'default';
-    const ok = await ror.saveScene(name, app.scene).catch(() => false);
-    app.toast(ok ? `Saved “${name}”` : 'Save failed.');
-    $('sceneName').value = name;
-    await refreshScenes();
-    $('scenes').value = name;
+    const cur = setups.find(x => x.id === lastSetup);
+    const name = $('setupName').value.trim() || cur?.name || 'My setup';
+    const g = $('setupLink').checked ? linkGame() : null;
+    const same = setups.find(x => x.name === name);
+    const r = await ror.saveSetup({ id: same?.id, name, game: g || (same && !linkGame() ? same.game : null), config: app.currentConfig() }).catch(() => null);
+    if (!r) return app.toast({ title: 'Could not save the setup', body: 'Please try again.', kind: 'error' });
+    lastSetup = r.id;
+    $('setupName').value = '';
+    app.toast(r.game ? `Saved “${name}”. It loads when ${r.game.name} launches.` : `Saved “${name}”`);
+    await refreshSetups();
   }
-  on('sceneSave', saveScene);
-  on('sceneLoad', async () => {
-    const n = $('scenes').value;
-    if (!n) return;
-    if (!app.loadScene(await ror.loadScene(n).catch(() => null))) return app.toast('Could not load scene.');
-    $('sceneName').value = n;
-    app.toast(`Loaded “${n}”`);
-  });
-  on('sceneDelete', async () => {
-    const n = $('scenes').value;
-    if (n && await ror.deleteScene(n).catch(() => false)) { await refreshScenes(); app.toast(`Deleted “${n}”`); }
-  });
+  async function loadSetup(st) {
+    const full = await ror.loadSetup(st.id).catch(() => null);
+    if (!full || !app.applyConfig(full.config)) return app.toast('Could not load that setup.');
+    lastSetup = st.id;
+    app.toast(`Loaded “${st.name}”`);
+    renderSetups();
+  }
+  async function deleteSetup(st) {
+    if (await ror.deleteSetup(st.id).catch(() => false)) { if (lastSetup === st.id) lastSetup = null; await refreshSetups(); app.toast(`Deleted “${st.name}”`); }
+  }
+  on('setupSave', saveScene);
+  on('setupName', e => { if (e.key === 'Enter') saveScene(); }, 'keydown');
+  on('setupPresets', () => { showTab('shop'); mounted.shop?.showTab?.('wallpapers'); });
 
   // ---- Play, fullscreen, panel ----
   on('play', () => app.togglePlay());
@@ -400,6 +449,9 @@ export function initUI(app) {
     if (document.activeElement !== $('fillClarity')) $('fillClarity').value = fc;
     $('fillClarityVal').textContent = `${fc}%`;
     for (const b of frameBtns) press(b, !!s && !s.customFrame && (s.frame ?? '') === b.dataset.id);
+    buildSkins(s);
+    const wearing = s ? app.frameOf(s)?.skin || '' : '';
+    for (const b of skinBtns) press(b, b.dataset.skin === wearing);
     for (const slot of Object.keys(LOOKS)) {
       const cur = s ? s[slot] : eq[slot];
       for (const b of $(LOOKS[slot][1]).children) if ('v' in b.dataset) press(b, b.dataset.v === (cur ?? ''));
@@ -421,13 +473,14 @@ export function initUI(app) {
     document.querySelectorAll('[data-needs-sel]').forEach(e => { e.disabled = !s; });
     $('selName').textContent = s ? s.sourceName || 'Empty screen' : 'Nothing. Click a screen on the stage.';
     $('selName').classList.toggle('none', !s);
+    renderSetups();
   }
 
   // Economy state changed (coins, level, inventory, presets): rebuild what depends on ownership.
   let owned = null;
   function stateChanged() {
     const inv = [...(app.state?.inventory || [])].sort().join();
-    if (inv !== owned) { owned = inv; buildFrames(); buildLooks(); buildSavers(); }
+    if (inv !== owned) { owned = inv; skinKey = null; buildFrames(); buildLooks(); buildSavers(); }
     try { hud?.update?.(app.state); } catch {}
     for (const m of Object.values(mounted)) { try { m?.update?.(app.state); } catch {} }
     render();
@@ -439,7 +492,7 @@ export function initUI(app) {
   let tab = 'stage';
   try { tab = localStorage.getItem('kayboro.tab') || 'stage'; } catch {}
   showTab(tab);
-  refreshSources(); refreshDisplays(); refreshScenes();
+  refreshSources(); refreshDisplays(); refreshSetups();
   return { render, stateChanged, catalogChanged, saveScene, refreshSources, showTab, toaster };
 }
 

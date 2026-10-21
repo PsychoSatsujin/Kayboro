@@ -1,9 +1,11 @@
-// Shell-fill screensavers: canvas 2D scenes for the six fill ids. createScreensaver() sizes the
+// Shell-fill screensavers: canvas 2D scenes for every fill id. createScreensaver() sizes the
 // canvas to its CSS box x devicePixelRatio, follows resizes, runs on the shared ticker (paused while
 // the document is hidden) and draws a single still frame when the user prefers reduced motion.
 import { onFrame, reducedMotion, onReducedMotionChange } from './ticker.js';
+import { ENV_SCENES, ENV_PALETTES } from './pixel-envs.js';
 
-export const SCREENSAVER_IDS = ['starfield', 'bubbles', 'plasma', 'pixel-rain', 'sakura-petals', 'aurora'];
+// The six classic fills, then the pixel-art environments (pixel-envs.js).
+export const SCREENSAVER_IDS = ['starfield', 'bubbles', 'plasma', 'pixel-rain', 'sakura-petals', 'aurora', ...Object.keys(ENV_SCENES)];
 // Defaults match the fills catalogue; a 4th colour, when present, is an optional extra accent.
 export const PALETTES = {
   starfield: ['#0b0a1a', '#ffffff', '#7af0ff', '#ff6ad5'],
@@ -12,6 +14,7 @@ export const PALETTES = {
   'pixel-rain': ['#0f0d16', '#6ee7a8', '#7af0ff'],
   'sakura-petals': ['#2a1630', '#ffb7d5', '#ffe3ef'],
   aurora: ['#071522', '#6ee7a8', '#c58cff'],
+  ...ENV_PALETTES,
 };
 
 const TAU = Math.PI * 2;
@@ -443,7 +446,7 @@ function aurora({ pal: [bg, green, violet] }) {
   };
 }
 
-const SCENES = { starfield, bubbles, plasma, 'pixel-rain': pixelRain, 'sakura-petals': sakura, aurora };
+const SCENES = { starfield, bubbles, plasma, 'pixel-rain': pixelRain, 'sakura-petals': sakura, aurora, ...ENV_SCENES };
 
 // createScreensaver(id, canvas, { palette, fps = 60, pixelRatio, seed }) -> { stop(), resize() }
 export function createScreensaver(id, canvas, { palette, fps = 60, pixelRatio, seed = 7 } = {}) {
