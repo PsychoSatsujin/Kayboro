@@ -17,7 +17,7 @@ Poses in `assets/brand/kayboro-mascot-sheet.svg`: wave (default, `kayboro-mascot
 | `assets/brand/kayboro-mark-pixel-24.svg` | 24 px pixel mark | 24 px icon, the HUD sprite `#i-logo-24` |
 | `assets/brand/kayboro-mark-pixel-32.svg` | 32 px pixel mark | 32 px icon; scaled up by whole numbers for the larger app icons |
 
-The three pixel marks are hand-tuned grids in `tools/brand/marks.cjs` (one character per pixel). Below 48 px always use them, scaled by whole numbers only (16 at 2x = 32, never 16 at 1.5x). From 48 px up use the vector mark. `assets/brand/sizes.png` shows all sizes on dark and light.
+The three pixel marks are hand-tuned grids in `tools/brand/marks.cjs` (one character per pixel). Below 48 px always use them, scaled by whole numbers only (16 at 2x = 32, never 16 at 1.5x). From 48 px up use the vector mark, except the app icon, which is the pixel mark at every size. `assets/brand/sizes.png` shows all sizes on dark and light.
 
 Cel-shaded house style, same as the shells: flat fills, one hard shade and one highlight per part, ink outlines in `#2a0b22`. The mark works on dark and light backgrounds without a plate.
 
