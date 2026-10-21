@@ -29,6 +29,9 @@ const FILTERS = {
   frame: [{ name: 'Frame images', extensions: ['png', 'webp', 'svg'] }],
 };
 
+// The Kayboro mark (tools/brand) on the window and taskbar; the packaged exe also embeds build/icon.ico.
+const ICON = path.join(__dirname, '..', 'renderer', 'assets', 'icon.png');
+
 let win = null;
 let play = null; // { hwnd, win, popId, timer, lastCursor, lastRect }
 let economy = null; // registerEconomyIpc() result: coins/XP for time spent, hosted-game session, mods
@@ -45,6 +48,7 @@ function createWindow() {
     minWidth: 480,
     minHeight: 320,
     title: 'Kayboro',
+    icon: ICON,
     backgroundColor: '#000000',
     autoHideMenuBar: true,
     webPreferences: {
@@ -372,7 +376,7 @@ app.whenReady().then(() => {
   registerIpc();
   require('./kaybo').registerProtocol(protocol, net);
   require('./steam/library').probeLibraries().catch(() => {}); // skip hung library drives before anything scans them
-  popout.register({ ipcMain, page: path.join(__dirname, '..', 'renderer', 'index.html'), preload: path.join(__dirname, '..', 'preload.js'),
+  popout.register({ ipcMain, page: path.join(__dirname, '..', 'renderer', 'index.html'), preload: path.join(__dirname, '..', 'preload.js'), icon: ICON,
     notify: (ev) => send('popout', ev), onPlayRequest: (id) => sendTo(popout.windowOf(id), 'popout', { type: 'playRequest', id }) });
   if (!sandbox.enabled) migrateUserData(app); // one-time copy of pre-rename (Shellcade) data; never throws. The sandbox starts fresh
   economy = registerEconomyIpc({ ipcMain, getWindow: () => win, detectSteamGame, isPlaying: () => !!play, userDataDir: app.getPath('userData') });

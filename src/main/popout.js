@@ -15,7 +15,7 @@ const IMG = /\.(?:svg|png|webp)$/i;
 const MIME = { '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp' };
 const pops = new Map(); // screen id -> { win, screen, pinned, drag }
 
-let ctx = null; // { page, preload, notify(ev), onPlayRequest(id) }
+let ctx = null; // { page, preload, icon, notify(ev), onPlayRequest(id) }
 
 const byWc = (wc) => [...pops.entries()].find(([, p]) => !p.win.isDestroyed() && p.win.webContents === wc) || [];
 const live = (p) => p && !p.win.isDestroyed();
@@ -38,7 +38,7 @@ function open(id, screenData, bounds, { pinned = true } = {}) {
   const b = clamp({ x: bounds?.x ?? 100, y: bounds?.y ?? 100, width: Math.max(MIN, bounds?.width || 480), height: Math.max(MIN, bounds?.height || 360) });
   const win = new BrowserWindow({
     ...b, frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false, resizable: false, maximizable: false,
-    fullscreenable: false, alwaysOnTop: pinned, skipTaskbar: false, show: false, title: `Kayboro: ${screenData?.sourceName || 'Shell'}`,
+    fullscreenable: false, alwaysOnTop: pinned, skipTaskbar: false, show: false, title: `Kayboro: ${screenData?.sourceName || 'Shell'}`, icon: ctx.icon,
     webPreferences: { preload: ctx.preload, contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false },
   });
   const p = { win, screen: screenData, pinned, drag: null };
