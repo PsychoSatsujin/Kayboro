@@ -12,10 +12,10 @@ Poses in `assets/brand/kayboro-mascot-sheet.svg`: wave (default, `kayboro-mascot
 
 | File | What | Use it for |
 | --- | --- | --- |
-| `assets/brand/kayboro-mark.svg` | Vector mark, 1024 box, transparent | Anything 48 px and up: app icon, store pages, docs |
+| `assets/brand/kayboro-mark.svg` | Vector mark, 1024 box, transparent | Anything 48 px and up: store pages, docs |
 | `assets/brand/kayboro-mark-pixel.svg` | 16 px pixel mark, `crispEdges` | 16 px icon, the in-app sprite `#i-logo` |
 | `assets/brand/kayboro-mark-pixel-24.svg` | 24 px pixel mark | 24 px icon, the HUD sprite `#i-logo-24` |
-| `assets/brand/kayboro-mark-pixel-32.svg` | 32 px pixel mark | 32 px icon |
+| `assets/brand/kayboro-mark-pixel-32.svg` | 32 px pixel mark | 32 px icon; scaled up by whole numbers for the larger app icons |
 
 The three pixel marks are hand-tuned grids in `tools/brand/marks.cjs` (one character per pixel). Below 48 px always use them, scaled by whole numbers only (16 at 2x = 32, never 16 at 1.5x). From 48 px up use the vector mark. `assets/brand/sizes.png` shows all sizes on dark and light.
 
@@ -67,9 +67,9 @@ Don't:
 
 ```
 assets/brand/            mark, pixel marks, wordmark, lockups, mascot, pose sheet (SVG + PNG renders), sizes.png
-build/icon.ico           16, 24, 32 (pixel) + 48, 64, 128, 256 (vector) PNG entries, electron-builder picks it up from build/
-build/icon.png           1024 x 1024 vector mark
-src/renderer/assets/icon.png   256 x 256 runtime window icon
+build/icon.ico           16..256 PNG entries, all pixel marks (48 = 24 x 2, 64/128/256 = 32 x 2/4/8), electron-builder picks it up from build/
+build/icon.png           1024 x 1024 pixel mark (32 x 32)
+src/renderer/assets/icon.png   256 x 256 runtime window icon (pixel mark)
 src/renderer/index.html  <symbol id="i-logo"> (16) and <symbol id="i-logo-24"> sprites
 steam/assets/            store and library assets + MANIFEST.json (sizes, doc URLs, shells used)
 steam/achievement-icons/ <apiName>.jpg + <apiName>_locked.jpg, 256 x 256, from steam/achievements.json

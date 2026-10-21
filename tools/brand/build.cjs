@@ -10,9 +10,9 @@
 //   assets/brand/kayboro-lockup.svg            mark + wordmark; kayboro-lockup-stacked.svg centred
 //   assets/brand/kayboro-mascot.svg            Kay waving; kayboro-mascot-sheet.svg = four poses + the mark
 //   assets/brand/*.png                         PNG renders of the above, plus sizes.png (mark at 16..256 on dark/light)
-//   build/icon.ico                             16, 24, 32 (pixel marks) + 48, 64, 128, 256 (vector), PNG entries
-//   build/icon.png                             1024 x 1024 vector mark (electron-builder buildResources)
-//   src/renderer/assets/icon.png               256 x 256 runtime window icon
+//   build/icon.ico                             16..256, the pixel marks scaled by whole numbers, PNG entries
+//   build/icon.png                             1024 x 1024 pixel mark (electron-builder buildResources)
+//   src/renderer/assets/icon.png               256 x 256 runtime window icon (pixel mark)
 // and, unless --no-html, replaces the <symbol id="i-logo"> (16 px) and <symbol id="i-logo-24"> sprites in
 // src/renderer/index.html with the pixel marks (the HUD uses -24 at 1:1, the empty stage uses the 16 at 4x).
 // Everything is deterministic: same code in, same bytes out.
@@ -36,6 +36,8 @@ const b64 = (s) => Buffer.from(s).toString('base64');
 
 /** The mark at every icon size: pixel grids where they exist, the vector mark above 32 px. */
 const markAt = (n) => (M.GRIDS[n] ? M.gridSvg(n) : A.markSvg());
+/** The app icon at size n: the pixel mark, its most detailed grid that n is a whole multiple of (32 x 8 at 256). */
+const iconAt = (n) => { const g = [32, 24, 16].find((k) => n % k === 0); return M.gridSvg(g, n / g); };
 
 /** Contact sheet: marks at 16..256 on dark and light, pixel sizes drawn 1:1 (for docs/BRAND.md and review). */
 function sizesSheet() {
@@ -84,9 +86,9 @@ run(async (r) => {
   const sh = sizesSheet(); write(path.join('assets', 'brand', 'sizes.png'), await r.raster(sh.svg, sh.w, sh.h));
   // C. icons
   const entries = [];
-  for (const n of [16, 24, 32, 48, 64, 128, 256]) entries.push({ size: n, png: await r.raster(markAt(n), n, n, { smooth: n > 32 }) });
+  for (const n of [16, 24, 32, 48, 64, 128, 256]) entries.push({ size: n, png: await r.raster(iconAt(n), n, n, { smooth: false }) });
   write(path.join('build', 'icon.ico'), ico(entries));
-  write(path.join('build', 'icon.png'), await r.raster(A.markSvg(), 1024, 1024));
+  write(path.join('build', 'icon.png'), await r.raster(iconAt(1024), 1024, 1024, { smooth: false }));
   write(path.join('src', 'renderer', 'assets', 'icon.png'), entries.find((e) => e.size === 256).png);
   // D. in-app sprite
   if (HTML && OUT === ROOT) patchHtml();
