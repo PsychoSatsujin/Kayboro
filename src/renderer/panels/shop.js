@@ -317,7 +317,7 @@ export function mountShop(el, ctx = {}) {
 
   function wpTile(w, target, on) {
     const t = h('button', { type: 'button', className: `sc-wp${on ? ' on' : ''}${w.usable ? '' : ' is-off'}`, 'aria-pressed': String(on), title: tileTitle(w),
-      onclick: () => (w.usable ? apply(w, target) : toast({ title: `${w.name} needs Wallpaper Engine`, body: 'Scene and web wallpapers only run inside Wallpaper Engine. Pick a video or image one.', kind: 'info' })) },
+      onclick: () => (w.usable ? apply(on ? null : w, target) : toast({ title: `${w.name} needs Wallpaper Engine`, body: 'Scene and web wallpapers only run inside Wallpaper Engine. Pick a video or image one.', kind: 'info' })) },
     wpArt(w), h('span', { className: 'sc-wp-meta' }, h('b', { textContent: w.name }), h('small', { textContent: `${SOURCE_LABEL[w.source]} · ${TYPE_LABEL[w.type] || w.type}` })));
     if (on) t.append(h('span', { className: 'sc-tag on' }, icon('check'), target === 'stage' ? 'Showing' : 'In fill'));
     if (!w.usable) t.append(h('span', { className: 'sc-tag off', textContent: 'Needs WE' }));
@@ -374,18 +374,20 @@ export function mountShop(el, ctx = {}) {
     return tile;
   }
 
+  // w = null takes the wallpaper off: the stage goes back to its color, the shell fill to none.
   async function apply(w, target) {
-    if (!w?.usable) return;
-    const ref = refOf(w);
+    if (w && !w.usable) return;
+    const ref = w ? refOf(w) : null;
     active[target] = ref;
     play('tap');
     let r = null;
     if (app.setWallpaper) r = await app.setWallpaper(ref, target, w);
     else {
       if (target === 'stage') {
-        if (w.type === 'screensaver') app.setBackground?.({ type: 'screensaver', id: w.fill });
+        if (!w) app.setBackground?.({ type: 'color' });
+        else if (w.type === 'screensaver') app.setBackground?.({ type: 'screensaver', id: w.fill });
         else app.setBackground?.({ type: w.type === 'video' ? 'video' : 'image', url: w.url });
-      } else if (w.type === 'screensaver') await app.setLook?.('fill', w.fill);
+      } else if (w?.type === 'screensaver') await app.setLook?.('fill', w.fill);
       r = await call(shell, 'setActiveWallpaper', ref, target);
     }
     if (r?.state) setState(r.state);
@@ -453,7 +455,7 @@ export function mountShop(el, ctx = {}) {
     if (!dlg) return;
     const target = prefs.target === 'fill' ? 'fill' : 'stage', y = dlg.scrollTop;
     dlg.replaceChildren(h('header', { className: 'sc-dlg-head' },
-      h('div', {}, h('h2', { textContent: 'Wallpaper gallery' }), h('p', { textContent: `Click to put it ${target === 'stage' ? 'on your stage' : 'in your shell fill'}. Every wallpaper is free to use.` })),
+      h('div', {}, h('h2', { textContent: 'Wallpaper gallery' }), h('p', { textContent: `Click to put it ${target === 'stage' ? 'on your stage' : 'in your shell fill'}, and again to take it off. Every wallpaper is free to use.` })),
       h('button', { type: 'button', className: 'icon-btn', 'aria-label': 'Close', onclick: () => dlg.close() }, icon('x'))),
     galleryView(gallery(), target, true));
     dlg.scrollTop = y;
